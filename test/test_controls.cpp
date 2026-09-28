@@ -38,27 +38,174 @@ void alive(uint8_t species = 0) {
     tiltValue = 0; tiltArmed = true; go(Scene::Life);
 }
 
+void dispatch(Ev e) { Events::push(e); Game::update(); }
+
+bool lit(const Canvas &c, int x, int y) {
+    if (x < 0 || x >= MATRIX_W || y < 0 || y >= MATRIX_H) return false;
+    const Rgb p = c.get(x, y);
+    return p.r || p.g || p.b;
+}
+int litCount(const Canvas &c) {
+    int n = 0;
+    for (int y = 0; y < MATRIX_H; ++y) for (int x = 0; x < MATRIX_W; ++x) n += lit(c, x, y);
+    return n;
+}
+
 void testDreamAutomaton() {
     Dream::Automaton life;
-    life.seed(0, true); // blinker: period 2
-    assert(life.population() == 3);
+    life.clear(); life.set(2, 3); life.set(3, 3); life.set(4, 3); // blinker: period 2
     life.step(); assert(life.population() == 3 && life.alive(3, 2) && life.alive(3, 3) && life.alive(3, 4));
     life.step(); assert(life.population() == 3 && life.alive(2, 3) && life.alive(3, 3) && life.alive(4, 3));
-    life.seed(2, true); // bloco imóvel
+    life.clear(); life.set(3, 3); life.set(4, 3); life.set(3, 4); life.set(4, 4); // bloco imóvel
     for (int i = 0; i < 8; ++i) life.step();
     assert(life.population() == 4 && life.alive(3, 3) && life.alive(4, 4));
-    life.seed(3, true); // glider clássico, com as bordas conectadas
-    assert(life.population() == 5);
+    life.clear(); // glider clássico, com as bordas conectadas
+    life.set(3, 2); life.set(4, 3); life.set(2, 4); life.set(3, 4); life.set(4, 4);
     for (int i = 0; i < 4; ++i) life.step();
     assert(life.population() == 5 && life.alive(3, 5) && life.alive(5, 5));
     for (int i = 0; i < 12; ++i) life.step();
     assert(life.population() == 5 && life.alive(0, 0) && life.alive(0, 7) &&
            life.alive(6, 0) && life.alive(7, 0) && life.alive(7, 6)); // cruzou a borda
-    life.seed(0x12345678, false);
-    Dream::Automaton repeat; repeat.seed(0x12345678, false);
-    assert(life.population() == repeat.population());
-    for (uint8_t y = 0; y < 8; ++y)
-        for (uint8_t x = 0; x < 8; ++x) assert(life.alive(x, y) == repeat.alive(x, y));
+
+    // Capítulos: cada tipo mantém a intenção em qualquer orientação/posição.
+    for (uint32_t seed = 0; seed < 4096; seed += 7) {
+        Dream::Automaton g; g.seedChapter(Dream::Kind::Gliders, seed);
+        const uint8_t pop = g.population();
+        assert(pop == 5 || pop == 10);
+        for (int i = 0; i < 32; ++i) { g.step(); assert(g.population() == pop); } // atravessam sem colidir
+        Dream::Automaton p; p.seedChapter(Dream::Kind::Pulse, seed);
+        const uint64_t start = p.signature();
+        p.step(); assert(p.signature() != start);
+        p.step(); assert(p.signature() == start); // pulsação de período 2
+        Dream::Automaton soup; soup.seedChapter(Dream::Kind::Soup, seed * 2654435761u);
+        Dream::Automaton again; again.seedChapter(Dream::Kind::Soup, seed * 2654435761u);
+        assert(soup.signature() == again.signature() && soup.population()); // reproduzível
+    }
+}
+
+// Três minutos de sono: capítulos mudam, sem tela apagada nem imobilidade longa.
+void testDreamChapters() {
+    alive();
+    assert(sim.lightsOff() == Result::Ok);
+    const uint32_t start = testMs;
+    uint32_t firstChapter = 0, stillSince = 0, emptySince = 0;
+    uint64_t lastSig = 0;
+    bool sawDream = false;
+    for (uint32_t t = 0; t <= 180000 + SLEEP_DREAM_AFTER_MS; t += 100) {
+        const uint32_t now = start + t;
+        updateDreamView(now, false);
+        cv.clear(); nightFrame = false;
+        drawLife(now);
+        assert(litCount(cv) > 0); // nenhuma passagem pela tela inteira apagada
+        if (!dreamView || now - dreamViewAt < DREAM_BUBBLE_MS) continue;
+        if (!sawDream) { sawDream = true; firstChapter = dreamChapter; stillSince = emptySince = now; }
+        const uint64_t sig = dreamGrid.signature();
+        if (sig != lastSig) stillSince = now;
+        if (dreamGrid.population()) emptySince = now;
+        lastSig = sig;
+        assert(now - stillSince <= (DREAM_STILL_STEPS + 1u) * DREAM_STEP_MS + 100);
+        assert(now - emptySince <= DREAM_STEP_MS + 100);
+    }
+    assert(sawDream && dreamChapter - firstChapter >= 4); // capítulos de 20 a 40 s
+    // Entrada: olhos fechados, bolhinhas e bolha crescendo sem apagão.
+    alive();
+    assert(sim.lightsOff() == Result::Ok);
+    updateDreamView(testMs, false);
+    updateDreamView(testMs + SLEEP_DREAM_AFTER_MS, false);
+    assert(dreamView);
+    for (uint32_t e = 0; e < DREAM_BUBBLE_MS; e += 50) {
+        cv.clear();
+        drawSleepingDream(dreamViewAt + e);
+        assert(litCount(cv) > 0);
+    }
+}
+
+// Refeição: a silhueta do pet fica intacta; a comida aparece, diminui e some.
+void testMealSequence() {
+    for (uint8_t species = 0; species < PET_COUNT; species++) {
+        alive(species);
+        const PetDef &d = def();
+        doMenu(0, testMs);
+        assert(act == Act::Eat && meal.x1 >= 0);
+        if (species == 0) assert(meal.x1 == 7 && meal.y1 == 4); // capivara: logo à frente do focinho
+        int lastFood = 3;
+        for (uint32_t t = 0; t < EAT_MS; t += 20) {
+            const uint32_t now = actAt + t;
+            cv.clear(); drawAction(now); const Canvas scene = cv;
+            const Anim &pose = t < EAT_APPROACH_MS ? *d.idle : t < EAT_MS - 600 ? *d.eat : *d.happy;
+            cv.clear(); drawPet(pose, t, petX, 7, now); const Canvas petOnly = cv;
+            int food = 0;
+            for (int y = 0; y < MATRIX_H; ++y)
+                for (int x = 0; x < MATRIX_W; ++x) {
+                    if (lit(petOnly, x, y)) {
+                        const Rgb a = petOnly.get(x, y), b = scene.get(x, y);
+                        assert(a.r == b.r && a.g == b.g && a.b == b.b); // efeito nunca cobre o pet
+                    }
+                    const bool piece = (x == meal.x1 && y == meal.y1) || (x == meal.x2 && y == meal.y2);
+                    food += piece && lit(scene, x, y) && !lit(petOnly, x, y);
+                }
+            if (t >= EAT_FOOD_MS + 100 && t < EAT_LAST_BITE_MS) assert(food >= 1);
+            if (t >= EAT_APPROACH_MS) { assert(food <= lastFood); lastFood = food; } // só diminui
+            if (t >= EAT_LAST_BITE_MS) assert(food == 0);
+        }
+        testMs = actAt + EAT_MS + 1;
+        dispatch(Ev::None);
+        assert(act == Act::None && litCount(cv) > 0); // volta ao descanso sem apagão
+    }
+}
+
+// Conway ao redor do pet: só em pixels livres com respiro; autômato intacto.
+void testAmbientConway() {
+    for (uint8_t species = 0; species < 2; species++) {
+        alive(species);
+        bool sawCells[2] = {false, false};
+        for (uint32_t visit = 0; visit < 2; ++visit) {
+            const uint32_t begin = lastInputAt + IDLE_DREAM_AFTER_MS + visit * IDLE_DREAM_CYCLE_MS;
+            for (uint32_t t = 0; t < IDLE_DREAM_SHOW_MS; t += 100) {
+                const uint32_t now = begin + t;
+                updateDreamView(now, false);
+                assert(dreamView && dreamAmbient);
+                cv.clear(); nightFrame = false;
+                drawPet(*def().idle, now, petX, 7, now); const Canvas base = cv;
+                drawAmbient(now);
+                assert(dreamGrid.population() == (visit % 2 ? 3 : 5)); // máscara não apaga células
+                for (int y = 0; y < MATRIX_H; ++y)
+                    for (int x = 0; x < MATRIX_W; ++x) {
+                        if (lit(base, x, y) || !lit(cv, x, y)) continue;
+                        const Rgb c = cv.get(x, y);
+                        const bool bird = c.r == 205 && c.g == 228 && c.b == 255;
+                        if (!bird) {
+                            assert(!lit(base, x - 1, y) && !lit(base, x + 1, y) &&
+                                   !lit(base, x, y - 1) && !lit(base, x, y + 1));
+                            sawCells[visit] = true;
+                        }
+                    }
+            }
+        }
+        assert(sawCells[0] && sawCells[1]); // glider e blinker aparecem de fato
+    }
+}
+
+// Acontecimentos ociosos cedem a BOOT e movimento.
+void testIdlePriority() {
+    alive();
+    beh = Beh::Nap; behAt = testMs; behUntil = testMs + 9000;
+    dispatch(Ev::Short);
+    assert(act == Act::Eat && beh == Beh::Stand); // cuidado pedido entra na hora
+    alive();
+    beh = Beh::Watch; behAt = testMs; behUntil = testMs + 8000; bugX = 0; bugDir = 1;
+    testMs += 21; motionAt = testMs; Game::update();
+    assert(beh == Beh::Stand); // movimento interrompe o acontecimento
+    motionAt = 0; observedMotionAt = 0;
+    // Cada comportamento desenha o pet (nada substitui a silhueta).
+    for (uint8_t b = 0; b < (uint8_t)Beh::COUNT; ++b) {
+        alive(1);
+        beh = (Beh)b; behAt = testMs; bugX = 5; bugY = 0;
+        for (uint32_t t = 0; t < 4000; t += 100) {
+            cv.clear(); drawLife(testMs + t);
+            assert(litCount(cv) >= 10);
+        }
+    }
 }
 
 void testDreamTimingAndMotion() {
@@ -94,7 +241,6 @@ void testDreamTimingAndMotion() {
     updateDreamView(autoSleepAt + SLEEP_DREAM_AFTER_MS, false);
     assert(dreamView && sim.s().asleep); // cochilo automático entra no mesmo sonho
 }
-void dispatch(Ev e) { Events::push(e); Game::update(); }
 void sample(float x, float y, float z, uint32_t ms = 20) {
     testMs += ms; testAccel = {{x, y, z}}; testSampleReady = true; Imu::update();
 }
@@ -160,6 +306,10 @@ void testLedContrast() {
 int main() {
     testDreamAutomaton();
     testDreamTimingAndMotion();
+    testDreamChapters();
+    testMealSequence();
+    testAmbientConway();
+    testIdlePriority();
     Display::begin(); testLedContrast();
     Input::begin(); Imu::begin();
     // Contato instável nunca vira clique.
@@ -264,10 +414,6 @@ int main() {
                 }
             }
         }
-        startAct(Act::Eat, 3000); testMs += 1000;
-        cv.clear(); drawAction(testMs); Canvas eating = cv;
-        cv.clear(); drawPet(*d.eat, testMs - actAt, petX, 7, testMs);
-        assert(memcmp(eating.px, cv.px, sizeof(cv.px)) == 0);
     }
-    puts("PASS: Conway dreams/glider, LED contrast, BOOT, IMU, sleep/wake, menu, egg and sprite composition");
+    puts("PASS: Conway dreams/chapters/ambient, meal sequence, idle priority, LED contrast, BOOT, IMU, sleep/wake, menu, egg and sprite composition");
 }

@@ -71,17 +71,25 @@ constexpr uint8_t SLEEP_GAIN_EVERY_MIN = 1; // +1 de energia dormindo (0→100 e
 // Cansado (energia < NEED_LOW) e ninguém brinca com ele (sem clique nem gesto)
 // por esse tempo: pega no sono sozinho. Só segurar a placa não o mantém acordado.
 constexpr uint32_t AUTO_SLEEP_IDLE_MS = 30000;
-// Em energia boa, depois de 2 min sem BOOT/gesto/movimento, o pet visita o
-// mundo de Conway por 7 s a cada 45 s. Ao dormir, sonha após 8 s de pet visível.
+// Em energia boa, depois de 2 min sem BOOT/gesto/movimento, o mundo de Conway
+// aparece ao redor do pet por 7 s a cada 45 s (glider ou blinker, só nos
+// pixels livres). Ao dormir, sonha após 8 s de pet visível.
 constexpr uint32_t IDLE_DREAM_AFTER_MS = 2UL * 60UL * 1000UL;
 constexpr uint32_t IDLE_DREAM_CYCLE_MS = 45UL * 1000UL;
 constexpr uint32_t IDLE_DREAM_SHOW_MS = 7UL * 1000UL;
 constexpr uint32_t SLEEP_DREAM_AFTER_MS = 8UL * 1000UL;
 constexpr uint32_t SLEEP_PET_REVEAL_MS = 8UL * 1000UL;
 constexpr uint16_t DREAM_STEP_MS = 500; // uma geração a cada meio segundo
-constexpr uint16_t DREAM_TRANSITION_MS = 1200;
-constexpr uint32_t DREAM_CHAPTER_MS = 30000;
-constexpr uint32_t DREAM_STILL_MIN_MS = 20000;
+// Entrada no sonho: olhos fechados, bolha acima da cabeça, bolha vira o mundo.
+constexpr uint16_t DREAM_BUBBLE_MS = 2400;
+// Capítulos do sono: duração sorteada (DNA + contador) entre esses limites.
+// Vazio passa na hora; imóvel por DREAM_STILL_STEPS gerações também; um
+// oscilador que sobrou de outro capítulo pulsa por até DREAM_OSC_MAX_MS.
+constexpr uint32_t DREAM_CHAPTER_MIN_MS = 20000;
+constexpr uint32_t DREAM_CHAPTER_MAX_MS = 40000;
+constexpr uint8_t DREAM_STILL_STEPS = 6;
+constexpr uint32_t DREAM_OSC_MAX_MS = 10000;
+constexpr uint16_t DREAM_FADE_MS = 1000; // troca de capítulo por substituição de pixels
 constexpr uint16_t POOP_MIN_MIN = 90;       // intervalo entre cocôs (aleatório)
 constexpr uint16_t POOP_MAX_MIN = 150;
 constexpr uint8_t POOP_MAX = 3;

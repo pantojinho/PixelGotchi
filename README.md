@@ -58,27 +58,46 @@ além de uma paleta de ovo e uma variante selvagem.
   nem fizer um gesto por 30 s, dorme sozinho; dormindo recupera 1 de
   energia por minuto e acorda sozinho quando enche.
 
-### Sonhos e Conway
+### Acontecimentos, refeição e sonhos
 
-Depois de 2 minutos sem BOOT nem movimento, com energia suficiente e sem
-necessidade urgente, o pet visita por 7 s um mundo procedural a cada 45 s.
-Algumas visitas incluem um passarinho atravessando a tela. Ao dormir — pelo
-menu, pelo gesto ou pelo cochilo automático de energia baixa — ele fica
-visível por 8 s e depois a matriz inteira vira um sonho de Conway. Mexer ou
-chacoalhar a placa mostra o pet dormindo por mais 8 s; isso não o acorda.
-O BOOT acorda o pet normalmente, e ele também acorda quando recupera toda a
-energia. Assim o cochilo automático usa o mesmo sonho longo.
+**Refeição.** O pet olha para o lado do focinho, a comida (1 ou 2 pixels nas
+cores dela) aparece no primeiro pixel livre à frente da boca, ele se aproxima
+quando cabe e mastiga enquanto a comida diminui; no fim fica satisfeito e um
+coraçãozinho aparece. A silhueta nunca é substituída. A capivara mastiga sem
+sair do lugar (o focinho comprido já encosta na borda) e move a mandíbula.
+Cada refeição continua dando o mesmo ganho fixo de saciedade.
 
-Os sonhos evoluem uma geração a cada meio segundo. DNA e estado do pet
-escolhem entre sementes estáveis (incluindo o glider, que cruza as bordas
-conectadas da grade) ou padrões mais turbulentos; tons frios indicam um sonho
-tranquilo e tons quentes um sonho inquieto. Isso só muda a exibição: não
-altera fome, energia nem as regras de alimentação. O formato de grade 8×8,
-as regras e o glider seguem a referência do
+**Acordado**, pausas alternam com pequenas intenções: farejar um ponto no
+chão, olhar em volta, observar algo passando no alto, seguir uma borboleta
+e bocejar/se acomodar antes de um cochilo. O DNA escolhe as frequências e o
+tamanho das pausas. A capivara fareja e observa com calma; o gato observa
+mais, com atenção. BOOT ou movimento interrompem o acontecimento na hora, e
+um cuidado pedido sempre tem prioridade.
+
+**Conway ao redor do pet.** Depois de 2 minutos sem BOOT nem movimento, com
+energia suficiente e sem necessidade urgente, o pet para e observa por 7 s,
+a cada 45 s: um glider atravessando (visitas pares) ou um blinker pulsando
+com um passarinho (ímpares). As células aparecem só nos pixels livres com
+1 px de respiro do pet; o autômato continua completo por baixo da máscara.
+
+**Sono.** Pelo menu, pelo gesto ou pelo cochilo automático de energia baixa,
+o pet fica visível por 8 s; depois fecha os olhos, bolhinhas saem da cabeça
+e uma bolha cresce até virar o mundo inteiro, substituindo o pet pixel a
+pixel. O sonho troca de capítulo a cada 20–40 s (gliders atravessando,
+pulsações e grupos nascendo e se desfazendo), também por substituição de
+pixels. Um padrão vazio ou imóvel prepara o capítulo seguinte na hora; um
+oscilador que sobrou pulsa no máximo 10 s. Mexer ou chacoalhar mostra o pet
+dormindo por mais 8 s sem acordá-lo e o sonho volta pela bolha; BOOT acorda,
+e ele também acorda quando recupera toda a energia.
+
+Uma geração a cada meio segundo, bordas conectadas. DNA, estado e contador de
+capítulos escolhem padrão, orientação e posição de forma reproduzível; tons
+frios indicam um sonho tranquilo e tons quentes um sonho inquieto. Isso só
+muda a exibição: não altera fome, energia nem as regras de alimentação. As
+regras e o glider seguem a referência do
 [Jogo da Vida em matriz de LEDs](https://www.makerguides.com/game-of-life-dot-matrix-max7219/).
-Os tempos do preview são encurtados para a demonstração; o firmware usa os
-tempos acima. Veja o [roteiro dos sonhos](docs/TESTES.md#sonhos-e-conway).
-As próximas melhorias de continuidade, alimentação e sonhos estão no
+O preview encurta só a espera ociosa (12 s em vez de 2 min); veja o
+[roteiro dos sonhos](docs/TESTES.md#sonhos-e-conway) e o
 [plano de animações e Conway](docs/ANIMACOES-E-CONWAY.md).
 
 Os desenhos são originais, feitos diretamente na grade de pixels.

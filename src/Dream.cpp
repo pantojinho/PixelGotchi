@@ -3,60 +3,77 @@
 
 namespace Dream {
 namespace {
-void put(uint8_t rows[8], uint8_t x, uint8_t y) { rows[y] |= (uint8_t)(1u << x); }
+struct Cell { uint8_t x, y; };
+
+// Padrões em coordenadas locais (caixa de até 4x4).
+const Cell GLIDER[] = {{1, 0}, {2, 1}, {0, 2}, {1, 2}, {2, 2}};
+const Cell BLINKER[] = {{1, 0}, {1, 1}, {1, 2}};
+const Cell TOAD[] = {{1, 0}, {2, 0}, {3, 0}, {0, 1}, {1, 1}, {2, 1}};
+const Cell BEACON[] = {{0, 0}, {1, 0}, {0, 1}, {3, 2}, {2, 3}, {3, 3}};
+
+uint32_t xorshift(uint32_t &s) {
+    s ^= s << 13; s ^= s >> 17; s ^= s << 5;
+    return s;
+}
 } // namespace
 
-void Automaton::seed(uint32_t seedValue, bool calm) {
+void Automaton::clear() {
     memset(rows_, 0, sizeof(rows_));
     generation_ = 0;
-    if (calm) {
-        // Sementes reconhecíveis e estáveis: osciladores e um bloco imóvel.
-        switch (seedValue % 4) {
-            case 0:
-                put(rows_, 2, 3); put(rows_, 3, 3); put(rows_, 4, 3); // blinker
-                break;
-            case 1:
-                put(rows_, 3, 2); put(rows_, 4, 2); put(rows_, 5, 2);
-                put(rows_, 2, 3); put(rows_, 3, 3); put(rows_, 4, 3); // toad
-                break;
-            default:
-                if (seedValue % 4 == 2) {
-                    put(rows_, 3, 3); put(rows_, 4, 3);
-                    put(rows_, 3, 4); put(rows_, 4, 4); // bloco imóvel
-                } else {
-                    // Glider, a nave que cruza a matriz e reaparece na borda.
-                    put(rows_, 3, 2);
-                    put(rows_, 4, 3);
-                    put(rows_, 2, 4); put(rows_, 3, 4); put(rows_, 4, 4);
-                }
-                break;
-        }
-        // O mesmo padrão pode visitar outras posições e orientações.
-        uint8_t transformed[8]{};
-        const uint8_t turns = (seedValue >> 2) & 3;
-        for (uint8_t y = 0; y < 8; ++y) for (uint8_t x = 0; x < 8; ++x) {
-            if (!alive(x, y)) continue;
-            uint8_t nx = x, ny = y;
-            for (uint8_t i = 0; i < turns; ++i) {
-                const uint8_t oldX = nx; nx = 7 - ny; ny = oldX;
-            }
-            put(transformed, (nx + ((seedValue >> 4) & 7)) % 8,
-                (ny + ((seedValue >> 7) & 7)) % 8);
-        }
-        memcpy(rows_, transformed, sizeof(rows_));
-        return;
-    }
+}
 
-    // DNA e atributos escolhem um campo esparso que tende a se apagar rápido.
-    uint32_t rng = seedValue ^ 0x9E3779B9u;
-    if (!rng) rng = 0xA341316Cu;
-    for (uint8_t y = 0; y < 8; ++y) {
-        for (uint8_t x = 0; x < 8; ++x) {
-            rng ^= rng << 13; rng ^= rng >> 17; rng ^= rng << 5;
-            if (rng % 100 < 18) put(rows_, x, y);
+void Automaton::set(uint8_t x, uint8_t y) {
+    rows_[y & 7] |= (uint8_t)(1u << (x & 7));
+}
+
+void Automaton::seedChapter(Kind kind, uint32_t seed) {
+    clear();
+    // Orientação (espelhos e transposição) e posição saem da semente. Aplicar
+    // a mesma transformação ao quadro inteiro preserva o comportamento.
+    const bool flipX = seed & 1, flipY = seed & 2, swap = seed & 4;
+    const uint8_t ox = (seed >> 3) & 7, oy = (seed >> 6) & 7;
+    auto place = [&](const Cell *cells, uint8_t count, uint8_t dx, uint8_t dy) {
+        for (uint8_t i = 0; i < count; ++i) {
+            uint8_t x = cells[i].x + dx, y = cells[i].y + dy;
+            if (flipX) x = 7 - x;
+            if (flipY) y = 7 - y;
+            if (swap) { const uint8_t t = x; x = y; y = t; }
+            set(x + ox, y + oy);
+        }
+    };
+    switch (kind) {
+        case Kind::Gliders:
+            place(GLIDER, 5, 0, 0);
+            // Duas naves na mesma direção, a (4,4) uma da outra, não se tocam no toro.
+            if ((seed >> 9) & 1) place(GLIDER, 5, 4, 4);
+            break;
+        case Kind::Pulse:
+            switch ((seed >> 10) & 3) {
+                case 0: place(BLINKER, 3, 0, 0); break;
+                case 1: place(TOAD, 6, 0, 0); break;
+                case 2: place(BEACON, 6, 0, 0); break;
+                default: place(BLINKER, 3, 0, 0); place(BLINKER, 3, 4, 4); break;
+            }
+            break;
+        case Kind::Soup: {
+            // Campo esparso; descarta sementes que se apagam antes de mostrar algo.
+            uint32_t rng = seed ^ 0x9E3779B9u;
+            if (!rng) rng = 0xA341316Cu;
+            for (uint8_t attempt = 0; attempt < 6; ++attempt) {
+                clear();
+                const uint8_t density = 20 + xorshift(rng) % 13; // 20..32%
+                for (uint8_t y = 0; y < 8; ++y)
+                    for (uint8_t x = 0; x < 8; ++x)
+                        if (xorshift(rng) % 100 < density) set(x, y);
+                Automaton probe = *this;
+                for (uint8_t i = 0; i < 8; ++i) probe.step();
+                if (probe.population()) break;
+            }
+            generation_ = 0;
+            if (!population()) place(GLIDER, 5, 0, 0);
+            break;
         }
     }
-    if (!population()) put(rows_, 3, 3);
 }
 
 void Automaton::step() {
@@ -72,7 +89,7 @@ void Automaton::step() {
                     if (alive(nx, ny)) ++neighbors;
                 }
             }
-            if (neighbors == 3 || (alive(x, y) && neighbors == 2)) put(next, x, y);
+            if (neighbors == 3 || (alive(x, y) && neighbors == 2)) next[y] |= (uint8_t)(1u << x);
         }
     }
     memcpy(rows_, next, sizeof(rows_));

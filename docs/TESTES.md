@@ -98,47 +98,72 @@ com relógio, GPIO, sensor, NVS e saída LED substituídos por mocks.
 | Navegação por inclinação | Retorno ao centro libera a próxima troca |
 | Brincadeiras | Intervalo impede gasto repetido de energia por sacudidas consecutivas |
 | Ovo parado | Incubação pausa depois da tolerância sem zerar progresso |
-| Composição visual | Poses verificadas não sofrem cortes; efeitos da refeição alternam com o pet |
+| Composição visual | Poses verificadas não sofrem cortes; comida, coração e acontecimentos nunca cobrem pixels do pet |
+| Refeição (6 espécies) | Silhueta intacta em toda a refeição; comida aparece, só diminui e some; volta ao descanso com quadro aceso |
+| Sonhos e Conway | Regras, capítulos, três minutos de sono sem apagão, bolha de entrada, máscara do Conway acordado, prioridade de BOOT/movimento |
 
 Esses testes são casos selecionados, não uma prova de todas as combinações
 de regras, tempo, DNA e falhas de hardware.
 
 ## Sonhos e Conway
 
-O firmware mantém o pet visível por 8 s ao entrar no sono e, em seguida,
-usa toda a matriz para a evolução de Conway enquanto ele dorme. Isso vale
-para sono pelo menu, por gesto e para o cochilo automático quando a energia
-está baixa. Movimento do acelerômetro durante o sono revela o pet por mais
-8 s sem acordá-lo; BOOT continua acordando. Com energia suficiente, 2 min de
-ociosidade iniciam visitas de 7 s ao mundo a cada 45 s. Algumas visitas
-incluem um passarinho. Os estados de cuidado impedem a visita ociosa, e o
-autômato não altera os atributos do pet. Uma geração roda a cada 500 ms; as
-bordas da grade se conectam, permitindo que o glider reapareça do outro lado.
+Implementação do [plano de animações e Conway](ANIMACOES-E-CONWAY.md)
+(etapas 1 a 6). Comportamento no firmware:
+
+- **Refeição:** o pet olha para o lado do focinho; a comida (1–2 px) aparece
+  no primeiro pixel livre à frente da boca; ele se aproxima quando cabe,
+  mastiga enquanto ela diminui e termina satisfeito com um coração.
+- **Acordado:** pausas (duração pelo DNA) alternam com farejar, olhar em
+  volta, observar algo passando, seguir uma borboleta, pulinhos e bocejo
+  antes de cochilar. BOOT ou movimento interrompem na hora.
+- **Conway ao redor:** após 2 min sem BOOT/gesto/movimento, com energia
+  suficiente e sem necessidade urgente, 7 s a cada 45 s: glider (visitas
+  pares) ou blinker + passarinho (ímpares), só em pixels livres com 1 px de
+  respiro do pet. O pet para e olha na direção do que se move.
+- **Sono:** pet visível por 8 s; então bolhinhas, bolha crescendo (2,4 s) e o
+  mundo inteiro. Capítulos de 20–40 s alternam gliders, pulsação e campo
+  turbulento, trocando por substituição de pixels. Vazio passa na hora,
+  imóvel após 3 s; oscilador que sobrou pulsa no máximo 10 s. Movimento
+  revela o pet dormindo por 8 s; BOOT acorda. Menu, gesto e cochilo
+  automático usam a mesma sequência.
+
+### Resultado registrado — 28/09/2026 (software)
 
 | Verificação | Resultado / limite |
 |---|---|
-| Regras de Conway | Teste nativo: blinker alterna, bloco permanece e glider mantém cinco células após quatro gerações |
-| Sementes turbulentas | Repetir DNA gera o mesmo padrão inicial |
-| Temporização de sonhos | Teste do Game real: visitas ociosas, sonho contínuo no sono e retorno ao pet por movimento |
-| Cochilo automático | Teste C++ reduz energia, dispara a regra real após 30 s de ociosidade e confirma o sonho longo |
-| Build ESP32-S3 | Passou: RAM 20.704 bytes; flash de aplicação 365.045 bytes |
-| Preview no navegador | Página e controles carregaram em localhost, sem erros de console; a matriz física não foi simulada |
-| Preview | Tempos reduzidos para 12 s ocioso, ciclos de 20 s e 8 s de sono; não são os tempos do firmware |
-| Matriz física e IMU | Pendente: confirmar conforto visual, deslocamento do glider e retorno após mover a placa |
+| Regras de Conway | Teste nativo: blinker alterna, bloco permanece, glider cruza a borda |
+| Tipos de capítulo | Teste nativo em 585 sementes: gliders atravessam 32 gerações sem colidir, pulsação tem período 2, campo turbulento é reproduzível e não nasce vazio |
+| Três minutos de sono | Teste do Game real: nenhum quadro apagado (inclusive na bolha), ao menos 4 trocas de capítulo, nenhum vazio > 0,6 s nem imobilidade > 3,6 s |
+| Refeição | Teste nativo nas 6 espécies: pixels do pet idênticos ao pet sozinho durante 3 s, comida visível de 0,4 a 2,1 s e só diminuindo; capivara com comida em (7,4) |
+| Conway acordado | Teste nativo (capivara e gato): células só em pixels livres sem vizinho do pet; população do autômato preservada; glider e blinker aparecem |
+| Prioridade | BOOT durante cochilo ocioso inicia a refeição; movimento interrompe um acontecimento; todos os comportamentos desenham o pet |
+| Temporização e controles | Visitas ociosas, sono contínuo, movimento revelando o pet sem acordá-lo, cochilo automático no mesmo sonho |
+| Build ESP32-S3 | Passou: RAM 20.776 bytes; flash de aplicação 370.061 bytes |
+| Preview no Chromium | Playwright com relógio simulado, modo de cores de design, capivara e gato: início, refeição, 70 s de descanso, 45 s de visitas, 190 s de sono pelo gesto, movimento, retorno do sonho e BOOT. Nenhum quadro vazio, nenhum erro de console; capítulos mudaram entre os três tipos |
+| Preview | Só a espera ociosa é encurtada (12 s, ciclos de 20 s); bolha, capítulos e passos usam os tempos do firmware |
+| Matriz física e IMU | Pendente: conforto visual, leitura das cores do sonho no brilho 5, glider perceptível, retorno após mover a placa |
 
 ### Roteiro na placa
 
-1. Grave o firmware e mantenha o pet acordado, com energia suficiente. Aguarde
-   2 min sem tocar ou mover a placa; confirme uma visita curta e depois o
-   retorno ao pet. Espere outro ciclo para observar um passarinho.
-2. Inicie o sono pelo menu. O pet aparece por cerca de 8 s; a matriz inteira
-   então exibe o padrão. Mova a placa e confirme que o pet volta sem acordar.
-   Deixe-a parada por 8 s para ver o sonho voltar; clique BOOT para acordar.
-3. Reduza a energia e deixe o pet cansado sem entrada por 30 s. Confirme que
-   o cochilo automático também passa do pet para o sonho e que o movimento
-   apenas revela o pet. A recuperação até energia cheia deve acordá-lo.
-4. Observe o brilho a uma distância confortável. A tela de sonho usa o mesmo
-   perfil reduzido de LEDs; ajuste em placa somente se a luz real pedir.
+Sequência principal: alimentar → mastigar → satisfação → descanso → sonho →
+movimento → pet dormindo. Anote se o observador entende o que o pet faz.
+
+1. Grave o firmware. Alimente pelo BOOT e confirme, para capivara e gato,
+   que o pet não some, que a comida é reconhecível à frente da boca e que ela
+   diminui antes do coração.
+2. Observe um minuto de descanso: reconheça pausas e ações diferentes. Clique
+   BOOT ou mova a placa durante um acontecimento e confirme a resposta imediata.
+3. Mantenha o pet acordado com energia suficiente e aguarde 2 min parado;
+   confirme um glider ao redor do pet e, no ciclo seguinte, blinker e
+   passarinho. A espécie deve continuar reconhecível nas cores reais.
+4. Durma pelo menu. Após 8 s: bolhinhas, bolha e mundo inteiro, sem apagão.
+   Observe 3 min: capítulos diferentes, sem longos períodos vazios ou parados.
+   Mova a placa: o pet aparece dormindo; parado 8 s, o sonho volta. BOOT acorda.
+5. Repita com o cochilo automático (energia < 25, 30 s sem entrada) e com o
+   gesto de virar; desvirar deve acordar o sono do gesto. A recuperação até
+   energia cheia continua acordando o pet.
+6. Observe o brilho a uma distância confortável; o sonho usa o mesmo perfil
+   reduzido de LEDs. Ajuste somente se a luz real pedir.
 
 ## Roteiro manual do preview
 
@@ -148,7 +173,7 @@ revisão, navegador, tamanho da janela e resultado de cada caso.
 | ID | Procedimento | Resultado esperado |
 |---|---|---|
 | WEB-01 | Selecione gato e capivara; alterne design/LED | Gato com orelhas e cauda reconhecíveis; capivara com focinho largo e pernas curtas; paleta permanece distinguível |
-| WEB-02 | Escolha fome e clique no BOOT | Saciedade aumenta; comida, mastigação e coração aparecem em sequência |
+| WEB-02 | Escolha fome e clique no BOOT | Saciedade aumenta; o pet olha, a comida aparece à frente da boca, diminui enquanto ele mastiga e termina com coração, sem o pet sumir |
 | WEB-03 | Segure BOOT por 0,6 s e solte | Indicador de confirmação aparece; menu abre no cuidado sugerido |
 | WEB-04 | No menu, clique ou incline; confirme | Troca uma posição por entrada; executar não exige outro botão |
 | WEB-05 | Escolha sujeira e doença, execute cuidados | Limpeza remove sujeira; remédio trata a condição simulada |

@@ -187,25 +187,83 @@ function tinyHeart(buf, color=[255,111,168]) {
   }
   setFree(buf,0,0,color);
 }
-function drawCrumbs(buf, pet, ref, cx, t, flip=false) {
-  if (t >= 1400) return;
-  const {s} = frameRef(ref), top=8-s.h;
-  let x=cx+(flip ? -Math.floor(s.w/2)-1 : s.w-Math.floor(s.w/2)), y=top+2;
-  if (x<0||x>=8) { x=cx; y=top-1; }
-  const color=hexToRgb(Object.values(frameRef(pet.food).pal)[0]);
-  setFree(buf,x,t<600 ? Math.floor(t*Math.max(0,y)/600) : y,color);
-  if(t<900) setFree(buf,x-(flip ? -1:1),y-1,color);
+// Mesma geometria de Game.cpp: limites do pet e boca (linha mais baixa em que
+// o frame de comer difere do idle).
+const idleSprite = pet => frameRef(A.anims[pet.id + '_idle'].frames[0]).s;
+const centerCx = w => Math.floor((N - w) / 2) + Math.floor(w / 2);
+function clampCx(pet, x) {
+  const w = idleSprite(pet).w, lo = Math.floor(w / 2), hi = N - 1 - (w - 1 - Math.floor(w / 2));
+  return Math.max(lo, Math.min(hi, x));
 }
-function careFrame(pet, kind, t) {
+function mouthOf(pet) {
+  const a = idleSprite(pet), eat = A.anims[pet.id + '_eat'].frames, b = frameRef(eat[eat.length - 1]).s;
+  const at = (s, rel, ry) => { const sx = rel + Math.floor(s.w / 2), sy = s.h - 1 - ry; return sx < 0 || sx >= s.w || sy < 0 ? '.' : s.rows[sy][sx]; };
+  for (let ry = 0; ry < Math.max(a.h, b.h); ry++) {
+    let sum = 0, n = 0;
+    for (let rel = -N; rel < N; rel++) if (at(a, rel, ry) !== at(b, rel, ry)) { sum += rel + Math.floor(a.w / 2); n++; }
+    if (n) return { col: Math.floor(sum / n), ry };
+  }
+  return { col: a.w - 1, ry: Math.floor(a.h / 2) };
+}
+function mouthAt(pet, cx, flip = false) {
+  const s = idleSprite(pet), m = mouthOf(pet);
+  return [cx - Math.floor(s.w / 2) + (flip ? s.w - 1 - m.col : m.col), N - 1 - m.ry];
+}
+// As duas cores mais usadas no sprite da comida (principal, detalhe).
+function foodColors(pet) {
+  const { s, pal } = frameRef(pet.food), count = {};
+  s.rows.join('').split('').filter(c => c !== '.').forEach(c => count[c] = (count[c] || 0) + 1);
+  const keys = Object.keys(count).sort((a, b) => count[b] - count[a]);
+  return [hexToRgb(pal[keys[0]]), hexToRgb(pal[keys[1] || keys[0]])];
+}
+// Refeição (espelha planMeal): olha para o lado do focinho, a comida aparece
+// no primeiro pixel livre à frente da boca e o pet se aproxima quando cabe.
+const EAT = { MS:3000, FOOD:300, APPROACH:800, FIRST:1500, LAST:2100 };
+function planMeal(pet) {
+  const s = idleSprite(pet), home = centerCx(s.w), left = home - Math.floor(s.w / 2), right = left + s.w - 1;
+  const dir = pet.side ? 1 : (N - 1 - right >= left ? 1 : -1);
+  const plan = { dir, fromX: home, toX: home, x1: -1, y1: -1, x2: -1, y2: -1 };
+  let body = newBuf(), mx = 0, my = 0;
+  const free = (x, y) => x >= 0 && x < N && y >= 0 && y < N && !body[y * N + x];
+  for (const to of [clampCx(pet, home + dir), home]) {
+    plan.toX = to; body = newBuf();
+    blitA(body, A.anims[pet.id + '_idle'].frames[0], to, 7);
+    A.anims[pet.id + '_eat'].frames.forEach(f => blitA(body, f, to, 7));
+    [mx, my] = mouthAt(pet, to);
+    for (let x = mx; x >= 0 && x < N; x += dir) if (free(x, my)) { plan.x1 = x; plan.y1 = my; break; }
+    if (plan.x1 >= 0) break;
+  }
+  if (plan.x1 < 0) {
+    let best = Infinity;
+    for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) {
+      const d = (x - mx) ** 2 + (y - my) ** 2;
+      if (free(x, y) && d < best) { best = d; plan.x1 = x; plan.y1 = y; }
+    }
+  }
+  if (plan.x1 < 0) return plan;
+  if (free(plan.x1 + dir, plan.y1)) { plan.x2 = plan.x1 + dir; plan.y2 = plan.y1; }
+  else if (free(plan.x1, plan.y1 - 1)) { plan.x2 = plan.x1; plan.y2 = plan.y1 - 1; }
+  return plan;
+}
+// 1) olha; 2) comida aparece; 3) aproxima e mastiga enquanto ela diminui;
+// 4) satisfeito, coraçãozinho. O pet nunca some.
+function drawMeal(b, pet, plan, t) {
+  const cx = t < EAT.APPROACH ? plan.fromX : plan.toX;
+  const pose = t < EAT.APPROACH ? 'idle' : t < EAT.MS - 600 ? 'eat' : 'happy';
+  blitA(b, animFrame(pet.id + '_' + pose, t), cx, 7);
+  const [main, detail] = foodColors(pet);
+  if (t >= EAT.FOOD && t < EAT.LAST && plan.x1 >= 0) setFree(b, plan.x1, plan.y1, main);
+  if (t >= EAT.FOOD + 100 && t < EAT.FIRST && plan.x2 >= 0) setFree(b, plan.x2, plan.y2, detail);
+  if (t >= EAT.MS - 600) tinyHeart(b);
+  return cx;
+}
+function careFrame(pet, kind, t, cx = centerCx(idleSprite(pet).w)) {
   const b=newBuf(), id=pet.id;
-  const w=spriteW(animFrame(id+'_idle',0)), cx=Math.floor((8-w)/2)+Math.floor(w/2);
+  if(kind==='comendo') { drawMeal(b,pet,planMeal(pet),t); return b; }
   let pose='happy', bottom=7;
-  if(kind==='comendo') pose=t<600?'idle':t<2500?'eat':'happy';
   if(kind==='brincando') { pose=t<650?'idle':'happy'; if(t>=650&&t<2550) bottom-=Math.floor(t/350)%2; }
   if(kind==='remedio') pose=t<800?'idle':'happy';
-  const ref=animFrame(id+'_'+pose,t);
-  blitA(b,ref,cx,bottom);
-  if(kind==='comendo') { drawCrumbs(b,pet,ref,cx,t); if(t>=2500) tinyHeart(b); }
+  blitA(b,animFrame(id+'_'+pose,t),cx,bottom);
   if(kind==='carinho'&&Math.floor(t/300)%2===0) tinyHeart(b);
   if(kind==='remedio') tinyHeart(b,[62,214,76]);
   if(kind==='brincando') {

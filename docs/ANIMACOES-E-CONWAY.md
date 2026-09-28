@@ -2,9 +2,12 @@
 
 [README](../README.md) · [Testes](TESTES.md) · [Editor de pets e USB](PROXIMA-SPRINT.md)
 
-**Status: roteiro para implementação pelo Cláudio, em etapas.**
-Diagnóstico baseado na revisão `ad80145`. Este documento registra as ideias
-e os critérios de aceite; as correções descritas continuam pendentes.
+**Status: etapas 1 a 6 implementadas no firmware e na maquete; aceitação
+na placa física pendente.** Diagnóstico original baseado na revisão `ad80145`.
+A seção [Estado da implementação](#estado-da-implementação) resume o que
+foi feito em cada etapa; as evidências ficam em
+[Testes](TESTES.md#sonhos-e-conway). A ideia de comida procedural continua
+para depois.
 
 ## Problema observado e diagnóstico
 
@@ -138,6 +141,17 @@ A comida pode deixar um pequeno rastro de células que o pet consome
 visualmente. O ganho fixo por refeição mantém o equilíbrio do jogo mesmo
 quando a evolução das células é imprevisível. Experimentar esse efeito
 depois de validar a alimentação contínua e os capítulos dos sonhos.
+
+## Estado da implementação
+
+| Etapa | Firmware (`src/Game.cpp`, `src/Dream.cpp`) e maquete (`preview/`) | Na placa |
+|---|---|---|
+| 1 — quadro vazio | O preview só entra no sonho dentro da janela ativa; fora dela desenha o pet e seus efeitos. Teste de navegador com relógio simulado não encontrou quadro vazio na sequência completa | Pendente |
+| 2 — alimentação | `planMeal()`: boca detectada pela diferença entre o idle e o frame de comer; comida (1–2 px nas duas cores mais usadas do sprite) no primeiro pixel livre à frente da boca; passo de aproximação só quando ainda cabe; mastiga, a comida diminui, coração no fim. Capivara mastiga no lugar, comida em (7,4). Carinho, brincadeira e remédio já mantinham o pet | Pendente |
+| 3 — intenções | Novo `Beh::Watch` (algo passa no alto; pets de perfil viram a cabeça), borboleta no `Chase`, bocejo antes do `Nap`, farejar um ponto no chão à frente do focinho, pausas com duração pelo DNA. `reactToInput()` interrompe o acontecimento em BOOT/movimento. O gato de frente não tem frame de cabeça virada: observa parado | Pendente |
+| 4 — Conway ao redor | Visitas alternam glider e blinker (+ passarinho). Máscara com 1 px de respiro do pet; posição inicial escolhida entre 16 candidatas pelo espaço livre; o autômato não é apagado. O pet para e olha para o passarinho ou para o centro do padrão | Pendente (cores e brilho reais) |
+| 5 — sonho com capítulos | Bolhinhas da cabeça, bolha crescendo até cobrir a matriz (2,4 s). Capítulos `Gliders`, `Pulse`, `Soup` de 20–40 s, sementes por DNA + contador, troca por substituição de pixels; vazio passa de capítulo na hora, imóvel após 3 s, oscilador que sobrou pulsa no máximo 10 s | Pendente |
+| 6 — controles | Menu, gesto e cochilo automático entram pelo mesmo `updateDreamView()`. Movimento revela o pet dormindo, o sonho volta pela bolha; BOOT acorda; desvirar acorda o sono do gesto | Pendente |
 
 ## Orientação de execução para o Cláudio
 

@@ -73,15 +73,27 @@ uint32_t lastEggMs = 0;
 uint32_t progressUntil = 0;
 
 // ---- vida: comportamento autônomo
-enum class Beh : uint8_t { Stand, Walk, Sniff, Look, Hop, Nap, Chase, COUNT };
+// Pausas (Stand) alternam com pequenas intenções: farejar um ponto, olhar em
+// volta, observar algo passando (Watch), seguir uma borboleta (Chase) e se
+// acomodar antes de cochilar (Nap). Cuidados e entradas sempre têm prioridade.
+enum class Beh : uint8_t { Stand, Walk, Sniff, Look, Watch, Hop, Nap, Chase, COUNT };
 Beh beh = Beh::Stand;
 uint32_t behAt = 0, behUntil = 0;
 int petX = 3, targetX = 3;
 bool faceRight = true;
 uint32_t lastStep = 0;
 uint32_t blinkAt = 0;
-int bugX = 0, bugY = 1;
+int bugX = 0, bugY = 1, bugDir = 1; // borboleta (Chase) ou o que passa (Watch)
 uint32_t bugStep = 0;
+constexpr uint16_t NAP_SETTLE_MS = 1500; // boceja e se ajeita antes de fechar os olhos
+
+// Refeição (3 s): olha (0..300), comida aparece, aproxima e mastiga (800..2400),
+// comida diminui a cada mordida, satisfeito com coração nos últimos 600 ms.
+constexpr uint32_t EAT_MS = 3000;
+constexpr uint16_t EAT_FOOD_MS = 300;
+constexpr uint16_t EAT_APPROACH_MS = 800;
+constexpr uint16_t EAT_FIRST_BITE_MS = 1500;
+constexpr uint16_t EAT_LAST_BITE_MS = 2100;
 
 // ---- vida: ações com animação própria
 enum class Act : uint8_t { None, Eat, Play, Clean, Medicine, Pet, Refuse, Flee, Forage, Wild, Grumpy };
@@ -94,14 +106,23 @@ bool nightFrame = false; // quadro atual é de "luz apagada" (brilho mínimo)
 uint32_t lastInputAt = 0; // último clique/gesto (cansado + muito tempo sem isso = dorme)
 uint32_t observedMotionAt = 0;
 
-// Sonhos procedurais: interlúdios no idle e mundo completo durante o sono.
-Dream::Automaton dreamGrid;
+// Refeição: posições calculadas no início (comida fica parada no mundo).
+struct Meal { int8_t fromX, toX, dir, x1, y1, x2, y2; };
+Meal meal{3, 3, 1, -1, -1, -1, -1};
+
+// Sonhos procedurais: Conway ao redor do pet no idle e mundo completo no sono.
+Dream::Automaton dreamGrid, dreamPrevGrid;
 bool sleepWasActive = false, dreamSeeded = false, dreamView = false;
+bool dreamAmbient = false, dreamPlaceAmbient = false;
 uint32_t sleepStartedAt = 0, sleepPetUntil = 0, lastDreamStep = 0, dreamSeedValue = 1;
-uint32_t dreamBaseSeed = 1, dreamChapter = 0, dreamChapterAt = 0, dreamViewAt = 0;
-uint8_t dreamStillSteps = 0;
-bool dreamIsCalm = true;
+uint32_t dreamBaseSeed = 1, dreamChapter = 0, dreamChapterAt = 0, dreamChapterMs = 0, dreamViewAt = 0;
+uint32_t ambientVisit = 0;
+uint64_t dreamSig1 = 0, dreamSig2 = 0; // assinaturas das duas gerações anteriores
+uint8_t dreamStillSteps = 0, dreamOscSteps = 0;
+bool dreamIsCalm = true, dreamFading = false;
+Dream::Kind dreamKind = Dream::Kind::Gliders;
 Rgb dreamBright{90, 210, 245}, dreamDim{28, 82, 135};
+Rgb dreamPrevBright{90, 210, 245}, dreamPrevDim{28, 82, 135};
 
 // ---- menu / status
 const Sprite *const MENU_ICONS[] = {&SPR_icon_food, &SPR_icon_play, &SPR_icon_clean,
@@ -181,6 +202,7 @@ void pickBehavior(uint32_t now) {
     w[(int)Beh::Walk] = 20 + d.activity() / 8;
     w[(int)Beh::Sniff] = 6 + d.curiosity() / 16;
     w[(int)Beh::Look] = 6 + d.curiosity() / 16;
+    w[(int)Beh::Watch] = 4 + d.curiosity() / 16;
     w[(int)Beh::Hop] = s.happy > 60 ? 3 + d.activity() / 32 : 0;
     w[(int)Beh::Nap] = s.energy < 40 ? 20 : 3;
     w[(int)Beh::Chase] = s.energy > 40 ? 3 + d.activity() / 32 : 0;
@@ -188,11 +210,13 @@ void pickBehavior(uint32_t now) {
     if (strcmp(def().id, "capy") == 0) {
         w[(int)Beh::Stand] += 20;
         w[(int)Beh::Sniff] += 16;
+        w[(int)Beh::Watch] += 6;
         w[(int)Beh::Nap] += 8;
         w[(int)Beh::Chase] = 0;
         w[(int)Beh::Hop] /= 2;
     } else if (strcmp(def().id, "cat") == 0) {
-        w[(int)Beh::Look] += 12;
+        w[(int)Beh::Look] += 6;
+        w[(int)Beh::Watch] += 14;
         w[(int)Beh::Chase] += s.energy > 40 ? 14 : 0;
     }
     if (beh == Beh::Walk) w[(int)Beh::Stand] *= 2;
@@ -200,6 +224,7 @@ void pickBehavior(uint32_t now) {
     if (beh != Beh::Stand && beh != Beh::Walk) w[(int)beh] = 0; // não repete o "especial"
     if (s.wild) {
         w[(int)Beh::Look] *= 3;
+        w[(int)Beh::Watch] *= 2;
         w[(int)Beh::Sniff] *= 2;
         w[(int)Beh::Walk] = w[(int)Beh::Walk] * 3 / 2;
         w[(int)Beh::Hop] = 0;
@@ -220,11 +245,24 @@ void pickBehavior(uint32_t now) {
             if (targetX == petX) beh = Beh::Stand;
             behUntil = now + 8000;
             break;
-        case Beh::Stand: behUntil = now + rndRange(2000, 5000); break;
+        case Beh::Stand: {
+            // Pausas mais longas no pet preguiçoso, mais curtas no elétrico.
+            const uint32_t lazy = (255u - d.activity()) * 12u; // 0..3060 ms
+            behUntil = now + 1500 + lazy + rnd(2500);
+            break;
+        }
         case Beh::Sniff: behUntil = now + rndRange(1800, 3000); break;
         case Beh::Look: behUntil = now + rndRange(1500, 3000); break;
+        case Beh::Watch:
+            // Algo cruza o alto da tela; ele acompanha até sair do outro lado.
+            bugDir = rnd(2) ? 1 : -1;
+            bugX = bugDir > 0 ? -1 : MATRIX_W;
+            bugY = rndRange(0, 1);
+            bugStep = now;
+            behUntil = now + 8000;
+            break;
         case Beh::Hop: behUntil = now + 1500; break;
-        case Beh::Nap: behUntil = now + rndRange(5000, 9000); break;
+        case Beh::Nap: behUntil = now + NAP_SETTLE_MS + rndRange(5000, 9000); break;
         case Beh::Chase:
             bugX = rnd(MATRIX_W);
             bugY = rndRange(0, 2);
@@ -232,6 +270,16 @@ void pickBehavior(uint32_t now) {
             break;
         default: break;
     }
+}
+
+// BOOT ou movimento: interrompe o acontecimento ocioso na hora, com uma piscada
+// (resposta visível). Cuidados pedidos entram por cima em seguida.
+void reactToInput(uint32_t now) {
+    if (beh == Beh::Stand || beh == Beh::Walk) return;
+    beh = Beh::Stand;
+    behAt = now;
+    behUntil = now + 2500;
+    blinkAt = now;
 }
 
 void stepToward(int target, uint32_t now, uint16_t stepMs) {
@@ -269,6 +317,15 @@ void updateBehavior(uint32_t now) {
             break;
         case Beh::Look:
             if ((now - behAt) / 700 % 2 == 1) faceRight = !faceRight, behAt = now;
+            break;
+        case Beh::Watch:
+            // Capivara acompanha devagar; gato, atento, um pouco mais rápido.
+            if (now - bugStep > (strcmp(def().id, "capy") == 0 ? 420u : 320u)) {
+                bugStep = now;
+                bugX += bugDir;
+                if (bugX < -1 || bugX > MATRIX_W) behUntil = now;
+            }
+            faceRight = bugX >= petX;
             break;
         case Beh::Chase:
             if (now - bugStep > 260) {
@@ -350,16 +407,111 @@ void tinyHeart(Rgb color = C_HAPPY) {
     setFree(0, 0, color);
 }
 
-void drawCrumbs(const Sprite &pet, uint32_t t) {
-    if (t >= 1400) return;
-    const int top = 8 - pet.h;
-    int x = petX + (petFlip() ? -(pet.w / 2) - 1 : pet.w - pet.w / 2);
-    int y = top + 2;
-    if (x < 0 || x >= 8) { x = petX; y = top - 1; }
-    const Rgb color = rgb(def().food->pal[1]);
-    // Dois pedaços chegam ao focinho; a mastigação consome o último.
-    setFree(x, t < 600 ? (int)(t * (y > 0 ? y : 0) / 600) : y, color);
-    if (t < 900) setFree(x - (petFlip() ? -1 : 1), y - 1, color);
+// ---- boca e comida
+// Boca = linha mais baixa em que o frame de comer difere do idle (centro dos
+// pixels diferentes). Coluna em coordenadas do idle; linha contada de baixo.
+struct Mouth { int col, rowFromBottom; };
+Mouth mouthOf(const PetDef &d) {
+    const Sprite &a = *d.idle->frames[0], &b = *d.eat->frames[d.eat->count - 1];
+    auto at = [](const Sprite &s, int rel, int ry) -> uint8_t {
+        const int sx = rel + s.w / 2, sy = s.h - 1 - ry;
+        return sx < 0 || sx >= s.w || sy < 0 ? 0 : s.px[sy * s.w + sx];
+    };
+    const int maxH = a.h > b.h ? a.h : b.h;
+    for (int ry = 0; ry < maxH; ++ry) {
+        int sum = 0, n = 0;
+        for (int rel = -MATRIX_W; rel < MATRIX_W; ++rel)
+            if (at(a, rel, ry) != at(b, rel, ry)) sum += rel + a.w / 2, ++n;
+        if (n) return {sum / n, ry};
+    }
+    return {a.w - 1, a.h / 2};
+}
+
+// Posição da boca na tela com o pet ancorado em cx.
+void mouthAt(int cx, bool flip, int &x, int &y) {
+    const Sprite &idle = frame(*def().idle, 0);
+    const Mouth m = mouthOf(def());
+    x = cx - idle.w / 2 + (flip ? idle.w - 1 - m.col : m.col);
+    y = MATRIX_H - 1 - m.rowFromBottom;
+}
+
+// As duas cores mais usadas no sprite da comida (principal, detalhe).
+void foodColors(Rgb &main, Rgb &detail) {
+    const Sprite &f = *def().food;
+    uint8_t count[16]{};
+    for (int i = 0; i < f.w * f.h; ++i) if (f.px[i] < 16) ++count[f.px[i]];
+    uint8_t first = 0, second = 0;
+    for (uint8_t i = 1; i < 16; ++i) {
+        if (!count[i]) continue;
+        if (!first || count[i] > count[first]) second = first, first = i;
+        else if (!second || count[i] > count[second]) second = i;
+    }
+    main = rgb(f.pal[first ? first : 1]);
+    detail = second ? rgb(f.pal[second]) : main;
+}
+
+// Planeja a refeição: o pet olha para o lado do focinho, a comida aparece no
+// primeiro pixel livre à frente da boca e o pet dá um passo até ela quando cabe.
+void planMeal() {
+    const PetDef &d = def();
+    const Sprite &idle = frame(*d.idle, 0);
+    const int home = centerCx(idle.w);
+    const int left = home - idle.w / 2, right = left + idle.w - 1;
+    meal.dir = d.side ? 1 : (MATRIX_W - 1 - right >= left ? 1 : -1);
+    faceRight = meal.dir > 0;
+    meal.fromX = home;
+    const bool flip = petFlip();
+    Canvas body;
+    auto freeAt = [&](int x, int y) {
+        if (x < 0 || x >= MATRIX_W || y < 0 || y >= MATRIX_H) return false;
+        const Rgb c = body.get(x, y);
+        return !(c.r || c.g || c.b);
+    };
+    int mx = 0, my = 0;
+    // Dá um passo até a comida só se ainda sobrar espaço à frente da boca
+    // (a capivara, de focinho comprido, mastiga sem sair do lugar).
+    const int targets[] = {clampX(home + meal.dir), home};
+    for (int to : targets) {
+        meal.toX = to;
+        body.clear();
+        body.blitAnchored(idle, to, 7, flip);
+        for (uint8_t i = 0; i < d.eat->count; ++i) body.blitAnchored(*d.eat->frames[i], to, 7, flip);
+        mouthAt(to, flip, mx, my);
+        meal.x1 = meal.y1 = meal.x2 = meal.y2 = -1;
+        for (int x = mx; x >= 0 && x < MATRIX_W; x += meal.dir)
+            if (freeAt(x, my)) { meal.x1 = x; meal.y1 = my; break; }
+        if (meal.x1 >= 0) break;
+    }
+    if (meal.x1 < 0) { // sem espaço na linha da boca: pixel livre mais próximo
+        int best = 1 << 20;
+        for (int y = 0; y < MATRIX_H; ++y) for (int x = 0; x < MATRIX_W; ++x) {
+            const int dist = (x - mx) * (x - mx) + (y - my) * (y - my);
+            if (freeAt(x, y) && dist < best) best = dist, meal.x1 = x, meal.y1 = y;
+        }
+    }
+    if (meal.x1 < 0) return;
+    if (freeAt(meal.x1 + meal.dir, meal.y1)) meal.x2 = meal.x1 + meal.dir, meal.y2 = meal.y1;
+    else if (freeAt(meal.x1, meal.y1 - 1)) meal.x2 = meal.x1, meal.y2 = meal.y1 - 1;
+}
+
+// Pixel livre no chão à frente do focinho, pra farejar.
+bool sniffSpot(int &sx, int &sy) {
+    int mx, my;
+    mouthAt(petX, petFlip(), mx, my);
+    const int dir = def().side ? (faceRight ? 1 : -1) : (petX <= MATRIX_W / 2 ? 1 : -1);
+    for (int dx = 0; dx < 4; ++dx)
+        for (int y = MATRIX_H - 1; y >= my; --y) {
+            const int x = mx + dir * dx;
+            if (emptyPixel(x, y)) { sx = x; sy = y; return true; }
+        }
+    return false;
+}
+
+// Borboleta: asas abertas (2 px) e fechadas (1 px) alternando.
+void drawButterfly(int x, int y, uint32_t now) {
+    const bool open = (now / 200) % 2;
+    setFree(x, y, open ? Rgb{255, 176, 48} : Rgb{255, 226, 140});
+    if (open) setFree(x + 1, y, {255, 176, 48});
 }
 
 void blitFree(const Sprite &sprite, int x, int y) {
@@ -376,9 +528,25 @@ uint32_t dreamHash(uint32_t value) {
     return value ^ (value >> 16);
 }
 
-void startDreamChapter(uint32_t now) {
+// Capítulos do sono: o DNA escolhe por qual tipo começa e o contador varia.
+// Sonho agitado (fome, sujeira, doença...) repete mais o campo turbulento.
+Dream::Kind sleepChapterKind(uint32_t chapter) {
+    static const Dream::Kind CALM[] = {Dream::Kind::Gliders, Dream::Kind::Pulse, Dream::Kind::Soup};
+    static const Dream::Kind RESTLESS[] = {Dream::Kind::Soup, Dream::Kind::Gliders, Dream::Kind::Soup,
+                                           Dream::Kind::Pulse};
+    const uint32_t i = dreamBaseSeed % 4 + chapter;
+    return dreamIsCalm ? CALM[i % 3] : RESTLESS[i % 4];
+}
+
+void startDreamChapter(uint32_t now, bool fade) {
+    dreamPrevGrid = dreamGrid;
+    dreamPrevBright = dreamBright;
+    dreamPrevDim = dreamDim;
+    dreamFading = fade && dreamPrevGrid.population();
     dreamSeedValue = dreamHash(dreamBaseSeed + dreamChapter * 0x9E3779B9u);
-    dreamGrid.seed(dreamSeedValue, dreamIsCalm);
+    dreamKind = sleepChapterKind(dreamChapter);
+    dreamGrid.seedChapter(dreamKind, dreamSeedValue);
+    // Paleta pequena, duas cores bem separadas por capítulo.
     const Rgb calmBright[] = {{90, 210, 245}, {120, 235, 110}, {195, 138, 245}};
     const Rgb calmDim[] = {{28, 82, 135}, {28, 90, 45}, {75, 36, 130}};
     const Rgb warmBright[] = {{255, 112, 96}, {255, 155, 45}, {245, 95, 165}};
@@ -387,35 +555,67 @@ void startDreamChapter(uint32_t now) {
     dreamBright = dreamIsCalm ? calmBright[palette] : warmBright[palette];
     dreamDim = dreamIsCalm ? calmDim[palette] : warmDim[palette];
     dreamChapterAt = lastDreamStep = now;
-    dreamStillSteps = 0;
+    dreamChapterMs = DREAM_CHAPTER_MIN_MS + dreamSeedValue % (DREAM_CHAPTER_MAX_MS - DREAM_CHAPTER_MIN_MS + 1);
+    dreamStillSteps = dreamOscSteps = 0;
+    dreamSig1 = dreamSig2 = ~0ull;
 }
 
 void seedDream(uint32_t now) {
     const PetState &s = sim.s();
     Dna dna = sim.dna();
-    dreamSeedValue = dna.bits ^ ((uint32_t)s.hunger << 24) ^ ((uint32_t)s.energy << 16) ^
-                     ((uint32_t)s.happy << 8) ^ s.ageMin ^ ((uint32_t)s.poop << 4);
+    dreamBaseSeed = dna.bits ^ ((uint32_t)s.hunger << 24) ^ ((uint32_t)s.energy << 16) ^
+                    ((uint32_t)s.happy << 8) ^ s.ageMin ^ ((uint32_t)s.poop << 4);
     dreamIsCalm = !s.sick && !s.wild && s.poop == 0 && s.hunger >= 50 &&
                   s.happy >= 50 && s.energy >= 50;
-    dreamBaseSeed = dreamSeedValue;
+    dreamAmbient = false;
+    dreamPlaceAmbient = false;
     dreamChapter = 0;
-    startDreamChapter(now);
+    dreamGrid.clear();
+    startDreamChapter(now, false);
     dreamSeeded = true;
-    lastDreamStep = now;
+}
+
+// Visita acordada: um só elemento com intenção clara. Visitas pares trazem um
+// glider (deslocamento); ímpares, um blinker (pulsação) e um passarinho.
+void seedAmbient(uint32_t now, uint32_t visit) {
+    dreamBaseSeed = dreamHash(sim.dna().bits ^ (visit * 0x9E3779B9u));
+    dreamIsCalm = true;
+    dreamAmbient = true;
+    dreamPlaceAmbient = true; // posição escolhida no desenho, olhando o espaço livre
+    dreamChapter = visit;
+    dreamKind = visit % 2 ? Dream::Kind::Pulse : Dream::Kind::Gliders;
+    dreamSeedValue = dreamBaseSeed & ~(7u << 9); // um glider só / blinker simples
+    dreamGrid.seedChapter(dreamKind, dreamSeedValue);
+    dreamBright = {90, 210, 245};
+    dreamDim = {28, 82, 135};
+    dreamChapterAt = lastDreamStep = now;
+    dreamFading = false;
+    dreamSeeded = true;
 }
 
 void advanceDream(uint32_t now) {
     if (!dreamSeeded) seedDream(now);
+    if (dreamFading && now - dreamChapterAt >= DREAM_FADE_MS) dreamFading = false;
     if (now - lastDreamStep < DREAM_STEP_MS) return;
     lastDreamStep = now;
     const uint64_t before = dreamGrid.signature();
     dreamGrid.step();
-    dreamStillSteps = dreamGrid.signature() == before ? (dreamStillSteps < 255 ? dreamStillSteps + 1 : 255) : 0;
+    if (dreamAmbient) return; // visitas curtas não trocam de capítulo
+    const uint64_t after = dreamGrid.signature();
+    dreamStillSteps = after == before ? (dreamStillSteps < 255 ? dreamStillSteps + 1 : 255) : 0;
+    const bool oscillating = after != before && (after == dreamSig1 || after == dreamSig2);
+    dreamOscSteps = oscillating ? (dreamOscSteps < 255 ? dreamOscSteps + 1 : 255) : 0;
+    dreamSig2 = dreamSig1;
+    dreamSig1 = before;
     const uint32_t elapsed = now - dreamChapterAt;
-    if (!dreamGrid.population() || elapsed >= DREAM_CHAPTER_MS ||
-        (dreamStillSteps >= 8 && elapsed >= DREAM_STILL_MIN_MS)) {
+    // Pulsação é o tema do capítulo Pulse; nos outros, um oscilador que sobrou
+    // pulsa só por algum tempo antes da próxima mudança.
+    const bool staleOsc = dreamKind != Dream::Kind::Pulse &&
+                          (uint32_t)dreamOscSteps * DREAM_STEP_MS >= DREAM_OSC_MAX_MS;
+    if (!dreamGrid.population() || dreamStillSteps >= DREAM_STILL_STEPS || staleOsc ||
+        elapsed >= dreamChapterMs) {
         ++dreamChapter;
-        startDreamChapter(now);
+        startDreamChapter(now, true);
     }
 }
 
@@ -435,7 +635,9 @@ void updateDreamView(uint32_t now, bool activity) {
         const bool initialPet = now - sleepStartedAt < SLEEP_DREAM_AFTER_MS;
         dreamView = !initialPet && !untilActive(now, sleepPetUntil);
         if (dreamView && !wasDreamView) dreamViewAt = now;
-        if (dreamView) advanceDream(now);
+        // O mundo só evolui depois que a bolha tomou a tela.
+        if (dreamView && now - dreamViewAt >= DREAM_BUBBLE_MS) advanceDream(now);
+        else if (dreamView) lastDreamStep = now;
         return;
     }
 
@@ -453,31 +655,94 @@ void updateDreamView(uint32_t now, bool activity) {
         dreamSeeded = false;
         return;
     }
-    if (!dreamSeeded) seedDream(now);
+    const uint32_t visit = (idle - IDLE_DREAM_AFTER_MS) / IDLE_DREAM_CYCLE_MS;
     const uint32_t phase = (idle - IDLE_DREAM_AFTER_MS) % IDLE_DREAM_CYCLE_MS;
     dreamView = phase < IDLE_DREAM_SHOW_MS;
+    if (dreamView && (!dreamSeeded || !dreamAmbient || visit != ambientVisit)) {
+        ambientVisit = visit;
+        seedAmbient(now, visit);
+    }
     if (dreamView) advanceDream(now);
 }
 
-void drawDream(uint32_t now, bool bird, bool freeOnly = false) {
-    for (uint8_t y = 0; y < 8; ++y) {
-        for (uint8_t x = 0; x < 8; ++x) {
-            if (dreamGrid.alive(x, y))
-                if (freeOnly) setFree(x, y, ((x + y) & 1) ? dreamBright : dreamDim);
-                else cv.set(x, y, ((x + y) & 1) ? dreamBright : dreamDim);
+bool ambientBird() { return dreamAmbient && dreamKind == Dream::Kind::Pulse; }
+int birdX(uint32_t now) { return 8 - (int)((now / 150) % 12); }
+
+// Máscara de renderização: a célula só aparece em pixel livre que não encosta
+// no pet (1 px de respiro protege olhos, focinho e silhueta). O autômato
+// continua completo por baixo.
+bool ambientPixel(const Canvas &base, int x, int y) {
+    auto lit = [&](int px, int py) {
+        if (px < 0 || px >= MATRIX_W || py < 0 || py >= MATRIX_H) return false;
+        const Rgb c = base.get(px, py);
+        return c.r || c.g || c.b;
+    };
+    return !lit(x, y) && !lit(x - 1, y) && !lit(x + 1, y) && !lit(x, y - 1) && !lit(x, y + 1);
+}
+
+// Escolhe, entre algumas orientações/posições, a que mais aparece fora do pet
+// nas próximas gerações. Só muda onde o padrão nasce; as regras seguem iguais.
+void placeAmbient(const Canvas &base) {
+    uint32_t bestSeed = dreamSeedValue;
+    int best = -1;
+    for (uint32_t k = 0; k < 16; ++k) {
+        // Bits 0..8: orientação e posição; 9..11 zerados (padrão simples).
+        const uint32_t candidate = (dreamSeedValue & ~0xFFFu) | ((dreamSeedValue + k * 37u) & 0x1FFu);
+        Dream::Automaton probe;
+        probe.seedChapter(dreamKind, candidate);
+        int visible = 0;
+        for (int g = 0; g < 6; ++g) {
+            for (int y = 0; y < MATRIX_H; ++y) for (int x = 0; x < MATRIX_W; ++x)
+                if (probe.alive(x, y) && ambientPixel(base, x, y)) ++visible;
+            probe.step();
+        }
+        if (visible > best) best = visible, bestSeed = candidate;
+    }
+    dreamSeedValue = bestSeed;
+    dreamGrid.seedChapter(dreamKind, dreamSeedValue);
+    dreamPlaceAmbient = false;
+}
+
+// Mundo inteiro do sonho, com a troca de capítulo feita por substituição de
+// pixels (nunca passa por uma tela toda apagada).
+void drawDreamWorld(uint32_t now) {
+    const uint32_t t = now - dreamChapterAt;
+    const uint8_t stage = dreamFading ? 1 + t * 4 / DREAM_FADE_MS : 4;
+    for (int y = 0; y < MATRIX_H; ++y) {
+        for (int x = 0; x < MATRIX_W; ++x) {
+            const bool fresh = (x + 2 * y) % 4 < stage;
+            const Dream::Automaton &grid = fresh ? dreamGrid : dreamPrevGrid;
+            if (grid.alive(x, y))
+                cv.set(x, y, ((x + y) & 1) ? (fresh ? dreamBright : dreamPrevBright)
+                                           : (fresh ? dreamDim : dreamPrevDim));
         }
     }
-    if (bird) {
-        // Um passarinho de três pixels cruza o mundo em algumas visitas idle.
-        int x = 8 - (int)((now / 150) % 12);
-        int y = 1 + (int)((now / 700) % 3);
+}
+
+// Conway ao redor do pet acordado (o pet já está desenhado no canvas).
+void drawAmbient(uint32_t now) {
+    const Canvas base = cv;
+    if (dreamPlaceAmbient) placeAmbient(base);
+    for (int y = 0; y < MATRIX_H; ++y)
+        for (int x = 0; x < MATRIX_W; ++x)
+            if (dreamGrid.alive(x, y) && ambientPixel(base, x, y))
+                cv.set(x, y, ((x + y) & 1) ? dreamBright : dreamDim);
+    if (ambientBird()) {
+        // Um passarinho de três pixels cruza o alto da tela.
+        const int x = birdX(now), y = 1 + (int)((now / 700) % 2);
         const Rgb color{205, 228, 255};
-        if (freeOnly) {
-            setFree(x, y + 1, color); setFree(x + 1, y, color); setFree(x + 2, y + 1, color);
-        } else {
-            cv.set(x, y + 1, color); cv.set(x + 1, y, color); cv.set(x + 2, y + 1, color);
-        }
+        setFree(x, y + 1, color); setFree(x + 1, y, color); setFree(x + 2, y + 1, color);
     }
+}
+
+// Para onde o pet olha durante a visita: o passarinho ou o centro do padrão.
+int ambientFocusX(uint32_t now) {
+    if (ambientBird()) return birdX(now) + 1;
+    int sum = 0, n = 0;
+    for (int y = 0; y < MATRIX_H; ++y)
+        for (int x = 0; x < MATRIX_W; ++x)
+            if (dreamGrid.alive(x, y)) sum += x, ++n;
+    return n ? sum / n : petX;
 }
 
 void drawAction(uint32_t now) {
@@ -485,12 +750,18 @@ void drawAction(uint32_t now) {
     uint32_t t = now - actAt;
     switch (act) {
         case Act::Eat: {
-            petX = centerCx(idleW());
-            faceRight = true;
-            const Anim &pose = t < 600 ? *d.idle : t < actDur - 500 ? *d.eat : *d.happy;
+            // 1) olha para o lado do focinho; 2) a comida aparece num pixel
+            // livre; 3) aproxima o focinho e mastiga enquanto ela diminui;
+            // 4) satisfeito, um coraçãozinho. O pet nunca some.
+            petX = t < EAT_APPROACH_MS ? meal.fromX : meal.toX;
+            faceRight = meal.dir > 0;
+            const Anim &pose = t < EAT_APPROACH_MS ? *d.idle : t < actDur - 600 ? *d.eat : *d.happy;
             drawPet(pose, t, petX, 7, now);
-            drawCrumbs(frame(pose, t), t);
-            if (t >= actDur - 500) tinyHeart();
+            Rgb main, detail;
+            foodColors(main, detail);
+            if (t >= EAT_FOOD_MS && t < EAT_LAST_BITE_MS && meal.x1 >= 0) setFree(meal.x1, meal.y1, main);
+            if (t >= EAT_FOOD_MS + 100 && t < EAT_FIRST_BITE_MS && meal.x2 >= 0) setFree(meal.x2, meal.y2, detail);
+            if (t >= actDur - 600) tinyHeart();
             break;
         }
         case Act::Play: {
@@ -538,23 +809,43 @@ void drawAction(uint32_t now) {
     }
 }
 
+// Entrada no sonho: olhos fechados, bolhinhas saem da cabeça, a bolha cresce
+// e o mundo de Conway substitui o pet pixel a pixel.
+constexpr uint16_t BUBBLE_GROW_MS = 900; // antes disso, só as bolhinhas
 void drawSleepingDream(uint32_t now) {
     const uint32_t elapsed = now - dreamViewAt;
-    if (elapsed >= DREAM_TRANSITION_MS) { drawDream(now, false); return; }
+    if (elapsed >= DREAM_BUBBLE_MS) { drawDreamWorld(now); return; }
+    const Sprite &sleeping = frame(*def().sleep, now);
     drawPet(*def().sleep, now, petX, 7, now);
-    const Canvas sleeping = cv;
-    cv.clear(); drawDream(now, false);
-    const Canvas world = cv;
-    cv = sleeping;
-    const uint8_t stage = elapsed * 4 / DREAM_TRANSITION_MS;
-    setFree(0, 0, dreamBright);
-    if (stage) { setFree(1, 0, dreamBright); setFree(0, 1, dreamDim); }
-    bool visible = false;
-    for (int y = 0; y < 8; ++y) for (int x = 0; x < 8; ++x) {
-        if ((x + 2 * y) % 4 < stage) cv.px[y][x] = world.px[y][x];
-        const Rgb c = cv.get(x, y); visible |= c.r || c.g || c.b;
+    const int dir = faceRight ? 1 : -1;
+    const int headTop = MATRIX_H - sleeping.h;
+    const int bx = petX + dir * 2 < 1 ? 1 : (petX + dir * 2 > MATRIX_W - 2 ? MATRIX_W - 2 : petX + dir * 2);
+    const int by = headTop > 3 ? 1 : 0;
+    const Rgb ring{120, 150, 210};
+    if (elapsed < BUBBLE_GROW_MS) {
+        nightFrame = true; // ainda é o pet dormindo, na luz de dormir
+        setFree(petX + dir, headTop - 1, ring);
+        if (elapsed >= 300) setFree(bx - dir, by + 1, ring);
+        if (elapsed >= 600) setFree(bx, by, dreamBright);
+        return;
     }
-    if (!visible) cv = world;
+    // A bolha cresce do alto da cabeça até cobrir a matriz inteira.
+    const Canvas pet = cv;
+    cv.clear();
+    drawDreamWorld(now);
+    const Canvas world = cv;
+    const int r = 1 + (int)(elapsed - BUBBLE_GROW_MS) * 10 / (DREAM_BUBBLE_MS - BUBBLE_GROW_MS); // 1..10
+    const int r2 = r * r, inner2 = (r - 1) * (r - 1);
+    for (int y = 0; y < MATRIX_H; ++y) {
+        for (int x = 0; x < MATRIX_W; ++x) {
+            const int d2 = (x - bx) * (x - bx) + (y - by) * (y - by);
+            const Rgb w = world.get(x, y), p = pet.get(x, y);
+            const bool worldLit = w.r || w.g || w.b;
+            if (d2 < inner2) cv.set(x, y, w);                   // dentro: o sonho
+            else if (d2 <= r2) cv.set(x, y, worldLit ? w : ring); // borda da bolha
+            else cv.set(x, y, dim(p, 110));                     // fora: pet dormindo
+        }
+    }
 }
 
 void drawLife(uint32_t now) {
@@ -579,7 +870,8 @@ void drawLife(uint32_t now) {
         return;
     }
 
-    if (dreamView && def().side) faceRight = 8 - (int)((now / 150) % 12) >= petX;
+    // Visita acordada: o pet para e olha para o que passa.
+    if (dreamView && def().side) faceRight = ambientFocusX(now) >= petX;
 
     if (s.sick) {
         drawPet(*d.sad, now, petX, 7, now);
@@ -590,24 +882,36 @@ void drawLife(uint32_t now) {
     } else if (s.happy < NEED_LOW) {
         drawPet(*d.sad, now, petX, 7, now);
     } else {
-        switch (beh) {
+        switch (dreamView ? Beh::Stand : beh) {
             case Beh::Walk: drawPet(*d.walk, t, petX, 7, now); break;
-            case Beh::Sniff:
-                drawPet(*d.eat, t, petX, 7, now);
-                if ((t / 450) % 2 == 0) setFree(petX + (petFlip() ? -2 : 2), 1, {130, 175, 100});
+            case Beh::Sniff: {
+                // Fareja um ponto no chão à frente do focinho.
+                drawPet((t / 700) % 3 == 2 ? *d.idle : *d.eat, t, petX, 7, now);
+                int sx, sy;
+                if ((t / 450) % 2 == 0 && sniffSpot(sx, sy)) cv.set(sx, sy, {130, 175, 100});
                 break;
+            }
             case Beh::Look:
                 if (!dreamView) faceRight = ((t / 900) + sim.dna().bits) % 2;
                 drawPet(*d.idle, t, petX, 7, now);
                 break;
+            case Beh::Watch:
+                // Olhar atento: pisca pouco enquanto a coisa passa.
+                drawPet(*d.idle, t, petX, 7, now);
+                setFree(bugX, bugY, {205, 228, 255});
+                break;
             case Beh::Hop: drawPet(*d.happy, t, petX, 7 - (int)((t / 250) % 2), now); break;
             case Beh::Nap:
-                drawPet(*d.sleep, t, petX, 7, now);
-                drawRising(SPR_fx_z, 0, t, 2400, 0);
+                if (t < NAP_SETTLE_MS) {
+                    drawPet(*d.tired, t, petX, 7, now); // boceja e se ajeita
+                } else {
+                    drawPet(*d.sleep, t, petX, 7, now);
+                    drawRising(SPR_fx_z, 0, t - NAP_SETTLE_MS, 2400, 0);
+                }
                 break;
             case Beh::Chase:
                 drawPet(*d.walk, t, petX, 7, now);
-                if ((now / 150) % 3) setFree(bugX, bugY, C_WHITE);
+                drawButterfly(bugX, bugY, now);
                 break;
             default: {
                 if (now >= blinkAt && now < blinkAt + 150) {
@@ -619,11 +923,7 @@ void drawLife(uint32_t now) {
             }
         }
     }
-    if (dreamView) {
-        const uint32_t idle = now - lastInputAt;
-        const bool bird = ((idle - IDLE_DREAM_AFTER_MS) / IDLE_DREAM_CYCLE_MS) % 2 == 1;
-        drawDream(now, bird, true); // máscara somente visual; o autômato permanece completo
-    }
+    if (dreamView) drawAmbient(now); // máscara somente visual; o autômato permanece completo
     drawPoop(now);
     drawNeed(now);
 }
@@ -784,8 +1084,11 @@ void doMenu(uint8_t item, uint32_t now) {
     Result r = Result::Refused;
     switch (item) {
         case 0:
-            r = sim.feed();
-            if (r == Result::Ok) startAct(Act::Eat, 3000);
+            r = sim.feed(); // ganho fixo por refeição; a animação não muda a quantidade
+            if (r == Result::Ok) {
+                planMeal();
+                startAct(Act::Eat, EAT_MS);
+            }
             break;
         case 1:
             r = sim.play();
@@ -879,7 +1182,8 @@ void sceneLife(uint32_t now, Ev e) {
         Serial.println("[Game] cansado e sozinho: dormiu");
     }
 
-    if (act == Act::None && !s.asleep) updateBehavior(now);
+    // Durante a visita de Conway ele para e observa; cuidados continuam por cima.
+    if (act == Act::None && !s.asleep && !dreamView) updateBehavior(now);
     drawLife(now);
 }
 
@@ -1066,7 +1370,10 @@ void update() {
         observedMotionAt = motionAt;
         activity = true;
     }
-    if (activity) lastInputAt = now;
+    if (activity) {
+        lastInputAt = now;
+        if (scene == Scene::Life && !sim.s().asleep) reactToInput(now);
+    }
     updateDreamView(now, activity);
     // O gesto de desvirar também funciona enquanto um menu está aberto.
     if (e == Ev::FaceUp && gestureSleep) {

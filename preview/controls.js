@@ -6,7 +6,7 @@
   let pet = A.pets[0], pose = scenes(pet), state, screen = 'life', item = 0, page = 0;
   let action = '', actionAt = 0, deadline = 0, heldAt = null, resetSent = false;
   let holdResetTimer = null;
-  let sleepByGesture = false, playedAt = -Infinity, cx = 3, pageAt = 0;
+  let sleepByGesture = false, playedAt = -Infinity, pageAt = 0;
   const say = message => el('demo-message').textContent = message;
   // Mesmas cores de Game.cpp (C_HUNGER, C_HAPPY...): a cor do ícone que resolve.
   const C = { hunger:[255,58,74], bored:[154,92,255], poop:[127,216,255], sick:[62,214,76], energy:[255,138,26], happy:[255,111,168], care:[62,214,76] };
@@ -32,91 +32,287 @@
     return out;
   }
   let dna = (Math.random() * 2 ** 32) >>> 0;
-  let lastActivityAt = performance.now(), dreamRows = new Uint8Array(8), dreamSeedValue = 1;
-  let dreamGenerationAt = 0, dreamCalm = true, dreamBright = [90,210,245], dreamDim = [28,82,135];
-  let sleepStartedAt = 0, sleepPetUntil = 0, idleDreamReady = false;
-  let dreamBaseSeed=1, dreamChapter=0, dreamChapterAt=0, dreamStillSteps=0;
-  let sleepDreamVisible=false, sleepDreamViewAt=0;
-  // A maquete encurta os tempos para dar para ver o efeito sem esperar no navegador.
+  let lastActivityAt = performance.now();
+  let sleepStartedAt = 0, sleepPetUntil = 0, sleepDreamVisible = false, sleepDreamViewAt = 0;
+  // A maquete encurta a espera ociosa para dar para ver o efeito no navegador;
+  // capítulos e bolha usam os mesmos tempos do firmware.
   const IDLE_DREAM_AFTER = 12000, IDLE_DREAM_CYCLE = 20000, IDLE_DREAM_SHOW = 7000;
   const SLEEP_DREAM_AFTER = 8000, SLEEP_PET_REVEAL = 8000, DREAM_STEP = 500;
+  const DREAM_BUBBLE = 2400, BUBBLE_GROW = 900, DREAM_FADE = 1000;
+  const CHAPTER_MIN = 20000, CHAPTER_MAX = 40000, STILL_STEPS = 6, OSC_MAX = 10000;
   function dreamHash(value) {
     value=Math.imul(value^(value>>>16),0x7FEB352D);
     value=Math.imul(value^(value>>>15),0x846CA68B);
     return (value^(value>>>16))>>>0;
   }
-  function seedDream(now) {
-    dreamCalm = !state.sick && !state.poop && state.hunger >= 50 && state.happy >= 50 && state.energy >= 50;
-    dreamBaseSeed=(dna^(state.hunger<<24)^(state.energy<<16)^(state.happy<<8)^(state.poop<<4))>>>0;
-    dreamChapter=0; startDreamChapter(now);
-  }
-  function startDreamChapter(now) {
-    dreamSeedValue=dreamHash((dreamBaseSeed+Math.imul(dreamChapter,0x9E3779B9))>>>0);
-    const palette=dreamChapter%3;
-    dreamBright=(dreamCalm?[[90,210,245],[120,235,110],[195,138,245]]:[[255,112,96],[255,155,45],[245,95,165]])[palette];
-    dreamDim=(dreamCalm?[[28,82,135],[28,90,45],[75,36,130]]:[[118,35,85],[105,42,15],[90,25,70]])[palette];
-    dreamRows.fill(0);
-    if (dreamCalm) {
-      const pattern = dreamSeedValue % 4;
-      const put = (x,y) => { dreamRows[y] |= 1 << x; };
-      if (pattern === 0) { put(2,3); put(3,3); put(4,3); }
-      else if (pattern === 1) { [[3,2],[4,2],[5,2],[2,3],[3,3],[4,3]].forEach(([x,y])=>put(x,y)); }
-      else if (pattern === 2) { [[3,3],[4,3],[3,4],[4,4]].forEach(([x,y])=>put(x,y)); }
-      else { [[3,2],[4,3],[2,4],[3,4],[4,4]].forEach(([x,y])=>put(x,y)); }
-      const transformed=new Uint8Array(8);
-      for(let y=0;y<8;y++) for(let x=0;x<8;x++) if(dreamAlive(x,y)) {
-        let nx=x,ny=y;
-        for(let i=0;i<((dreamSeedValue>>>2)&3);i++) { const oldX=nx;nx=7-ny;ny=oldX; }
-        nx=(nx+((dreamSeedValue>>>4)&7))%8;ny=(ny+((dreamSeedValue>>>7)&7))%8;
-        transformed[ny]|=1<<nx;
-      }
-      dreamRows=transformed;
-    } else {
-      let rng = (dreamSeedValue ^ 0x9E3779B9) >>> 0;
-      if (!rng) rng = 0xA341316C;
+  // ---- Autômato: mesma implementação de src/Dream.cpp (bit a bit).
+  const KIND = { gliders:0, pulse:1, soup:2 }, KIND_NAME = ['gliders atravessando', 'pulsação', 'grupos nascendo e se desfazendo'];
+  const GLIDER=[[1,0],[2,1],[0,2],[1,2],[2,2]], BLINKER=[[1,0],[1,1],[1,2]];
+  const TOAD=[[1,0],[2,0],[3,0],[0,1],[1,1],[2,1]], BEACON=[[0,0],[1,0],[0,1],[3,2],[2,3],[3,3]];
+  class Life {
+    constructor(rows) { this.rows = new Uint8Array(rows || 8); }
+    clear() { this.rows.fill(0); }
+    set(x, y) { this.rows[y & 7] |= 1 << (x & 7); }
+    alive(x, y) { return x >= 0 && x < 8 && y >= 0 && y < 8 && ((this.rows[y] >> x) & 1) === 1; }
+    pop() { let n = 0; for (const r of this.rows) for (let x = 0; x < 8; x++) n += (r >> x) & 1; return n; }
+    sig() { return this.rows.join(','); }
+    copy() { return new Life(this.rows); }
+    step() {
+      const next = new Uint8Array(8);
       for (let y=0;y<8;y++) for (let x=0;x<8;x++) {
-        rng ^= rng << 13; rng ^= rng >>> 17; rng ^= rng << 5; rng >>>= 0;
-        if (rng % 100 < 18) dreamRows[y] |= 1 << x;
+        let n=0;
+        for (let dy=-1;dy<=1;dy++) for (let dx=-1;dx<=1;dx++) if (dx||dy) n += this.alive((x+dx+8)%8,(y+dy+8)%8) ? 1 : 0;
+        if (n===3 || (this.alive(x,y) && n===2)) next[y] |= 1 << x;
+      }
+      this.rows = next;
+    }
+    seedChapter(kind, seed) {
+      this.clear(); seed >>>= 0;
+      const flipX = seed & 1, flipY = seed & 2, swap = seed & 4, ox = (seed >>> 3) & 7, oy = (seed >>> 6) & 7;
+      const place = (cells, dx, dy) => cells.forEach(([cx, cy]) => {
+        let x = cx + dx, y = cy + dy;
+        if (flipX) x = 7 - x;
+        if (flipY) y = 7 - y;
+        if (swap) [x, y] = [y, x];
+        this.set(x + ox, y + oy);
+      });
+      if (kind === KIND.gliders) { place(GLIDER, 0, 0); if ((seed >>> 9) & 1) place(GLIDER, 4, 4); }
+      else if (kind === KIND.pulse) {
+        const v = (seed >>> 10) & 3;
+        if (v === 0) place(BLINKER, 0, 0); else if (v === 1) place(TOAD, 0, 0);
+        else if (v === 2) place(BEACON, 0, 0); else { place(BLINKER, 0, 0); place(BLINKER, 4, 4); }
+      } else {
+        let rng = (seed ^ 0x9E3779B9) >>> 0; if (!rng) rng = 0xA341316C;
+        const next = () => { rng ^= rng << 13; rng >>>= 0; rng ^= rng >>> 17; rng ^= rng << 5; rng >>>= 0; return rng; };
+        for (let attempt = 0; attempt < 6; attempt++) {
+          this.clear();
+          const density = 20 + next() % 13;
+          for (let y = 0; y < 8; y++) for (let x = 0; x < 8; x++) if (next() % 100 < density) this.set(x, y);
+          const probe = this.copy(); for (let i = 0; i < 8; i++) probe.step();
+          if (probe.pop()) break;
+        }
+        if (!this.pop()) place(GLIDER, 0, 0);
       }
     }
-    if(!dreamRows.some(Boolean)) dreamRows[3]=1<<3;
-    dreamChapterAt=dreamGenerationAt=now; dreamStillSteps=0;
   }
-  function dreamAlive(x,y) { return (dreamRows[y] & (1 << x)) !== 0; }
-  function stepDream() {
-    const next = new Uint8Array(8);
+  // ---- Sonho: capítulos, troca por substituição de pixels e visitas acordado.
+  const D = { grid:new Life(), prev:new Life(), seeded:false, ambient:false, place:false, calm:true,
+    base:1, seed:1, chapter:0, chapterAt:0, chapterMs:CHAPTER_MIN, kind:KIND.gliders, lastStep:0,
+    sig1:'', sig2:'', still:0, osc:0, fading:false, visit:-1,
+    bright:[90,210,245], dim:[28,82,135], prevBright:[90,210,245], prevDim:[28,82,135] };
+  function sleepKind(chapter) {
+    const i = D.base % 4 + chapter;
+    return D.calm ? [KIND.gliders, KIND.pulse, KIND.soup][i % 3] : [KIND.soup, KIND.gliders, KIND.soup, KIND.pulse][i % 4];
+  }
+  function startChapter(now, fade) {
+    D.prev = D.grid.copy(); D.prevBright = D.bright; D.prevDim = D.dim;
+    D.fading = fade && D.prev.pop() > 0;
+    D.seed = dreamHash((D.base + Math.imul(D.chapter, 0x9E3779B9)) >>> 0);
+    D.kind = sleepKind(D.chapter);
+    D.grid.seedChapter(D.kind, D.seed);
+    const p = D.chapter % 3;
+    D.bright = (D.calm ? [[90,210,245],[120,235,110],[195,138,245]] : [[255,112,96],[255,155,45],[245,95,165]])[p];
+    D.dim = (D.calm ? [[28,82,135],[28,90,45],[75,36,130]] : [[118,35,85],[105,42,15],[90,25,70]])[p];
+    D.chapterAt = D.lastStep = now;
+    D.chapterMs = CHAPTER_MIN + D.seed % (CHAPTER_MAX - CHAPTER_MIN + 1);
+    D.still = D.osc = 0; D.sig1 = D.sig2 = '';
+    if (state.asleep) say(`Sonho, capítulo ${D.chapter + 1}: ${KIND_NAME[D.kind]}.`);
+  }
+  function seedDream(now) {
+    D.calm = !state.sick && !state.poop && state.hunger >= 50 && state.happy >= 50 && state.energy >= 50;
+    D.base = (dna^(state.hunger<<24)^(state.energy<<16)^(state.happy<<8)^(state.poop<<4))>>>0;
+    D.ambient = false; D.place = false; D.chapter = 0; D.grid.clear();
+    startChapter(now, false); D.seeded = true;
+  }
+  // Visita acordada: glider (deslocamento) ou blinker (pulsação) + passarinho.
+  function seedAmbient(now, visit) {
+    D.base = dreamHash((dna ^ Math.imul(visit, 0x9E3779B9)) >>> 0);
+    D.calm = true; D.ambient = true; D.place = true; D.chapter = visit; D.visit = visit;
+    D.kind = visit % 2 ? KIND.pulse : KIND.gliders;
+    D.seed = (D.base & ~(7 << 9)) >>> 0;
+    D.grid.seedChapter(D.kind, D.seed);
+    D.bright = [90,210,245]; D.dim = [28,82,135];
+    D.chapterAt = D.lastStep = now; D.fading = false; D.seeded = true;
+  }
+  function advanceDream(now) {
+    if (!D.seeded) seedDream(now);
+    if (D.fading && now - D.chapterAt >= DREAM_FADE) D.fading = false;
+    if (now - D.lastStep < DREAM_STEP) return;
+    D.lastStep = now;
+    const before = D.grid.sig(); D.grid.step();
+    if (D.ambient) return;
+    const after = D.grid.sig();
+    D.still = after === before ? D.still + 1 : 0;
+    D.osc = after !== before && (after === D.sig1 || after === D.sig2) ? D.osc + 1 : 0;
+    D.sig2 = D.sig1; D.sig1 = before;
+    const staleOsc = D.kind !== KIND.pulse && D.osc * DREAM_STEP >= OSC_MAX;
+    if (!D.grid.pop() || D.still >= STILL_STEPS || staleOsc || now - D.chapterAt >= D.chapterMs) {
+      D.chapter++; startChapter(now, true);
+    }
+  }
+  function drawDreamWorld(buf, now) {
+    const stage = D.fading ? 1 + Math.floor((now - D.chapterAt) * 4 / DREAM_FADE) : 4;
     for (let y=0;y<8;y++) for (let x=0;x<8;x++) {
-      let n=0;
-      for (let dy=-1;dy<=1;dy++) for (let dx=-1;dx<=1;dx++) if (dx||dy)
-        n += Number(dreamAlive((x+dx+8)%8,(y+dy+8)%8));
-      if (n===3 || (dreamAlive(x,y) && n===2)) next[y] |= 1 << x;
-    }
-    dreamRows = next;
-  }
-  function drawDream(buf, now, bird=false, freeOnly=false) {
-    if(now-dreamGenerationAt>=DREAM_STEP) {
-      dreamGenerationAt=now;
-      const before=dreamRows.join(','); stepDream();
-      dreamStillSteps=before===dreamRows.join(',')?dreamStillSteps+1:0;
-      if(!dreamRows.some(Boolean)||now-dreamChapterAt>=30000||(dreamStillSteps>=8&&now-dreamChapterAt>=20000)) {
-        dreamChapter++; startDreamChapter(now);
-      }
-    }
-    for (let y=0;y<8;y++) for (let x=0;x<8;x++) if (dreamAlive(x,y))
-      if(freeOnly) setFree(buf,x,y,((x+y)&1)?dreamBright:dreamDim);
-      else buf[y*8+x] = ((x+y)&1) ? dreamBright : dreamDim;
-    if (bird) {
-      const x=8-Math.floor(now/150)%12, y=1+Math.floor(now/700)%3, c=[205,228,255];
-      if(freeOnly) { setFree(buf,x,y+1,c);setFree(buf,x+1,y,c);setFree(buf,x+2,y+1,c); }
-      else {
-        if (x>=0&&x<8) buf[(y+1)*8+x]=c;
-        if (x+1>=0&&x+1<8) buf[y*8+x+1]=c;
-        if (x+2>=0&&x+2<8) buf[(y+1)*8+x+2]=c;
-      }
+      const fresh = (x + 2*y) % 4 < stage, g = fresh ? D.grid : D.prev;
+      if (g.alive(x,y)) buf[y*8+x] = ((x+y)&1) ? (fresh ? D.bright : D.prevBright) : (fresh ? D.dim : D.prevDim);
     }
     return buf;
   }
-  function markActivity(now=performance.now()) { lastActivityAt=now; idleDreamReady=false; }
+  const ambientBird = () => D.ambient && D.kind === KIND.pulse;
+  const birdX = now => 8 - Math.floor(now / 150) % 12;
+  // Máscara: célula só em pixel livre que não encosta no pet (1 px de respiro).
+  function ambientPixel(base, x, y) {
+    const lit = (px, py) => px >= 0 && px < 8 && py >= 0 && py < 8 && !!base[py*8+px];
+    return !lit(x,y) && !lit(x-1,y) && !lit(x+1,y) && !lit(x,y-1) && !lit(x,y+1);
+  }
+  function placeAmbient(base) {
+    let best = -1, bestSeed = D.seed;
+    for (let k = 0; k < 16; k++) {
+      const candidate = ((D.seed & ~0xFFF) | ((D.seed + k * 37) & 0x1FF)) >>> 0, probe = new Life();
+      probe.seedChapter(D.kind, candidate);
+      let visible = 0;
+      for (let g = 0; g < 6; g++) {
+        for (let y=0;y<8;y++) for (let x=0;x<8;x++) if (probe.alive(x,y) && ambientPixel(base,x,y)) visible++;
+        probe.step();
+      }
+      if (visible > best) { best = visible; bestSeed = candidate; }
+    }
+    D.seed = bestSeed; D.grid.seedChapter(D.kind, D.seed); D.place = false;
+  }
+  function drawAmbient(buf, now) {
+    const base = buf.slice();
+    if (D.place) placeAmbient(base);
+    for (let y=0;y<8;y++) for (let x=0;x<8;x++)
+      if (D.grid.alive(x,y) && ambientPixel(base,x,y)) buf[y*8+x] = ((x+y)&1) ? D.bright : D.dim;
+    if (ambientBird()) {
+      const x = birdX(now), y = 1 + Math.floor(now / 700) % 2, c = [205,228,255];
+      setFree(buf,x,y+1,c); setFree(buf,x+1,y,c); setFree(buf,x+2,y+1,c);
+    }
+  }
+  function ambientFocusX(now) {
+    if (ambientBird()) return birdX(now) + 1;
+    let sum = 0, n = 0;
+    for (let y=0;y<8;y++) for (let x=0;x<8;x++) if (D.grid.alive(x,y)) { sum += x; n++; }
+    return n ? Math.floor(sum / n) : B.x;
+  }
+  // Entrada: olhos fechados, bolhinhas, a bolha cresce e o sonho substitui o pet.
+  function drawSleepingDream(buf, now, t) {
+    const e = now - sleepDreamViewAt;
+    if (e >= DREAM_BUBBLE) return drawDreamWorld(buf, now);
+    const ref = animFrame(pet.id + '_sleep', t), s = frameRef(ref).s, flip = pet.side && !B.faceRight;
+    blitA(buf, ref, B.x, 7, flip);
+    const dir = B.faceRight ? 1 : -1, headTop = N - s.h;
+    const bx = Math.max(1, Math.min(N - 2, B.x + dir * 2)), by = headTop > 3 ? 1 : 0, ring = [120,150,210];
+    if (e < BUBBLE_GROW) {
+      const night = dimBuf(buf, 110/255);
+      setFree(night, B.x + dir, headTop - 1, ring);
+      if (e >= 300) setFree(night, bx - dir, by + 1, ring);
+      if (e >= 600) setFree(night, bx, by, D.bright);
+      return night;
+    }
+    const world = drawDreamWorld(newBuf(), now), out = newBuf();
+    const r = 1 + Math.floor((e - BUBBLE_GROW) * 10 / (DREAM_BUBBLE - BUBBLE_GROW)), r2 = r*r, inner2 = (r-1)*(r-1);
+    for (let y=0;y<8;y++) for (let x=0;x<8;x++) {
+      const d2 = (x-bx)**2 + (y-by)**2, i = y*8+x;
+      out[i] = d2 < inner2 ? world[i] : d2 <= r2 ? (world[i] || ring) : (buf[i] && buf[i].map(v => Math.floor(v*110/255)));
+    }
+    return out;
+  }
+  // ---- Pequenas intenções acordado (espelha pickBehavior/updateBehavior).
+  const BEH = ['pausa', 'passeio', 'farejando', 'olhando em volta', 'observando algo passar', 'pulinhos', 'se acomodando para cochilar', 'seguindo uma borboleta'];
+  const B = { beh:0, at:0, until:0, x:3, target:3, faceRight:true, lastStep:0, blinkAt:0, bugX:0, bugY:1, bugDir:1, bugStep:0 };
+  const NAP_SETTLE = 1500;
+  const rnd = n => n ? Math.floor(Math.random() * n) : 0;
+  const rndRange = (a, b) => a + rnd(b - a + 1);
+  const idleW = () => idleSprite(pet).w;
+  const minCx = () => Math.floor(idleW() / 2), maxCx = () => N - 1 - (idleW() - 1 - Math.floor(idleW() / 2));
+  function pickBehavior(now) {
+    const act = (dna >>> 12) & 255, cur = (dna >>> 20) & 255, s = state;
+    const w = [30, 20 + (act >> 3), 6 + (cur >> 4), 6 + (cur >> 4), 4 + (cur >> 4),
+      s.happy > 60 ? 3 + (act >> 5) : 0, s.energy < 40 ? 20 : 3, s.energy > 40 ? 3 + (act >> 5) : 0];
+    if (pet.id === 'capy') { w[0] += 20; w[2] += 16; w[4] += 6; w[6] += 8; w[7] = 0; w[5] = w[5] >> 1; }
+    else if (pet.id === 'cat') { w[3] += 6; w[4] += 14; w[7] += s.energy > 40 ? 14 : 0; }
+    if (B.beh === 1) w[0] *= 2;
+    if (B.beh === 0) w[1] = Math.floor(w[1] * 3 / 2);
+    if (B.beh > 1) w[B.beh] = 0;
+    let r = rnd(w.reduce((a, b) => a + b, 0)), i = 0;
+    while (r >= w[i]) r -= w[i++];
+    B.beh = i; B.at = now;
+    if (i === 1) { B.target = rndRange(minCx(), maxCx()); if (B.target === B.x) B.beh = 0; B.until = now + 8000; }
+    if (B.beh === 0) B.until = now + 1500 + (255 - act) * 12 + rnd(2500);
+    if (i === 2) B.until = now + rndRange(1800, 3000);
+    if (i === 3) B.until = now + rndRange(1500, 3000);
+    if (i === 4) { B.bugDir = rnd(2) ? 1 : -1; B.bugX = B.bugDir > 0 ? -1 : N; B.bugY = rndRange(0, 1); B.bugStep = now; B.until = now + 8000; }
+    if (i === 5) B.until = now + 1500;
+    if (i === 6) B.until = now + NAP_SETTLE + rndRange(5000, 9000);
+    if (i === 7) { B.bugX = rnd(N); B.bugY = rndRange(0, 2); B.until = now + 6000; }
+    if (B.beh) say(`Acontecimento: ${BEH[B.beh]}.`);
+  }
+  function stepToward(target, now, ms) {
+    if (now - B.lastStep < ms || B.x === target) return;
+    B.lastStep = now; B.faceRight = target > B.x; B.x += B.faceRight ? 1 : -1;
+  }
+  function updateBehavior(now) {
+    const s = state;
+    if (s.hunger < 25 || s.sick || s.happy < 25) { stepToward(minCx(), now, 400); return; }
+    if (s.energy < 25) return;
+    if (B.beh === 1) { stepToward(B.target, now, 330); if (B.x === B.target) B.until = now; }
+    else if (B.beh === 3) { if (Math.floor((now - B.at) / 700) % 2 === 1) { B.faceRight = !B.faceRight; B.at = now; } }
+    else if (B.beh === 4) {
+      if (now - B.bugStep > (pet.id === 'capy' ? 420 : 320)) { B.bugStep = now; B.bugX += B.bugDir; if (B.bugX < -1 || B.bugX > N) B.until = now; }
+      B.faceRight = B.bugX >= B.x;
+    } else if (B.beh === 7) {
+      if (now - B.bugStep > 260) { B.bugStep = now; B.bugX = Math.max(0, Math.min(N - 1, B.bugX + rnd(3) - 1)); B.bugY = rndRange(0, 2); }
+      stepToward(clampCx(pet, B.bugX), now, 270);
+    }
+    if (now >= B.until) pickBehavior(now);
+  }
+  // BOOT ou movimento interrompem o acontecimento ocioso, com uma piscada.
+  function reactToInput(now) {
+    if (B.beh <= 1) return;
+    B.beh = 0; B.at = now; B.until = now + 2500; B.blinkAt = now;
+    say('Ele percebeu você e parou o que fazia.');
+  }
+  function sniffSpot(b) {
+    const flip = pet.side && !B.faceRight, [mx, my] = mouthAt(pet, B.x, flip);
+    const dir = pet.side ? (B.faceRight ? 1 : -1) : (B.x <= N / 2 ? 1 : -1);
+    for (let dx = 0; dx < 4; dx++) for (let y = N - 1; y >= my; y--) {
+      const x = mx + dir * dx;
+      if (x >= 0 && x < N && !b[y*8+x]) return [x, y];
+    }
+    return null;
+  }
+  function drawBehavior(b, now, t, watching) {
+    const flip = pet.side && !B.faceRight, id = pet.id, beh = watching ? 0 : B.beh;
+    if (beh === 1) blitA(b, animFrame(id + '_walk', t), B.x, 7, flip);
+    else if (beh === 2) {
+      blitA(b, animFrame(id + (Math.floor(t / 700) % 3 === 2 ? '_idle' : '_eat'), t), B.x, 7, flip);
+      const spot = Math.floor(t / 450) % 2 === 0 && sniffSpot(b);
+      if (spot) b[spot[1]*8+spot[0]] = [130,175,100];
+    } else if (beh === 3) { B.faceRight = (Math.floor(t / 900) + dna) % 2 === 1; blitA(b, animFrame(id + '_idle', t), B.x, 7, pet.side && !B.faceRight); }
+    else if (beh === 4) { blitA(b, animFrame(id + '_idle', t), B.x, 7, flip); setFree(b, B.bugX, B.bugY, [205,228,255]); }
+    else if (beh === 5) blitA(b, animFrame(id + '_happy', t), B.x, 7 - Math.floor(t / 250) % 2, flip);
+    else if (beh === 6) {
+      if (t < NAP_SETTLE) blitA(b, animFrame(id + '_tired', t), B.x, 7, flip);
+      else {
+        blitA(b, animFrame(id + '_sleep', t), B.x, 7, flip);
+        const z = frameRef('fx_z').s, p = (t - NAP_SETTLE) % 2400;
+        blit(b, 'fx_z', 0, -Math.floor(p * (z.h + 1) / 2400));
+      }
+    } else if (beh === 7) {
+      blitA(b, animFrame(id + '_walk', t), B.x, 7, flip);
+      const open = Math.floor(now / 200) % 2;
+      setFree(b, B.bugX, B.bugY, open ? [255,176,48] : [255,226,140]);
+      if (open) setFree(b, B.bugX + 1, B.bugY, [255,176,48]);
+    } else {
+      if (now >= B.blinkAt + 150) B.blinkAt = now + rndRange(2500, 5000);
+      const blinking = now >= B.blinkAt && now < B.blinkAt + 150;
+      blitA(b, animFrame(id + (blinking ? '_blink' : '_idle'), t), B.x, 7, flip);
+    }
+    return b;
+  }
+  let meal = null;
+  function markActivity(now=performance.now()) { lastActivityAt=now; if (!state.asleep && screen === 'life') reactToInput(now); }
   function startSleep(now=performance.now()) {
     state.asleep=true; sleepStartedAt=now; sleepPetUntil=now+SLEEP_DREAM_AFTER;
     sleepDreamVisible=false;
@@ -132,8 +328,10 @@
   }
   function reset() {
     state = { hunger:80, happy:80, energy:90, poop:0, sick:false, asleep:false };
-    screen = 'life'; action = ''; sleepByGesture = false; playedAt = -Infinity; cx = 3;
-    markActivity(); sleepDreamVisible=false;
+    screen = 'life'; action = ''; sleepByGesture = false; playedAt = -Infinity;
+    Object.assign(B, { beh:0, at:performance.now(), until:performance.now() + 3000, x:centerCx(idleW()), faceRight:true, blinkAt:0 });
+    D.seeded = false; sleepDreamVisible=false;
+    markActivity();
     el('demo-need').value = 'normal';
     say('Pronto: clique para alimentar ou segure e solte para o menu.');
   }
@@ -154,11 +352,11 @@
     switch (index) {
       case 0:
         ok = !state.asleep && state.hunger < 95;
-        if (ok) { add('hunger', 30); action = 'comendo'; }
+        if (ok) { add('hunger', 30); action = 'comendo'; meal = planMeal(pet); } // ganho fixo por refeição
         break;
       case 1:
         ok = !state.asleep && state.energy >= 10;
-        if (ok) { add('happy', 20); add('energy', -8); add('hunger', -3); action = 'brincando'; }
+        if (ok) { add('happy', 20); add('energy', -8); add('hunger', -3); action = 'brincando'; B.x = centerCx(idleW()); }
         break;
       case 2: ok = state.poop > 0; if (ok) { state.poop = 0; action = 'limpar'; } break;
       case 3: ok = state.sick; if (ok) { state.sick = false; action = 'remedio'; } break;
@@ -228,8 +426,7 @@
     if (screen === 'menu') { item = (item + dir + icons.length) % icons.length; deadline = performance.now() + 8000; say(labels[item]); }
     else if (state.asleep) { sleepPetUntil=performance.now()+SLEEP_PET_REVEAL; say('Ele se mexeu, mas continua dormindo.'); }
     else {
-      const w = spriteW(animFrame(pet.id + '_idle', 0));
-      cx = dir < 0 ? Math.floor(w / 2) : N - 1 - (w - 1 - Math.floor(w / 2));
+      B.x = dir < 0 ? minCx() : maxCx(); B.faceRight = dir > 0;
       say('O bichinho acompanha a inclinação.');
     }
   }
@@ -295,45 +492,41 @@
       }
     } else if (screen === 'life' && state.asleep) {
       const reveal = now - sleepStartedAt < SLEEP_DREAM_AFTER || now < sleepPetUntil;
-      if (reveal) { buf = pose.dormindo(t); sleepDreamVisible=false; }
-      else {
-        if(!sleepDreamVisible) { sleepDreamVisible=true;sleepDreamViewAt=now; }
-        const world=drawDream(b,now), elapsed=now-sleepDreamViewAt;
-        buf=world; fullDream=true;
-        if(elapsed<1200) {
-          buf=pose.dormindo(t);
-          const stage=Math.floor(elapsed*4/1200);
-          setFree(buf,0,0,dreamBright);
-          if(stage) { setFree(buf,1,0,dreamBright);setFree(buf,0,1,dreamDim); }
-          for(let y=0;y<8;y++) for(let x=0;x<8;x++) if((x+2*y)%4<stage) buf[y*8+x]=world[y*8+x];
-          if(!buf.some(Boolean)) buf=world;
-        }
+      if (reveal) { // pet dormindo, com os Zzz e a luz de dormir
+        sleepDreamVisible = false;
+        blitA(b, animFrame(pet.id + '_sleep', t), B.x, 7, pet.side && !B.faceRight);
+        blit(b, 'fx_z', 0, -Math.floor((t % 2400) / 2400 * 4));
+        buf = dimBuf(b, 110 / 255);
+      } else {
+        if (!sleepDreamVisible) { sleepDreamVisible = true; sleepDreamViewAt = now; }
+        if (now - sleepDreamViewAt >= DREAM_BUBBLE) advanceDream(now); else D.lastStep = now;
+        buf = drawSleepingDream(b, now, t); fullDream = true;
       }
-    } else if (screen === 'life' && action && pose[action]) buf = pose[action](now - actionAt);
-    else if (screen === 'life' && action === 'recusa') blitA(b, animFrame(pet.id + '_sad', t), cx, 7);
-    else if (screen === 'life' && action === 'limpar') { blitA(b, animFrame(pet.id + '_idle', t), cx, 7); blit(b, animFrame('fx_sparkle_anim', t), Math.floor((now-actionAt)/140)-2, 5); }
-    else if (screen === 'life' && action === 'remedio') buf=careFrame(pet,'remedio',now-actionAt);
+    } else if (screen === 'life' && action === 'comendo') {
+      B.x = drawMeal(b, pet, meal, now - actionAt); B.faceRight = meal.dir > 0;
+    } else if (screen === 'life' && action && pose[action]) buf = careFrame(pet, action, now - actionAt, B.x);
+    else if (screen === 'life' && action === 'recusa') blitA(b, animFrame(pet.id + '_sad', t), B.x + (Math.floor((now - actionAt) / 120) % 2 ? 1 : -1), 7);
+    else if (screen === 'life' && action === 'limpar') { blitA(b, animFrame(pet.id + '_idle', t), B.x, 7); blit(b, animFrame('fx_sparkle_anim', t), Math.floor((now-actionAt)/140)-2, 5); }
+    else if (screen === 'life' && action === 'remedio') buf=careFrame(pet,'remedio',now-actionAt,B.x);
     else if (screen === 'life' && state.sick) buf = pose.doente(t);
     else if (screen === 'life' && state.hunger < 25) buf = pose['com fome'](t);
     else if (screen === 'life' && state.energy < 25) buf = pose.cansado(t);
     else if (screen === 'life' && state.happy < 25) buf = pose.triste(t);
     else if (screen === 'life') {
-      const idle=now-lastActivityAt, behavior=(Math.floor(idle/7000)+(dna&7))%5;
-      if(idle<3000) blitA(b,animFrame(pet.id+((t%3800<150)?'_blink':'_idle'),t),cx,7);
-      else if(pet.id==='capy'&&behavior===1) {
-        blitA(b,animFrame('capy_eat',t),cx,7);if(Math.floor(t/450)%2===0) setFree(b,cx+2,1,[130,175,100]);
-      } else if(behavior===2) {
-        blitA(b,animFrame(pet.id+'_idle',t),cx,7,pet.side&&Math.floor(t/900)%2===1);
-        if(pet.id==='cat') setFree(b,Math.floor(now/350)%8,0,[205,228,255]);
-      } else buf=pose.passeando(idle);
-    }
-    if(screen==='life'&&!state.asleep&&!action&&state.energy>=25&&urgentNeed()<0) {
-      const idle=now-lastActivityAt;
-      if(idle>=IDLE_DREAM_AFTER&&(idle-IDLE_DREAM_AFTER)%IDLE_DREAM_CYCLE<IDLE_DREAM_SHOW) {
-        if(!idleDreamReady) { seedDream(now);idleDreamReady=true; }
-        const bird=Math.floor((idle-IDLE_DREAM_AFTER)/IDLE_DREAM_CYCLE)%2===1;
-        drawDream(buf,now,bird,true);
-      }
+      // Visita de Conway (espelha updateDreamView): o pet para e observa.
+      const idle = now - lastActivityAt;
+      const visiting = urgentNeed() < 0 && idle >= IDLE_DREAM_AFTER && (idle - IDLE_DREAM_AFTER) % IDLE_DREAM_CYCLE < IDLE_DREAM_SHOW;
+      if (visiting) {
+        const visit = Math.floor((idle - IDLE_DREAM_AFTER) / IDLE_DREAM_CYCLE);
+        if (!D.seeded || !D.ambient || visit !== D.visit) {
+          seedAmbient(now, visit);
+          say(visit % 2 ? 'Um blinker pulsa ao redor e um passarinho passa.' : 'Um glider atravessa o mundo ao redor.');
+        }
+        advanceDream(now);
+        if (pet.side) B.faceRight = ambientFocusX(now) >= B.x;
+      } else updateBehavior(now);
+      drawBehavior(b, now, now - B.at, visiting);
+      if (visiting) drawAmbient(b, now); // máscara só visual; o autômato continua completo
     }
     if (screen === 'life' && !fullDream && state.poop && action !== 'limpar') blit(buf, 'fx_poop', 5, 6);
     // Pedido de ajuda: ícone do menu que resolve a cada 4 s; senão, pontinho na cor dele.
