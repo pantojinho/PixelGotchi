@@ -42,7 +42,7 @@ Mantenha a ordem de espécies existentes: o estado salvo usa esse índice.
 - Capivara: perfil, orelha curta arredondada, nariz na extremidade de um
   focinho largo, costas arredondadas e pernas curtas. Sem cauda longa.
 - Prefira massas de cor grandes. Tons próximos se misturam com o halo
-  dos LEDs. Confira no modo LED a 18/255 e também com a paleta de design.
+  dos LEDs. Confira no modo LED a 13/255 e também com a paleta de design.
 - Preserve orelhas e focinho nas expressões. Tristeza não deve transformar
   a espécie em outra silhueta.
 - As poses do gato e da capivara usam largura 7: só sobra um pixel para
@@ -59,7 +59,7 @@ de cada unidade. A validação final acontece na matriz física.
 
 ## Perfil de brilho e cor
 
-`led-profile.json` define o brilho global (**18/255**) e a curva gamma
+`led-profile.json` define o brilho global (**13/255**) e a curva gamma
 (**1,6**). O gerador produz `src/art/LedProfile.h` e `ART.ledProfile` no
 preview, incluindo a mesma tabela de 256 valores. Não edite as saídas à mão.
 

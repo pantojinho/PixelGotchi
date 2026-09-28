@@ -66,7 +66,7 @@ pode soltar. A ação longa só acontece ao soltar o botão.
 |---|---|---|
 | Seleção inicial | Clique no BOOT ou incline para um lado | Próxima espécie; inclinar à esquerda volta |
 | Seleção inicial | Segure BOOT por 0,6 s e solte | Escolhe a espécie e começa o ovo |
-| Ovo | Movimente suavemente a placa | Acumula incubação: 10 minutos; parar por 15 s pausa, sem zerar |
+| Ovo | Movimente suavemente a placa | Acumula incubação: 5 minutos; parar por 15 s pausa, sem zerar |
 | Ovo | Clique no BOOT | Mostra o progresso no topo por 2 s |
 | Pet acordado | Clique no BOOT | Alimenta, com animação de comida → mastigação → coração |
 | Pet dormindo | Clique no BOOT | Acorda; não alimenta junto |
@@ -77,16 +77,28 @@ pode soltar. A ação longa só acontece ao soltar o botão.
 | Vida | Incline lateralmente | O pet acompanha o lado mais baixo |
 | Vida | Vire a matriz para baixo por 1,5 s | Dorme |
 | Sono iniciado pelo gesto | Desvire | Acorda; o sono escolhido no menu continua até BOOT/menu ou energia cheia |
-| Status | Clique | Barras → idade → volta ao pet |
+| Status | Espere ou clique | Fome → alegria → energia → saúde → idade → volta ao pet |
+| Status | Segure BOOT por 0,6 s e solte | Volta ao pet na hora |
 | Qualquer cena | Segure BOOT por 8 s | Recomeça na seleção; barra vermelha a partir de 3 s |
 | Após a morte | Segure BOOT por 0,6 s e solte | Recomeça na seleção |
 
 ### Menu em 8×8
 
-Ordem dos oito ícones/pontos: **comida · bola · limpeza · remédio · lua ·
-coração · barras · voltar**. O ponto branco na última linha indica a posição.
+Ordem dos oito ícones/pontos: **maçã (vermelho) · controle (roxo) · bolhas
+(azul-claro) · cruz de farmácia (verde) · lua (amarelo) · coração (rosa) ·
+barras · voltar (branco)**. O ponto branco na última linha indica a posição.
 O menu fecha após 8 s sem entrada. Sem IMU, todos os cuidados continuam
 acessíveis pelo BOOT.
+
+**Pontinho piscando no canto superior direito** = o bicho precisa de algo.
+A cor é a do ícone que resolve: verde doente, azul-claro sujo, vermelho
+fome, amarelo cansado, roxo entediado/triste. Segurar o BOOT abre o menu
+já nesse ícone.
+
+**Status**: uma página por atributo, com o ícone em cima e uma barra de
+8 LEDs embaixo: maçã = fome (cheia = satisfeito), coração = alegria,
+raio = energia, cruz = saúde (cai quando você descuida). Ícone piscando =
+atributo baixo. Depois passa a idade em dias.
 
 O menu sugere acordar se estiver dormindo; caso contrário, prioriza doença,
 sujeira, fome, cansaço e tristeza. Quando está tudo bem, sugere carinho.
@@ -174,7 +186,7 @@ Veja também a [referência oficial da Waveshare](https://docs.waveshare.com/ESP
 | QMI8658, I²C | SDA GPIO11, SCL GPIO12 |
 | BOOT | GPIO0 |
 
-O firmware limita o brilho a **18/255** (antes 30/255), a corrente da matriz
+O firmware limita o brilho a **13/255** (antes 30, depois 18), a corrente da matriz
 a **400 mA** e usa FastLED **3.6.0**, com driver RMT e sem dithering temporal.
 A Waveshare informa que brilho excessivo aquece e pode danificar a placa.
 

@@ -24,6 +24,15 @@ uint32_t rndRange(uint32_t a, uint32_t b) { return a + rnd(b - a + 1); }
 const Rgb C_WHITE{255, 255, 255};
 const Rgb C_DIM{40, 40, 52};
 const Rgb C_RESET{255, 40, 40};
+// Uma cor por necessidade = a cor do ícone do menu que resolve (art/props.art).
+// Aparece no pontinho de alerta e nas barras do status.
+const Rgb C_HUNGER{255, 58, 74};   // comida: vermelho
+const Rgb C_BORED{154, 92, 255};   // brincar: roxo
+const Rgb C_DIRTY{127, 216, 255};  // limpar: azul-claro
+const Rgb C_SICK{62, 214, 76};     // remédio: verde
+const Rgb C_ENERGY{255, 214, 46};  // dormir: amarelo
+const Rgb C_HAPPY{255, 111, 168};  // alegria: rosa (coração)
+const Rgb C_CARE = C_SICK;         // saúde
 
 const Sprite &frame(const Anim &a, uint32_t t) { return frameAt(a, t); }
 
@@ -280,8 +289,14 @@ void drawHungerBubble(uint32_t now) {
     cv.blit(f, (MATRIX_W - f.w) / 2, (MATRIX_H - f.h) / 2);
 }
 
+// Pontinho piscando no canto: "preciso de algo". A cor é a do ícone do menu
+// que resolve, na mesma ordem do item sugerido (segurar o BOOT já abre nele).
 void drawAlert(uint32_t now) {
-    if (sim.needsAttention() && (now / 700) % 2) cv.set(7, 0, {255, 180, 30});
+    if (!sim.needsAttention() || !((now / 700) % 2)) return;
+    const PetState &s = sim.s();
+    Rgb c = s.sick ? C_SICK : s.poop ? C_DIRTY : s.hunger < NEED_LOW ? C_HUNGER
+          : s.energy < NEED_LOW ? C_ENERGY : C_BORED;
+    cv.set(7, 0, c);
 }
 
 void drawRising(const Sprite &s, int x, uint32_t t, uint16_t period, int from = 2) {
@@ -663,38 +678,55 @@ void sceneMenu(uint32_t now, Ev e) {
         return;
     }
     const Sprite &icon = *MENU_ICONS[menuIdx];
-    cv.blit(icon, (MATRIX_W - icon.w) / 2, 0);
+    cv.blit(icon, (MATRIX_W - icon.w) / 2, (MATRIX_H - 1 - icon.h) / 2);
     for (uint8_t i = 0; i < MENU_COUNT; i++) cv.set(i, 7, i == menuIdx ? C_WHITE : C_DIM);
+}
+
+// Status em páginas: ícone do atributo em cima e barra de 8 LEDs embaixo
+// (fome, alegria, energia, saúde), depois a idade rolando. Passa sozinho;
+// clique adianta, segurar sai.
+constexpr uint8_t STATUS_BARS = 4;
+constexpr uint16_t STATUS_PAGE_MS = 2200;
+
+uint32_t statusAgeMs(char *buf, size_t n) {
+    uint16_t days = sim.ageDays();
+    snprintf(buf, n, "%u %s%s", days, days == 1 ? "DIA" : "DIAS", sim.s().wild ? " SELVAGEM" : "");
+    return (uint32_t)(Canvas::textWidth(buf) + MATRIX_W + 2) * 100; // uma passada do texto
 }
 
 void sceneStatus(uint32_t now, Ev e) {
     uint32_t t = now - sceneAt;
-    if (e == Ev::Short || e == Ev::Long) {
-        if (statusPage == 0) {
-            statusPage = 1;
-            sceneAt = now;
-        } else {
-            go(Scene::Life);
-        }
-        return;
-    }
-    if (!Input::heldMs() && t > (statusPage == 0 ? STATUS_TIMEOUT_MS : 9000UL)) {
+    char buf[32];
+    uint32_t pageMs = statusPage < STATUS_BARS ? STATUS_PAGE_MS : statusAgeMs(buf, sizeof(buf));
+    if (e == Ev::Long) {
         go(Scene::Life);
         return;
     }
-    const PetState &s = sim.s();
-    if (statusPage == 0) {
-        struct Bar { uint8_t v; Rgb c; };
-        const Bar bars[] = {{s.hunger, {255, 138, 26}}, {s.happy, {255, 70, 140}},
-                            {s.energy, {255, 214, 46}}, {sim.care(), {62, 214, 76}}};
-        for (uint8_t i = 0; i < 4; i++) {
-            int len = (bars[i].v * MATRIX_W + 50) / 100;
-            for (int x = 0; x < MATRIX_W; x++) cv.set(x, 1 + i * 2, x < len ? bars[i].c : dim(bars[i].c, 30));
+    if (e == Ev::Short || (!Input::heldMs() && t > pageMs)) {
+        if (++statusPage > STATUS_BARS) {
+            go(Scene::Life);
+            return;
         }
+        sceneAt = now;
+        t = 0;
+    }
+    const PetState &s = sim.s();
+    if (statusPage < STATUS_BARS) {
+        struct Page { const Sprite *icon; uint8_t v; Rgb c; };
+        const Page pages[STATUS_BARS] = {{&SPR_stat_hunger, s.hunger, C_HUNGER},
+                                         {&SPR_stat_happy, s.happy, C_HAPPY},
+                                         {&SPR_stat_energy, s.energy, C_ENERGY},
+                                         {&SPR_stat_care, sim.care(), C_CARE}};
+        const Page &p = pages[statusPage];
+        // Atributo baixo: o ícone pisca pedindo atenção.
+        if (p.v >= NEED_LOW || (now / 300) % 2) cv.blit(*p.icon, (MATRIX_W - p.icon->w) / 2, 0);
+        // A barra "enche" na entrada da página, como um medidor.
+        int full = (p.v * MATRIX_W + 50) / 100;
+        int len = t < 400 ? full * (int)t / 400 : full;
+        for (int x = 0; x < MATRIX_W; x++)
+            for (int y = 6; y < MATRIX_H; y++) cv.set(x, y, x < len ? p.c : dim(p.c, 30));
     } else {
-        char buf[32];
-        uint16_t days = sim.ageDays();
-        snprintf(buf, sizeof(buf), "%u %s%s", days, days == 1 ? "DIA" : "DIAS", s.wild ? " SELVAGEM" : "");
+        statusAgeMs(buf, sizeof(buf));
         scrollText(buf, t, 1, s.wild ? Rgb{200, 160, 90} : C_WHITE);
     }
 }

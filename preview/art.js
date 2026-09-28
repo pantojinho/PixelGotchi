@@ -173,13 +173,15 @@ window.ART = {
    "R": "#FF3A4A",
    "r": "#C8202E",
    "G": "#3ED64C",
+   "g": "#1C8A2A",
    "C": "#8A4A1E",
    "W": "#FFFFFF",
-   "B": "#3F8CFF",
-   "b": "#9FD4FF",
+   "V": "#9A5CFF",
+   "b": "#7FD8FF",
    "Y": "#FFD62E",
    "O": "#FF8A1A",
-   "P": "#FF7FA6"
+   "P": "#FF6FA8",
+   "Z": "#7FC8FF"
   }
  },
  "sprites": {
@@ -1762,120 +1764,158 @@ window.ART = {
   "icon_food": {
    "pal": "icons",
    "rows": [
-    "....G...",
     "...CGG..",
-    ".RRCRRR.",
-    "RRRRRRWR",
-    "RRRRRRRR",
+    "...C....",
+    ".RRRRRR.",
+    "RRRRRWRR",
     "RRRRRRRR",
     ".RRRRRr.",
-    "..RR.R.."
+    "..RRrr.."
    ],
    "w": 8,
-   "h": 8
+   "h": 7
   },
   "icon_play": {
    "pal": "icons",
    "rows": [
-    "..RRYY..",
-    ".RRRYYY.",
-    "RRRWWYYY",
-    "RRWWWWYY",
-    "BBWWWWGG",
-    "BBBWWGGG",
-    ".BBBGGG.",
-    "..BBGG.."
+    ".VVVVVV.",
+    "VVWVVVRV",
+    "VWWWVYVV",
+    "VVWVVVVV",
+    "VVV..VVV",
+    "VV....VV"
    ],
    "w": 8,
-   "h": 8
+   "h": 6
   },
   "icon_clean": {
    "pal": "icons",
    "rows": [
-    ".....bb.",
-    "....b..b",
-    "....b..b",
-    ".bb..bb.",
-    "b..b....",
-    "b.Wb..b.",
-    ".bb..b.b",
-    "......b."
+    "......b.",
+    ".....b.b",
+    ".bbb..b.",
+    "b..Wb...",
+    "b...b.b.",
+    "b...b...",
+    ".bbb...."
    ],
    "w": 8,
-   "h": 8
+   "h": 7
   },
   "icon_medicine": {
    "pal": "icons",
    "rows": [
-    "........",
-    "........",
-    ".RRRWWW.",
-    "RWRRWWWW",
-    "RRRRWWWW",
-    ".rrrWWW.",
-    "........",
-    "........"
+    "..GGGG..",
+    "..GWGG..",
+    "GGGGGGGG",
+    "GGGGGGGG",
+    "..GGGG..",
+    "..gggg.."
    ],
    "w": 8,
-   "h": 8
+   "h": 6
   },
   "icon_sleep": {
    "pal": "icons",
    "rows": [
     "..YYY...",
-    ".YY.....",
-    "YY....W.",
-    "YY...WWW",
-    "YY....W.",
+    ".YY..ZZZ",
+    "YY....Z.",
+    "YY...ZZZ",
     "YY......",
     ".YY.....",
     "..YYY..."
    ],
    "w": 8,
-   "h": 8
-  },
-  "icon_status": {
-   "pal": "icons",
-   "rows": [
-    "......G.",
-    "......G.",
-    "...Y..G.",
-    "...Y..G.",
-    "R..Y..G.",
-    "R..Y..G.",
-    "R..Y..G.",
-    "WWWWWWWW"
-   ],
-   "w": 8,
-   "h": 8
+   "h": 7
   },
   "icon_pet": {
    "pal": "icons",
    "rows": [
-    "..P.P...",
-    ".PPPPP..",
-    "..PPP...",
-    "...P....",
-    "........",
-    "........",
-    "........"
+    ".PP.PP.",
+    "PWPPPPP",
+    "PPPPPPP",
+    ".PPPPP.",
+    "..PPP..",
+    "...P..."
+   ],
+   "w": 7,
+   "h": 6
+  },
+  "icon_status": {
+   "pal": "icons",
+   "rows": [
+    "......GG",
+    "......GG",
+    "....Y.GG",
+    "..P.Y.GG",
+    "R.P.Y.GG",
+    "R.P.Y.GG"
    ],
    "w": 8,
-   "h": 7
+   "h": 6
   },
   "icon_back": {
    "pal": "icons",
    "rows": [
-    "...W....",
-    "..WW....",
-    ".WWWWWW.",
-    "..WW..W.",
-    "...W..W.",
+    ".W......",
+    "WWWWW...",
+    ".W...W..",
     "......W.",
-    "........"
+    "......W.",
+    ".....W..",
+    ".WWWW..."
    ],
    "w": 8,
    "h": 7
+  },
+  "stat_hunger": {
+   "pal": "icons",
+   "rows": [
+    "...G.",
+    ".RRR.",
+    "RRRWR",
+    "RRRRR",
+    ".RRR."
+   ],
+   "w": 5,
+   "h": 5
+  },
+  "stat_happy": {
+   "pal": "icons",
+   "rows": [
+    ".P.P.",
+    "PPPPP",
+    "PPPPP",
+    ".PPP.",
+    "..P.."
+   ],
+   "w": 5,
+   "h": 5
+  },
+  "stat_energy": {
+   "pal": "icons",
+   "rows": [
+    "..YY",
+    ".YY.",
+    "YYYY",
+    ".YY.",
+    "YY.."
+   ],
+   "w": 4,
+   "h": 5
+  },
+  "stat_care": {
+   "pal": "icons",
+   "rows": [
+    "..G..",
+    "..G..",
+    "GGGGG",
+    "..G..",
+    "..G.."
+   ],
+   "w": 5,
+   "h": 5
   }
  },
  "anims": {
@@ -2380,7 +2420,7 @@ window.ART = {
   "*": "font_heart"
  },
  "ledProfile": {
-  "brightness": 18,
+  "brightness": 13,
   "gamma": 1.6,
   "glareCap": 420,
   "blueGain": 0.8,

@@ -87,4 +87,3 @@ constexpr uint8_t NEED_LOW = 25;            // abaixo disso o bicho reclama
 
 constexpr uint32_t SAVE_EVERY_MS = 5UL * 60UL * 1000UL;
 constexpr uint16_t MENU_TIMEOUT_MS = 8000;
-constexpr uint16_t STATUS_TIMEOUT_MS = 6000;

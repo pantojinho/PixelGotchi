@@ -32,7 +32,7 @@ DNA, incubação, descuido nem persistência.
 ## Rodada de brilho e cores — 28/09/2026
 
 Motivo: relato do autor de brilho excessivo e pouca separação de cores na
-placa. Ajuste: teto 18/255, gamma 1,6 compartilhado pelo firmware/preview e
+placa. Ajuste: teto 13/255, gamma 1,6 compartilhado pelo firmware/preview e
 nova paleta da capivara. A silhueta e o estado salvo não mudam.
 
 | Verificação | Resultado / limite |
@@ -98,7 +98,7 @@ revisão, navegador, tamanho da janela e resultado de cada caso.
 | WEB-05 | Escolha sujeira e doença, execute cuidados | Limpeza remove sujeira; remédio trata a condição simulada |
 | WEB-06 | Chacoalhe duas vezes e repita após 5 s | A segunda entrada imediata é ignorada; a posterior permite brincar se houver energia |
 | WEB-07 | Vire por 1,5 s e desvire; repita com sono pelo menu | Sono por gesto acorda ao desvirar; sono manual continua |
-| WEB-08 | Abra status e clique duas vezes | Barras, idade e retorno ao pet |
+| WEB-08 | Abra status e espere/clique | Uma página por atributo (ícone + barra), idade e retorno ao pet |
 | WEB-09 | Segure BOOT até 8 s | Barra de reset aparece após 3 s; reset ocorre sem executar outro cuidado |
 | WEB-10 | Use Espaço, setas e controles de toque; abra galeria | Interações acessíveis, sem erro no console; poses legíveis em janela estreita |
 

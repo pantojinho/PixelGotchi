@@ -6,8 +6,22 @@
   let pet = A.pets[0], pose = scenes(pet), state, screen = 'life', item = 0, page = 0;
   let action = '', actionAt = 0, deadline = 0, heldAt = null, resetSent = false;
   let holdResetTimer = null;
-  let sleepByGesture = false, playedAt = -Infinity, cx = 3;
+  let sleepByGesture = false, playedAt = -Infinity, cx = 3, pageAt = 0;
   const say = message => el('demo-message').textContent = message;
+  // Mesmas cores de Game.cpp (C_HUNGER, C_HAPPY...): a cor do ícone que resolve.
+  const C = { hunger:[255,58,74], bored:[154,92,255], poop:[127,216,255], sick:[62,214,76], energy:[255,214,46], happy:[255,111,168], care:[62,214,76] };
+  const STATUS = [['stat_hunger','hunger','Fome'], ['stat_happy','happy','Alegria'], ['stat_energy','energy','Energia'], ['stat_care','care','Saúde']];
+  const AGE_TEXT = '0 DIAS', PAGE_MS = 2200, AGE_MS = (textWidth(AGE_TEXT) + N + 2) * 100;
+  function nextStatusPage() {
+    page++; pageAt = performance.now();
+    if (page > STATUS.length) { screen = 'life'; say('De volta ao bichinho.'); }
+    else say(page < STATUS.length ? `Status: ${STATUS[page][2]}` : 'Idade — maquete: 0 dias.');
+  }
+  function alertColor() {
+    const s = state;
+    if (!(s.hunger < 25 || s.happy < 25 || s.sick || s.poop || (!s.asleep && s.energy < 15))) return null;
+    return s.sick ? C.sick : s.poop ? C.poop : s.hunger < 25 ? C.hunger : s.energy < 25 ? C.energy : C.bored;
+  }
   function reset() {
     state = { hunger:80, happy:80, energy:90, poop:0, sick:false, asleep:false };
     screen = 'life'; action = ''; sleepByGesture = false; playedAt = -Infinity; cx = 3;
@@ -44,7 +58,7 @@
         state.asleep = !state.asleep;
         break;
       case 5: ok = !state.asleep; if (ok) { add('happy', 5); action = 'carinho'; } break;
-      case 6: screen = 'status'; page = 0; deadline = performance.now() + 6000; break;
+      case 6: screen = 'status'; page = 0; pageAt = performance.now(); deadline = Infinity; say('Status: Fome'); return;
       case 7: say('De volta ao bichinho.'); return;
     }
     actionAt = performance.now();
@@ -56,8 +70,8 @@
       if (long) care(item);
       else { item = (item + 1) % icons.length; deadline = performance.now() + 8000; say(labels[item]); }
     } else if (screen === 'status') {
-      if (page === 0) { page = 1; deadline = performance.now() + 9000; say('Idade — maquete: 0 dias.'); }
-      else { screen = 'life'; say('De volta ao bichinho.'); }
+      if (long) { screen = 'life'; say('De volta ao bichinho.'); }
+      else nextStatusPage();
     } else if (long) {
       screen = 'menu'; item = suggest(); deadline = performance.now() + 8000;
       say(`Menu: ${labels[item]}. Clique para trocar; segure e solte para confirmar.`);
@@ -138,14 +152,19 @@
     if (action && now - actionAt >= actionMs[action]) action = '';
     let buf = b;
     if (screen === 'menu') {
-      blit(b, icons[item], 0, 0);
+      const { s } = frameRef(icons[item]);
+      blit(b, icons[item], Math.floor((N - s.w) / 2), Math.floor((N - 1 - s.h) / 2));
       for (let x = 0; x < 8; x++) b[56 + x] = x === item ? [255,255,255] : [40,40,52];
     } else if (screen === 'status') {
-      if (page === 1) scrollText(b, '0 DIAS', now % 9000, 1, [255,255,255], 100);
-      else [state.hunger, state.happy, state.energy, 100].forEach((v, i) => {
-        const colors = [[255,138,26],[255,70,140],[255,214,46],[62,214,76]];
-        for (let x = 0; x < 8; x++) b[(1+i*2)*8+x] = colors[i].map(c => x < Math.floor((v*8+50)/100) ? c : Math.floor(c*30/255));
-      });
+      const pt = now - pageAt;
+      if (heldAt === null && pt > (page < STATUS.length ? PAGE_MS : AGE_MS)) nextStatusPage();
+      if (page === STATUS.length) scrollText(b, AGE_TEXT, pt, 1, [255,255,255], 100);
+      else if (page < STATUS.length) {
+        const [spr, key] = STATUS[page], v = key === 'care' ? 100 : state[key], col = C[key];
+        if (v >= 25 || Math.floor(now / 300) % 2) blit(b, spr, Math.floor((N - frameRef(spr).s.w) / 2), 0);
+        const full = Math.floor((v * 8 + 50) / 100), len = pt < 400 ? Math.floor(full * pt / 400) : full;
+        for (let x = 0; x < 8; x++) for (let y = 6; y < 8; y++) b[y*8+x] = x < len ? col : col.map(c => Math.floor(c*30/255));
+      }
     } else if (state.asleep) buf = pose.dormindo(t);
     else if (action && pose[action]) buf = pose[action](now - actionAt);
     else if (action === 'recusa') blitA(b, animFrame(pet.id + '_sad', t), cx, 7);
@@ -157,6 +176,8 @@
     else if (state.happy < 25) buf = pose.triste(t);
     else blitA(b, animFrame(pet.id + ((t % 3800 < 150) ? '_blink' : '_idle'), t), cx, 7);
     if (screen === 'life' && state.poop && action !== 'limpar') blit(buf, 'fx_poop', 5, 6);
+    const alert = screen === 'life' && !action && alertColor();
+    if (alert && Math.floor(now / 700) % 2) buf[7] = alert;
     if (heldAt !== null) {
       const held = now - heldAt;
       if (held >= 3000) {

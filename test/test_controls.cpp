@@ -67,7 +67,7 @@ CRGB ledOutput(Rgb color, bool night = false) {
 
 int luminance(CRGB c) { return (54 * c.r + 183 * c.g + 19 * c.b); }
 void testLedContrast() {
-    assert(FastLED.brightness == 18 && FastLED.count == 64);
+    assert(FastLED.brightness == LedProfile::BRIGHTNESS && FastLED.count == 64);
     assert(FastLED.volts == 5 && FastLED.milliamps == 400 && FastLED.dither == 0);
     assert(LedProfile::channel(0) == 0 && LedProfile::channel(255) == 255);
     for (int i = 1; i < 256; i++) assert(LedProfile::channel(i) >= LedProfile::channel(i - 1));
@@ -75,9 +75,9 @@ void testLedContrast() {
     assert(black.r == 0 && black.g == 0 && black.b == 0);
     // Brilho por cor: branco (3 canais) ofusca menos que uma cor pura; azul atenuado.
     CRGB red = ledOutput({255, 0, 0}), green = ledOutput({0, 255, 0}), blue = ledOutput({0, 0, 255});
-    assert(red.r == 18 && red.g == 0 && red.b == 0);
-    assert(green.g == 18 && green.r == 0 && green.b == 0);
-    assert(blue.b < 18 && blue.b >= 12 && blue.r == 0 && blue.g == 0);
+    assert(red.r == LedProfile::BRIGHTNESS && red.g == 0 && red.b == 0);
+    assert(green.g == LedProfile::BRIGHTNESS && green.r == 0 && green.b == 0);
+    assert(blue.b < red.r && blue.b * 10 >= red.r * 6 && blue.r == 0 && blue.g == 0);
     assert(white.r == white.g && white.r > 0 && white.r < red.r && white.b <= white.r);
     // Piso: uma cor bem escura não some.
     CRGB darkest = ledOutput({30, 10, 5});

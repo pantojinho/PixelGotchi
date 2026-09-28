@@ -3,7 +3,7 @@
 #include <stdint.h>
 
 namespace LedProfile {
-constexpr uint8_t BRIGHTNESS = 18;
+constexpr uint8_t BRIGHTNESS = 13;
 // Curva suave gamma 1.6; mantém preto/primárias e separa meios-tons.
 constexpr uint8_t GAMMA_LUT[256] = {
     0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 2, 2, 2, 2, 3,

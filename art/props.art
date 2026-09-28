@@ -186,103 +186,140 @@ end
 
 anim ghost 350 ghost0 ghost1
 
-# ------------------------------------------------------------ ÍCONES DO MENU (8x8)
+# ------------------------------------------------------------ ÍCONES DO MENU
+# No máximo 8x7: a linha de baixo é dos oito pontinhos de navegação.
+# Cada ícone tem uma cor dominante própria pra dar pra reconhecer de relance:
+# comida vermelha, brincar roxo, limpar azul-claro, remédio verde,
+# dormir amarelo, carinho rosa, status colorido, voltar branco.
 palette icons
   R #FF3A4A
   r #C8202E
   G #3ED64C
+  g #1C8A2A
   C #8A4A1E
   W #FFFFFF
-  B #3F8CFF
-  b #9FD4FF
+  V #9A5CFF
+  b #7FD8FF
   Y #FFD62E
   O #FF8A1A
-  P #FF7FA6
+  P #FF6FA8
+  Z #7FC8FF
 end
 
+# maçã com cabinho, folha e brilho
 sprite icon_food icons
-....G...
 ...CGG..
-.RRCRRR.
-RRRRRRWR
-RRRRRRRR
+...C....
+.RRRRRR.
+RRRRRWRR
 RRRRRRRR
 .RRRRRr.
-..RR.R..
+..RRrr..
 end
 
+# controle de videogame: cruz branca, botões vermelho e amarelo
 sprite icon_play icons
-..RRYY..
-.RRRYYY.
-RRRWWYYY
-RRWWWWYY
-BBWWWWGG
-BBBWWGGG
-.BBBGGG.
-..BBGG..
+.VVVVVV.
+VVWVVVRV
+VWWWVYVV
+VVWVVVVV
+VVV..VVV
+VV....VV
 end
 
+# bolhas de sabão (uma grande com brilho, duas pequenas)
 sprite icon_clean icons
-.....bb.
-....b..b
-....b..b
-.bb..bb.
-b..b....
-b.Wb..b.
-.bb..b.b
 ......b.
+.....b.b
+.bbb..b.
+b..Wb...
+b...b.b.
+b...b...
+.bbb....
 end
 
+# cruz de farmácia
 sprite icon_medicine icons
-........
-........
-.RRRWWW.
-RWRRWWWW
-RRRRWWWW
-.rrrWWW.
-........
-........
+..GGGG..
+..GWGG..
+GGGGGGGG
+GGGGGGGG
+..GGGG..
+..gggg..
 end
 
+# lua crescente + "z"
 sprite icon_sleep icons
 ..YYY...
-.YY.....
-YY....W.
-YY...WWW
-YY....W.
+.YY..ZZZ
+YY....Z.
+YY...ZZZ
 YY......
 .YY.....
 ..YYY...
 end
 
-sprite icon_status icons
-......G.
-......G.
-...Y..G.
-...Y..G.
-R..Y..G.
-R..Y..G.
-R..Y..G.
-WWWWWWWW
-end
-
-# Ícones compactos: linha 7 reservada aos oito pontos de navegação.
+# coração com brilho
 sprite icon_pet icons
-..P.P...
-.PPPPP..
-..PPP...
-...P....
-........
-........
-........
+.PP.PP.
+PWPPPPP
+PPPPPPP
+.PPPPP.
+..PPP..
+...P...
 end
 
+# barrinhas nas cores das páginas do status (fome, alegria, energia, saúde)
+sprite icon_status icons
+......GG
+......GG
+....Y.GG
+..P.Y.GG
+R.P.Y.GG
+R.P.Y.GG
+end
+
+# seta de voltar (↶): ponta à esquerda, faz a curva e volta por baixo
 sprite icon_back icons
-...W....
-..WW....
-.WWWWWW.
-..WW..W.
-...W..W.
+.W......
+WWWWW...
+.W...W..
 ......W.
-........
+......W.
+.....W..
+.WWWW...
+end
+
+# ------------------------------------------------------------ STATUS (5x5)
+# Uma página por atributo: ícone em cima, barra de 8 LEDs embaixo.
+sprite stat_hunger icons
+...G.
+.RRR.
+RRRWR
+RRRRR
+.RRR.
+end
+
+sprite stat_happy icons
+.P.P.
+PPPPP
+PPPPP
+.PPP.
+..P..
+end
+
+sprite stat_energy icons
+..YY
+.YY.
+YYYY
+.YY.
+YY..
+end
+
+sprite stat_care icons
+..G..
+..G..
+GGGGG
+..G..
+..G..
 end
