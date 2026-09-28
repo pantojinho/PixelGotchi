@@ -5,7 +5,7 @@ window.ART = {
    "W": "#FFFFFF"
   },
   "capy": {
-   "B": "#A85A24",
+   "B": "#BE7828",
    "L": "#F4CA78",
    "D": "#754526",
    "O": "#FF8A00",
@@ -176,9 +176,9 @@ window.ART = {
    "g": "#1C8A2A",
    "C": "#8A4A1E",
    "W": "#FFFFFF",
-   "V": "#9A5CFF",
+   "V": "#B040FF",
    "b": "#7FD8FF",
-   "Y": "#FFD62E",
+   "Y": "#FF8A1A",
    "O": "#FF8A1A",
    "P": "#FF6FA8",
    "Z": "#7FC8FF"
@@ -831,6 +831,58 @@ window.ART = {
    "w": 7,
    "h": 7
   },
+  "capy_sad1": {
+   "pal": "capy",
+   "rows": [
+    "..DL...",
+    "..LDLLD",
+    ".BBLLLD",
+    "BBBTB..",
+    "BBBBB..",
+    ".D..D.."
+   ],
+   "w": 7,
+   "h": 6
+  },
+  "capy_tired0": {
+   "pal": "capy",
+   "rows": [
+    ".......",
+    "..DL...",
+    "..L.LLD",
+    "BBBLLLD",
+    "BBBBB..",
+    ".D..D.."
+   ],
+   "w": 7,
+   "h": 6
+  },
+  "capy_tired1": {
+   "pal": "capy",
+   "rows": [
+    ".......",
+    "..DL...",
+    "..LDLLD",
+    "BBBLLLD",
+    "BBBBB..",
+    ".D..D.."
+   ],
+   "w": 7,
+   "h": 6
+  },
+  "capy_yawn": {
+   "pal": "capy",
+   "rows": [
+    ".......",
+    "..DL...",
+    "..LDLLD",
+    "BBBLL.D",
+    "BBBBB..",
+    ".D..D.."
+   ],
+   "w": 7,
+   "h": 6
+  },
   "cat_idle0": {
    "pal": "cat",
    "rows": [
@@ -940,16 +992,69 @@ window.ART = {
   "cat_sad": {
    "pal": "cat",
    "rows": [
+    ".......",
     "B...B..",
-    "BPBPB..",
+    "BBBBB..",
     "B.B.B..",
     "BTPWB..",
-    ".BWB..B",
-    ".BWB.BB",
+    ".BWB...",
+    ".S.SBBB"
+   ],
+   "w": 7,
+   "h": 7
+  },
+  "cat_sad1": {
+   "pal": "cat",
+   "rows": [
+    ".......",
+    "B...B..",
+    "BBBBB..",
+    "BSBSB..",
+    "BWPWB..",
+    "TBWB...",
     ".S.SBB."
    ],
    "w": 7,
    "h": 7
+  },
+  "cat_tired0": {
+   "pal": "cat",
+   "rows": [
+    "B...B..",
+    "BPBPB..",
+    "B.B.B..",
+    "BWPWB.B",
+    ".BWB.BB",
+    ".S.SBB."
+   ],
+   "w": 7,
+   "h": 6
+  },
+  "cat_tired1": {
+   "pal": "cat",
+   "rows": [
+    "B...B..",
+    "BPBPB..",
+    "BSBSB..",
+    "BWPWB.B",
+    ".BWB.BB",
+    ".S.SBB."
+   ],
+   "w": 7,
+   "h": 6
+  },
+  "cat_yawn": {
+   "pal": "cat",
+   "rows": [
+    "B...B..",
+    "BPBPB..",
+    "BSBSB..",
+    "BWRWB.B",
+    ".BRB.BB",
+    ".S.SBB."
+   ],
+   "w": 7,
+   "h": 6
   },
   "cat_hungry0": {
    "pal": "cat",
@@ -1123,6 +1228,45 @@ window.ART = {
    "w": 6,
    "h": 6
   },
+  "frog_sad1": {
+   "pal": "frog",
+   "rows": [
+    "......",
+    ".G..G.",
+    "GGGGGG",
+    "GDGGDG",
+    "GTGGGG",
+    ".DDDD."
+   ],
+   "w": 6,
+   "h": 6
+  },
+  "frog_tired0": {
+   "pal": "frog",
+   "rows": [
+    ".G..G.",
+    "GGGGGG",
+    "G.GG.G",
+    "DGGGGD",
+    ".DDDD.",
+    "YY..YY"
+   ],
+   "w": 6,
+   "h": 6
+  },
+  "frog_yawn": {
+   "pal": "frog",
+   "rows": [
+    ".G..G.",
+    "GGGGGG",
+    "GDGGDG",
+    "DRRRRD",
+    ".DDDD.",
+    "YY..YY"
+   ],
+   "w": 6,
+   "h": 6
+  },
   "chick_idle0": {
    "pal": "chick",
    "rows": [
@@ -1233,6 +1377,58 @@ window.ART = {
     "..Y..",
     ".YYY.",
     "Y.Y.Y",
+    "YYOYY",
+    ".YOY.",
+    ".O.O."
+   ],
+   "w": 5,
+   "h": 6
+  },
+  "chick_sad1": {
+   "pal": "chick",
+   "rows": [
+    ".....",
+    ".YYY.",
+    "YLYLY",
+    "YYOYY",
+    ".TYY.",
+    ".O.O."
+   ],
+   "w": 5,
+   "h": 6
+  },
+  "chick_tired0": {
+   "pal": "chick",
+   "rows": [
+    ".Y...",
+    ".YYY.",
+    "Y.Y.Y",
+    "YYOYY",
+    ".YYY.",
+    ".O.O."
+   ],
+   "w": 5,
+   "h": 6
+  },
+  "chick_tired1": {
+   "pal": "chick",
+   "rows": [
+    ".Y...",
+    ".YYY.",
+    "YLYLY",
+    "YYOYY",
+    ".YYY.",
+    ".O.O."
+   ],
+   "w": 5,
+   "h": 6
+  },
+  "chick_yawn": {
+   "pal": "chick",
+   "rows": [
+    ".Y...",
+    ".YYY.",
+    "YLYLY",
     "YYOYY",
     ".YOY.",
     ".O.O."
@@ -1370,6 +1566,58 @@ window.ART = {
    "w": 5,
    "h": 6
   },
+  "bunny_sad1": {
+   "pal": "bunny",
+   "rows": [
+    ".....",
+    "WW.WW",
+    "WWWWW",
+    "WGWGW",
+    "WWPWW",
+    "TW.W."
+   ],
+   "w": 5,
+   "h": 6
+  },
+  "bunny_tired0": {
+   "pal": "bunny",
+   "rows": [
+    ".....",
+    "WW.WW",
+    "WWWWW",
+    "W.W.W",
+    "WWPWW",
+    ".W.W."
+   ],
+   "w": 5,
+   "h": 6
+  },
+  "bunny_tired1": {
+   "pal": "bunny",
+   "rows": [
+    ".....",
+    "WW.WW",
+    "WWWWW",
+    "WGWGW",
+    "WWPWW",
+    ".W.W."
+   ],
+   "w": 5,
+   "h": 6
+  },
+  "bunny_yawn": {
+   "pal": "bunny",
+   "rows": [
+    ".....",
+    "WW.WW",
+    "WWWWW",
+    "WGWGW",
+    "WW.WW",
+    ".W.W."
+   ],
+   "w": 5,
+   "h": 6
+  },
   "axo_idle0": {
    "pal": "axo",
    "rows": [
@@ -1474,6 +1722,54 @@ window.ART = {
     "MP.P.PM",
     ".PP.PP.",
     ".LLTLL."
+   ],
+   "w": 7,
+   "h": 5
+  },
+  "axo_sad1": {
+   "pal": "axo",
+   "rows": [
+    ".......",
+    ".MPPPM.",
+    ".PDPDP.",
+    ".PPDPP.",
+    ".TLLLL."
+   ],
+   "w": 7,
+   "h": 5
+  },
+  "axo_tired0": {
+   "pal": "axo",
+   "rows": [
+    ".......",
+    ".MPPPM.",
+    "MP.P.PM",
+    ".PPDPP.",
+    ".LLLLL."
+   ],
+   "w": 7,
+   "h": 5
+  },
+  "axo_tired1": {
+   "pal": "axo",
+   "rows": [
+    ".......",
+    ".MPPPM.",
+    "MPDPDPM",
+    ".PPDPP.",
+    ".LLLLL."
+   ],
+   "w": 7,
+   "h": 5
+  },
+  "axo_yawn": {
+   "pal": "axo",
+   "rows": [
+    ".......",
+    ".MPPPM.",
+    "MPDPDPM",
+    ".PP.PP.",
+    ".LLLLL."
    ],
    "w": 7,
    "h": 5
@@ -1779,9 +2075,9 @@ window.ART = {
    "pal": "icons",
    "rows": [
     ".VVVVVV.",
-    "VVWVVVRV",
-    "VWWWVYVV",
-    "VVWVVVVV",
+    "VV.VVVYV",
+    "V...VGVV",
+    "VV.VVVVV",
     "VVV..VVV",
     "VV....VV"
    ],
@@ -1805,12 +2101,12 @@ window.ART = {
   "icon_medicine": {
    "pal": "icons",
    "rows": [
-    "..GGGG..",
-    "..GWGG..",
-    "GGGGGGGG",
-    "GGGGGGGG",
-    "..GGGG..",
-    "..gggg.."
+    "GGGWWGGG",
+    "GGGWWGGG",
+    "WWWWWWWW",
+    "WWWWWWWW",
+    "GGGWWGGG",
+    "GGGWWGGG"
    ],
    "w": 8,
    "h": 6
@@ -1845,15 +2141,16 @@ window.ART = {
   "icon_status": {
    "pal": "icons",
    "rows": [
-    "......GG",
-    "......GG",
-    "....Y.GG",
-    "..P.Y.GG",
-    "R.P.Y.GG",
-    "R.P.Y.GG"
+    ".......G",
+    ".R.....G",
+    ".R.P...G",
+    ".R.P...G",
+    ".R.P.Y.G",
+    ".R.P.Y.G",
+    ".R.P.Y.G"
    ],
    "w": 8,
-   "h": 6
+   "h": 7
   },
   "icon_back": {
    "pal": "icons",
@@ -1969,9 +2266,11 @@ window.ART = {
    ]
   },
   "capy_sad": {
-   "ms": 800,
+   "ms": 700,
    "frames": [
-    "capy_sad"
+    "capy_sad",
+    "capy_sad",
+    "capy_sad1"
    ]
   },
   "capy_hungry": {
@@ -1979,6 +2278,21 @@ window.ART = {
    "frames": [
     "capy_hungry0",
     "capy_idle0"
+   ]
+  },
+  "capy_tired": {
+   "ms": 450,
+   "frames": [
+    "capy_tired0",
+    "capy_tired1",
+    "capy_tired1",
+    "capy_tired0",
+    "capy_tired1",
+    "capy_tired1",
+    "capy_tired1",
+    "capy_yawn",
+    "capy_yawn",
+    "capy_tired1"
    ]
   },
   "cat_idle": {
@@ -2031,9 +2345,11 @@ window.ART = {
    ]
   },
   "cat_sad": {
-   "ms": 800,
+   "ms": 650,
    "frames": [
-    "cat_sad"
+    "cat_sad",
+    "cat_sad",
+    "cat_sad1"
    ]
   },
   "cat_hungry": {
@@ -2041,6 +2357,21 @@ window.ART = {
    "frames": [
     "cat_hungry0",
     "cat_idle0"
+   ]
+  },
+  "cat_tired": {
+   "ms": 450,
+   "frames": [
+    "cat_tired0",
+    "cat_tired1",
+    "cat_tired1",
+    "cat_tired0",
+    "cat_tired1",
+    "cat_tired1",
+    "cat_tired1",
+    "cat_yawn",
+    "cat_yawn",
+    "cat_tired1"
    ]
   },
   "frog_idle": {
@@ -2091,9 +2422,11 @@ window.ART = {
    ]
   },
   "frog_sad": {
-   "ms": 800,
+   "ms": 700,
    "frames": [
-    "frog_sad"
+    "frog_sad",
+    "frog_sad",
+    "frog_sad1"
    ]
   },
   "frog_hungry": {
@@ -2101,6 +2434,21 @@ window.ART = {
    "frames": [
     "frog_hungry0",
     "frog_idle0"
+   ]
+  },
+  "frog_tired": {
+   "ms": 450,
+   "frames": [
+    "frog_tired0",
+    "frog_blink",
+    "frog_blink",
+    "frog_tired0",
+    "frog_blink",
+    "frog_blink",
+    "frog_blink",
+    "frog_yawn",
+    "frog_yawn",
+    "frog_blink"
    ]
   },
   "chick_idle": {
@@ -2149,9 +2497,11 @@ window.ART = {
    ]
   },
   "chick_sad": {
-   "ms": 800,
+   "ms": 700,
    "frames": [
-    "chick_sad"
+    "chick_sad",
+    "chick_sad",
+    "chick_sad1"
    ]
   },
   "chick_hungry": {
@@ -2159,6 +2509,21 @@ window.ART = {
    "frames": [
     "chick_hungry0",
     "chick_idle0"
+   ]
+  },
+  "chick_tired": {
+   "ms": 450,
+   "frames": [
+    "chick_tired0",
+    "chick_tired1",
+    "chick_tired1",
+    "chick_tired0",
+    "chick_tired1",
+    "chick_tired1",
+    "chick_tired1",
+    "chick_yawn",
+    "chick_yawn",
+    "chick_tired1"
    ]
   },
   "bunny_idle": {
@@ -2208,9 +2573,11 @@ window.ART = {
    ]
   },
   "bunny_sad": {
-   "ms": 800,
+   "ms": 700,
    "frames": [
-    "bunny_sad"
+    "bunny_sad",
+    "bunny_sad",
+    "bunny_sad1"
    ]
   },
   "bunny_hungry": {
@@ -2218,6 +2585,21 @@ window.ART = {
    "frames": [
     "bunny_hungry0",
     "bunny_idle0"
+   ]
+  },
+  "bunny_tired": {
+   "ms": 450,
+   "frames": [
+    "bunny_tired0",
+    "bunny_tired1",
+    "bunny_tired1",
+    "bunny_tired0",
+    "bunny_tired1",
+    "bunny_tired1",
+    "bunny_tired1",
+    "bunny_yawn",
+    "bunny_yawn",
+    "bunny_tired1"
    ]
   },
   "axo_idle": {
@@ -2267,9 +2649,11 @@ window.ART = {
    ]
   },
   "axo_sad": {
-   "ms": 800,
+   "ms": 700,
    "frames": [
-    "axo_sad"
+    "axo_sad",
+    "axo_sad",
+    "axo_sad1"
    ]
   },
   "axo_hungry": {
@@ -2277,6 +2661,21 @@ window.ART = {
    "frames": [
     "axo_hungry0",
     "axo_idle0"
+   ]
+  },
+  "axo_tired": {
+   "ms": 450,
+   "frames": [
+    "axo_tired0",
+    "axo_tired1",
+    "axo_tired1",
+    "axo_tired0",
+    "axo_tired1",
+    "axo_tired1",
+    "axo_tired1",
+    "axo_yawn",
+    "axo_yawn",
+    "axo_tired1"
    ]
   },
   "capy_egg": {
@@ -2420,11 +2819,11 @@ window.ART = {
   "*": "font_heart"
  },
  "ledProfile": {
-  "brightness": 13,
+  "brightness": 5,
   "gamma": 1.6,
   "glareCap": 420,
   "blueGain": 0.8,
-  "minPeak": 3,
+  "minPeak": 2,
   "gammaLut": [
    0,
    0,

@@ -30,7 +30,7 @@ const Rgb C_HUNGER{255, 58, 74};   // comida: vermelho
 const Rgb C_BORED{154, 92, 255};   // brincar: roxo
 const Rgb C_DIRTY{127, 216, 255};  // limpar: azul-claro
 const Rgb C_SICK{62, 214, 76};     // remédio: verde
-const Rgb C_ENERGY{255, 214, 46};  // dormir: amarelo
+const Rgb C_ENERGY{255, 138, 26};  // dormir: amarelo "de LED" (#FF8A1A, escolhido na placa)
 const Rgb C_HAPPY{255, 111, 168};  // alegria: rosa (coração)
 const Rgb C_CARE = C_SICK;         // saúde
 
@@ -41,17 +41,17 @@ int centerCx(int w) { return (MATRIX_W - w) / 2 + w / 2; }
 
 const PetDef &def() { return PETS[sim.s().species % PET_COUNT]; }
 
-void scrollText(const char *str, uint32_t t, int y, Rgb color, uint16_t stepMs = 100) {
+// Cor principal do bicho (1ª cor da paleta), pra escrever o nome dele.
+Rgb petColor() { return rgb(frameAt(*def().idle, 0).pal[1]); }
+
+void scrollText(const char *str, uint32_t t, int y, Rgb color) {
     int w = Canvas::textWidth(str);
     int span = w + MATRIX_W + 2;
-    cv.text(str, MATRIX_W - (int)((t / stepMs) % span), y, color);
+    cv.text(str, MATRIX_W - (int)((t / TEXT_STEP_MS) % span), y, color);
 }
 
-void upperName(const char *src, char *dst, size_t n) {
-    size_t i = 0;
-    for (; src[i] && i + 1 < n; i++) dst[i] = (src[i] >= 'a' && src[i] <= 'z') ? src[i] - 32 : src[i];
-    dst[i] = 0;
-}
+// Quanto dura uma passada completa do texto pela tela.
+uint32_t scrollMs(const char *str) { return (uint32_t)(Canvas::textWidth(str) + MATRIX_W + 2) * TEXT_STEP_MS; }
 
 // ============================================================ cenas
 enum class Scene : uint8_t { Select, Egg, Hatch, Life, Menu, Status, Dead };
@@ -90,12 +90,14 @@ uint32_t lastPlayAt = 0;
 bool playedOnce = false;
 bool gestureSleep = false;
 bool nightFrame = false; // quadro atual é de "luz apagada" (brilho mínimo)
+uint32_t lastInputAt = 0; // último clique/gesto (cansado + muito tempo sem isso = dorme)
 
 // ---- menu / status
 const Sprite *const MENU_ICONS[] = {&SPR_icon_food, &SPR_icon_play, &SPR_icon_clean,
                                     &SPR_icon_medicine, &SPR_icon_sleep, &SPR_icon_pet,
                                     &SPR_icon_status, &SPR_icon_back};
 constexpr uint8_t MENU_COUNT = sizeof(MENU_ICONS) / sizeof(MENU_ICONS[0]);
+constexpr uint8_t MENU_STATUS = 6;
 uint8_t menuIdx = 0;
 uint32_t menuAt = 0;
 uint8_t statusPage = 0;
@@ -247,6 +249,7 @@ void updateBehavior(uint32_t now) {
         stepToward(minCx(), now, 400);
         return;
     }
+    if (s.energy < NEED_LOW) return; // cansado demais pra passear: fica onde está
 
     switch (beh) {
         case Beh::Walk:
@@ -281,22 +284,33 @@ void drawPoop(uint32_t now, int sweepX = -1) {
     }
 }
 
-void drawHungerBubble(uint32_t now) {
-    // A comida aparece entre poses: nunca por cima do rosto em 64 LEDs.
-    if ((now % 3600) >= 700) return;
-    cv.clear();
-    const Sprite &f = *def().food;
-    cv.blit(f, (MATRIX_W - f.w) / 2, (MATRIX_H - f.h) / 2);
+// Item do menu que resolve a necessidade mais urgente, ou -1 se está tudo bem.
+// Mesma ordem do item sugerido (segurar o BOOT já abre nele).
+int urgentNeed() {
+    if (!sim.needsAttention()) return -1;
+    const PetState &s = sim.s();
+    if (s.sick) return 3;
+    if (s.poop) return 2;
+    if (s.hunger < NEED_LOW) return 0;
+    if (s.energy < NEED_LOW) return 4;
+    return 1;
 }
 
-// Pontinho piscando no canto: "preciso de algo". A cor é a do ícone do menu
-// que resolve, na mesma ordem do item sugerido (segurar o BOOT já abre nele).
-void drawAlert(uint32_t now) {
-    if (!sim.needsAttention() || !((now / 700) % 2)) return;
-    const PetState &s = sim.s();
-    Rgb c = s.sick ? C_SICK : s.poop ? C_DIRTY : s.hunger < NEED_LOW ? C_HUNGER
-          : s.energy < NEED_LOW ? C_ENERGY : C_BORED;
-    cv.set(7, 0, c);
+// Pedido de ajuda, em dois jeitos:
+//  - de tempos em tempos a tela mostra o ícone do menu que resolve
+//    (entre poses: nunca por cima do rosto em 64 LEDs);
+//  - no resto do tempo, um pontinho pisca no canto com a cor desse ícone.
+void drawNeed(uint32_t now) {
+    static const Rgb COLORS[] = {C_HUNGER, C_BORED, C_DIRTY, C_SICK, C_ENERGY};
+    int need = urgentNeed();
+    if (need < 0) return;
+    if ((now % NEED_BUBBLE_EVERY_MS) < NEED_BUBBLE_MS) {
+        cv.clear();
+        const Sprite &icon = *MENU_ICONS[need];
+        cv.blit(icon, (MATRIX_W - icon.w) / 2, (MATRIX_H - icon.h) / 2);
+        return;
+    }
+    if ((now / 700) % 2) cv.set(7, 0, COLORS[need]);
 }
 
 void drawRising(const Sprite &s, int x, uint32_t t, uint16_t period, int from = 2) {
@@ -388,13 +402,10 @@ void drawLife(uint32_t now) {
 
     if (s.sick) {
         drawPet(*d.sad, now, petX, 7, now);
-        if ((now % 3600) < 700) {
-            cv.clear();
-            cv.blit(SPR_fx_sick, 2, 2);
-        }
     } else if (s.hunger < NEED_LOW) {
         drawPet(*d.hungry, now, petX, 7, now);
-        drawHungerBubble(now);
+    } else if (s.energy < NEED_LOW) {
+        drawPet(*d.tired, now, petX, 7, now); // cabeceando: ou você põe pra dormir, ou ele cochila
     } else if (s.happy < NEED_LOW) {
         drawPet(*d.sad, now, petX, 7, now);
     } else {
@@ -421,7 +432,7 @@ void drawLife(uint32_t now) {
         }
     }
     drawPoop(now);
-    drawAlert(now);
+    drawNeed(now);
 }
 
 // ============================================================ cenas: lógica + desenho
@@ -527,6 +538,9 @@ void sceneHatch(uint32_t now) {
     const Sprite &egg = SPR_egg3;
     const int ex = centerCx(egg.w) - egg.w / 2, ey = MATRIX_H - egg.h; // canto do ovo
     petX = centerCx(idleW());
+    char name[16];
+    sim.dna().name(name, sizeof(name));
+    const uint32_t nameMs = scrollMs(name);
 
     if (t < 1600) {
         // 1) tremendo cada vez mais rápido e brilhando
@@ -558,6 +572,10 @@ void sceneHatch(uint32_t now) {
         // 5) comemoração
         drawPet(*d.happy, t, petX, 7 - (int)((t / 250) % 2), now);
         sparkles(t, 8);
+    } else if (t < 5200 + nameMs) {
+        // 6) se apresenta: o nome próprio passa rolando na cor dele
+        scrollText(name, t - 5200, 1, petColor());
+        sparkles(t, 3);
     } else {
         sim.hatch();
         petX = centerCx(idleW());
@@ -661,8 +679,37 @@ void sceneLife(uint32_t now, Ev e) {
         default: break;
     }
 
+    // Cansado e sozinho: dorme por conta própria (e recupera até acordar cheio).
+    if (!s.asleep && act == Act::None && s.energy < NEED_LOW && now - lastInputAt > AUTO_SLEEP_IDLE_MS &&
+        sim.lightsOff() == Result::Ok) {
+        gestureSleep = false;
+        Serial.println("[Game] cansado e sozinho: dormiu");
+    }
+
     if (act == Act::None && !s.asleep) updateBehavior(now);
     drawLife(now);
+}
+
+// Os quatro atributos do status, na ordem das páginas (e das barrinhas do ícone).
+struct StatusPage { const Sprite *icon; const char *label; uint8_t v; Rgb c; };
+StatusPage statusPageInfo(uint8_t page) {
+    const PetState &s = sim.s();
+    switch (page) {
+        case 0: return {&SPR_stat_hunger, "COMIDA", s.hunger, C_HUNGER};
+        case 1: return {&SPR_stat_happy, "ALEGRIA", s.happy, C_HAPPY};
+        case 2: return {&SPR_stat_energy, "ENERGIA", s.energy, C_ENERGY};
+        default: return {&SPR_stat_care, s.sick ? "DOENTE" : s.poop ? "SUJO" : "SAUDE", sim.care(), C_CARE};
+    }
+}
+
+// Ícone do status "ao vivo": uma barrinha por atributo, na cor da página dele
+// (comida, alegria, energia, saúde) e com a altura do valor atual.
+void drawStatusIcon() {
+    for (uint8_t i = 0; i < 4; i++) {
+        const StatusPage p = statusPageInfo(i);
+        int h = (p.v * 7 + 99) / 100; // 1..7 linhas; zero fica apagado
+        for (int y = 0; y < 7; y++) cv.set(1 + i * 2, y, 6 - y < h ? p.c : Rgb{0, 0, 0});
+    }
 }
 
 void sceneMenu(uint32_t now, Ev e) {
@@ -678,32 +725,47 @@ void sceneMenu(uint32_t now, Ev e) {
         return;
     }
     const Sprite &icon = *MENU_ICONS[menuIdx];
-    cv.blit(icon, (MATRIX_W - icon.w) / 2, (MATRIX_H - 1 - icon.h) / 2);
+    if (menuIdx == MENU_STATUS) drawStatusIcon();
+    else cv.blit(icon, (MATRIX_W - icon.w) / 2, (MATRIX_H - 1 - icon.h) / 2);
     for (uint8_t i = 0; i < MENU_COUNT; i++) cv.set(i, 7, i == menuIdx ? C_WHITE : C_DIM);
 }
 
-// Status em páginas: ícone do atributo em cima e barra de 8 LEDs embaixo
-// (fome, alegria, energia, saúde), depois a idade rolando. Passa sozinho;
-// clique adianta, segurar sai.
+// Status em páginas: primeiro o nome do bicho; depois uma página por atributo,
+// com barra de 8 LEDs embaixo e, em cima, o ícone seguido do nome rolando
+// (COMIDA, ALEGRIA, ENERGIA, SAUDE — ou DOENTE/SUJO); por fim a idade.
+// Passa sozinho; clique adianta, segurar sai.
 constexpr uint8_t STATUS_BARS = 4;
-constexpr uint16_t STATUS_PAGE_MS = 2200;
+constexpr uint8_t STATUS_NAME_PAGE = 0, STATUS_AGE_PAGE = STATUS_BARS + 1;
+constexpr uint16_t STATUS_ICON_MS = 1000;
 
-uint32_t statusAgeMs(char *buf, size_t n) {
-    uint16_t days = sim.ageDays();
-    snprintf(buf, n, "%u %s%s", days, days == 1 ? "DIA" : "DIAS", sim.s().wild ? " SELVAGEM" : "");
-    return (uint32_t)(Canvas::textWidth(buf) + MATRIX_W + 2) * 100; // uma passada do texto
+uint32_t statusBarMs(const char *label) {
+    return STATUS_ICON_MS + scrollMs(label);
 }
+
+// Texto das páginas de nome/idade; devolve quanto dura uma passada dele.
+uint32_t statusText(uint8_t page, char *buf, size_t n) {
+    if (page == STATUS_NAME_PAGE) {
+        sim.dna().name(buf, n);
+    } else {
+        uint16_t days = sim.ageDays();
+        snprintf(buf, n, "%u %s%s", days, days == 1 ? "DIA" : "DIAS", sim.s().wild ? " SELVAGEM" : "");
+    }
+    return scrollMs(buf);
+}
+
+bool statusIsBar(uint8_t page) { return page > STATUS_NAME_PAGE && page < STATUS_AGE_PAGE; }
 
 void sceneStatus(uint32_t now, Ev e) {
     uint32_t t = now - sceneAt;
     char buf[32];
-    uint32_t pageMs = statusPage < STATUS_BARS ? STATUS_PAGE_MS : statusAgeMs(buf, sizeof(buf));
+    uint32_t pageMs = statusIsBar(statusPage) ? statusBarMs(statusPageInfo(statusPage - 1).label)
+                                              : statusText(statusPage, buf, sizeof(buf));
     if (e == Ev::Long) {
         go(Scene::Life);
         return;
     }
     if (e == Ev::Short || (!Input::heldMs() && t > pageMs)) {
-        if (++statusPage > STATUS_BARS) {
+        if (++statusPage > STATUS_AGE_PAGE) {
             go(Scene::Life);
             return;
         }
@@ -711,22 +773,21 @@ void sceneStatus(uint32_t now, Ev e) {
         t = 0;
     }
     const PetState &s = sim.s();
-    if (statusPage < STATUS_BARS) {
-        struct Page { const Sprite *icon; uint8_t v; Rgb c; };
-        const Page pages[STATUS_BARS] = {{&SPR_stat_hunger, s.hunger, C_HUNGER},
-                                         {&SPR_stat_happy, s.happy, C_HAPPY},
-                                         {&SPR_stat_energy, s.energy, C_ENERGY},
-                                         {&SPR_stat_care, sim.care(), C_CARE}};
-        const Page &p = pages[statusPage];
-        // Atributo baixo: o ícone pisca pedindo atenção.
-        if (p.v >= NEED_LOW || (now / 300) % 2) cv.blit(*p.icon, (MATRIX_W - p.icon->w) / 2, 0);
+    if (statusIsBar(statusPage)) {
+        const StatusPage p = statusPageInfo(statusPage - 1);
+        // Atributo baixo: o ícone pisca pedindo atenção. Depois entra o nome.
+        if (t >= STATUS_ICON_MS) scrollText(p.label, t - STATUS_ICON_MS, 0, p.c);
+        else if (p.v >= NEED_LOW || (now / 300) % 2) cv.blit(*p.icon, (MATRIX_W - p.icon->w) / 2, 0);
         // A barra "enche" na entrada da página, como um medidor.
         int full = (p.v * MATRIX_W + 50) / 100;
         int len = t < 400 ? full * (int)t / 400 : full;
         for (int x = 0; x < MATRIX_W; x++)
             for (int y = 6; y < MATRIX_H; y++) cv.set(x, y, x < len ? p.c : dim(p.c, 30));
+    } else if (statusPage == STATUS_NAME_PAGE) {
+        statusText(statusPage, buf, sizeof(buf));
+        scrollText(buf, t, 1, s.wild ? Rgb{200, 160, 90} : petColor());
     } else {
-        statusAgeMs(buf, sizeof(buf));
+        statusText(statusPage, buf, sizeof(buf));
         scrollText(buf, t, 1, s.wild ? Rgb{200, 160, 90} : C_WHITE);
     }
 }
@@ -737,16 +798,17 @@ void sceneDead(uint32_t now, Ev e) {
         go(Scene::Select);
         return;
     }
-    uint32_t p = (now - sceneAt) % 9000;
+    // Lápide com fantasminha por 6 s, depois "RIP <nome>" passa uma vez.
+    char name[16], buf[24];
+    sim.dna().name(name, sizeof(name));
+    snprintf(buf, sizeof(buf), "RIP %s", name);
+    uint32_t p = (now - sceneAt) % (6000 + scrollMs(buf));
     if (p < 6000) {
         cv.blit(SPR_grave, 0, 3);
         int bob = ((now / 600) % 2) ? 1 : 0;
         cv.blit(frame(ANIM_ghost, now), 3, bob);
     } else {
-        char name[16], buf[24];
-        upperName(def().name, name, sizeof(name));
-        snprintf(buf, sizeof(buf), "RIP %s", name);
-        scrollText(buf, p - 6000, 1, {200, 210, 230}, 90);
+        scrollText(buf, p - 6000, 1, {200, 210, 230});
     }
 }
 
@@ -776,6 +838,8 @@ void enterFromSaved() {
 
 uint32_t lastFrame = 0;
 uint32_t lastLog = 0;
+uint32_t swatch[4];
+uint32_t swatchUntil = 0;
 
 } // namespace
 
@@ -786,8 +850,10 @@ void begin() {
     lastEggMs = millis();
     enterFromSaved();
     const PetState &s = sim.s();
-    Serial.printf("[Game] fase=%d bicho=%s dna=%08lx fome=%u alegria=%u energia=%u idade=%lu min\n",
-                  (int)s.phase, def().name, (unsigned long)s.dna, s.hunger, s.happy, s.energy,
+    char name[16];
+    sim.dna().name(name, sizeof(name));
+    Serial.printf("[Game] fase=%d bicho=%s nome=%s dna=%08lx fome=%u alegria=%u energia=%u idade=%lu min\n",
+                  (int)s.phase, def().name, name, (unsigned long)s.dna, s.hunger, s.happy, s.energy,
                   (unsigned long)s.ageMin);
 }
 
@@ -796,6 +862,7 @@ void update() {
     sim.update();
 
     Ev e = Events::pop();
+    if (e != Ev::None) lastInputAt = now;
     // O gesto de desvirar também funciona enquanto um menu está aberto.
     if (e == Ev::FaceUp && gestureSleep) {
         if (sim.s().asleep) sim.wakeUp();
@@ -819,6 +886,12 @@ void update() {
     lastFrame = now;
 
     cv.clear();
+    if ((int32_t)(swatchUntil - now) > 0) {
+        for (int y = 0; y < MATRIX_H; y++)
+            for (int x = 0; x < MATRIX_W; x++) cv.set(x, y, rgb(swatch[(y >= 4) * 2 + (x >= 4)]));
+        Display::show(cv, false);
+        return;
+    }
     nightFrame = false;
     switch (scene) {
         case Scene::Select: sceneSelect(now, e); break;
@@ -839,6 +912,11 @@ void update() {
                       s.hunger, s.happy, s.energy, s.poop, s.sick, s.asleep, s.neglect, s.wild,
                       (unsigned long)s.ageMin);
     }
+}
+
+void showSwatches(const uint32_t colors[4], uint32_t ms) {
+    memcpy(swatch, colors, sizeof(swatch));
+    swatchUntil = millis() + ms;
 }
 
 } // namespace Game

@@ -196,3 +196,17 @@ o que falta depende da peça física:
 | Variante em formato de ovo (estilo Tamagotchi) | Ideia futura |
 | **Primeira release no GitHub** (após aprovação) | Pacote pronto: `python tools/package_release.py v0.1.0` gera `dist/PixelGochi-v0.1.0.zip` (imagem única + binários com offsets do build, STLs, `SHA256SUMS.txt`, notas de [docs/releases/v0.1.0.md](releases/v0.1.0.md)). Falta: aprovação, criar a tag `v0.1.0` e publicar a release com o zip anexado (o `gh` não está instalado; dá pela página de Releases do GitHub) |
 | Ensaiar os dois jeitos de gravar do pacote na placa real | "Do zero" com a imagem única (apaga o pet) e "atualizar" gravando só `firmware.bin` em 0x10000 (deve manter o pet) |
+
+## Pendências: vida, menu e individualidade
+
+| Pendência | Por quê / como fechar |
+|---|---|
+| Conferir na placa brilho 5, ícones novos, status com nomes e pose de cansado | Ajustado pelo relato do uso real; só dá pra aprovar olhando os LEDs |
+| Amarelos dos bichos (pintinho, tangerina, brilhinhos) podem parecer esverdeados no LED | A interface usa o amarelo escolhido na placa (#FF8A1A). Testar o pintinho (#FFD62E) com o comando `cores` e puxar a paleta dele também se preciso |
+| Preview web mostra o amarelo "de LED" como laranja | O olho vê o verde do LED mais forte do que o monitor mostra; um ganho de verde só no preview poderia aproximar, mas precisa comparar com a placa (rosa não pode virar salmão) |
+| Pintinho feliz (asas abertas, 7 px) corta na beirada da tela | Mais largo que o idle (5 px); ao pular no canto perde uma asa. Limitar `petX` pela largura do frame atual ou afinar o sprite |
+| Orientação 360° | Girar o "chão" conforme a placa gira (90°/180°/270°) e cambalhota/tontura ao virar de ponta-cabeça |
+| DNA visível | Manchas/listras/cor de olho por indivíduo e personalidade com nome (brincalhão, preguiçoso, medroso) mudando animações |
+| Letrinhas no ar | Bicho "fala" soltando letras que sobem ("OI", "?", "FOME", "♥"), com jeito próprio por personalidade |
+| Reações extras ao sensor | Sacudir forte = tontura; toque na placa = olha pra você e pula |
+| Minijogo | Comida caindo do topo; inclinar pra ele pegar |

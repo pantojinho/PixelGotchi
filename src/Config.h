@@ -26,7 +26,13 @@ constexpr bool DISPLAY_MIRROR_X = false;
 constexpr uint8_t MAX_BRIGHTNESS = LedProfile::BRIGHTNESS; // 18/255; art/led-profile.json
 constexpr uint16_t MAX_MILLIAMPS = 400;  // matriz inteira, a 5V
 constexpr uint16_t FRAME_MS = 20;        // ~50 fps
-constexpr uint8_t NIGHT_LEVEL = 1;       // dormindo: cada LED aceso no menor degrau visível
+// Dormindo: cada LED aceso vai pra esse degrau (o mais baixo que ainda dá
+// pra ver). Em 1, só o canal mais forte de cada cor sobrevive ao
+// arredondamento — qualquer marrom/laranja vira vermelho puro, sem jeito de
+// escolher uma cor que escape disso. Em 2, um canal secundário com pelo
+// menos ~1/4 do canal principal ainda aparece, o suficiente pra reconhecer
+// o tom (ainda bem mais escuro que acordado).
+constexpr uint8_t NIGHT_LEVEL = 2;
 
 // ============================================================ BOTÃO
 constexpr uint16_t BUTTON_DEBOUNCE_MS = 25;
@@ -61,7 +67,10 @@ constexpr uint32_t INCUBATION_IDLE_GRACE_MS = 15UL * 1000UL;
 constexpr uint8_t HUNGER_EVERY_MIN = 4;     // -1 de saciedade
 constexpr uint8_t HAPPY_EVERY_MIN = 5;      // -1 de alegria
 constexpr uint8_t ENERGY_EVERY_MIN = 6;     // -1 de energia acordado
-constexpr uint8_t SLEEP_GAIN_EVERY_MIN = 2; // +1 de energia dormindo
+constexpr uint8_t SLEEP_GAIN_EVERY_MIN = 1; // +1 de energia dormindo (0→100 em ~1h40)
+// Cansado (energia < NEED_LOW) e ninguém brinca com ele (sem clique nem gesto)
+// por esse tempo: pega no sono sozinho. Só segurar a placa não o mantém acordado.
+constexpr uint32_t AUTO_SLEEP_IDLE_MS = 30000;
 constexpr uint16_t POOP_MIN_MIN = 90;       // intervalo entre cocôs (aleatório)
 constexpr uint16_t POOP_MAX_MIN = 150;
 constexpr uint8_t POOP_MAX = 3;
@@ -83,7 +92,10 @@ constexpr uint8_t PLAY_GAIN = 20;
 constexpr uint8_t PLAY_ENERGY_COST = 8;
 constexpr uint8_t PET_GAIN = 5;             // carinho no menu
 constexpr uint16_t PLAY_COOLDOWN_MS = 5000; // sacudidas repetidas não gastam energia em sequência
+constexpr uint16_t TEXT_STEP_MS = 150;      // texto rolando: ms por coluna (maior = mais devagar)
 constexpr uint8_t NEED_LOW = 25;            // abaixo disso o bicho reclama
+constexpr uint16_t NEED_BUBBLE_EVERY_MS = 4000; // a cada 4 s mostra o ícone do que precisa...
+constexpr uint16_t NEED_BUBBLE_MS = 900;        // ...por 0,9 s
 
 constexpr uint32_t SAVE_EVERY_MS = 5UL * 60UL * 1000UL;
 constexpr uint16_t MENU_TIMEOUT_MS = 8000;

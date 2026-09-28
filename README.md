@@ -38,7 +38,8 @@ A galeria permite conferir as poses de cada espécie antes de gravar a placa.
 
 Capivara, gato, sapo, pintinho, coelho e axolote. Cada espécie tem
 animações de descanso, caminhada, piscar, comer, dormir, felicidade,
-tristeza e fome, além de uma paleta de ovo e uma variante selvagem.
+tristeza (a lágrima escorre), fome e cansaço (cabeceando e bocejando),
+além de uma paleta de ovo e uma variante selvagem.
 
 - **Gato:** sentado, orelhas triangulares com interior rosa, olhos
   apagados, focinho e peito creme, patas e cauda que se mexe.
@@ -50,6 +51,11 @@ tristeza e fome, além de uma paleta de ovo e uma variante selvagem.
   mais baixa e reduz o brilho.
 - A capivara descansa e fareja mais; o gato observa e persegue mais.
   O DNA continua variando personalidade e tonalidade de cada indivíduo.
+- Cada bicho tem um **nome próprio** tirado do DNA (ex.: KALU, MOBITE).
+  Ele se apresenta ao nascer, abre a tela de status e vai na lápide.
+- Cansado (energia < 25), ele fica parado cabeceando. Se ninguém clicar
+  nem fizer um gesto por 30 s, dorme sozinho; dormindo recupera 1 de
+  energia por minuto e acorda sozinho quando enche.
 
 Os desenhos são originais, feitos diretamente na grade de pixels.
 Referências de forma: [perfil de capivara (WWF)](https://www.wwf.or.jp/staffblog/news/5510.html)
@@ -77,7 +83,7 @@ pode soltar. A ação longa só acontece ao soltar o botão.
 | Vida | Incline lateralmente | O pet acompanha o lado mais baixo |
 | Vida | Vire a matriz para baixo por 1,5 s | Dorme |
 | Sono iniciado pelo gesto | Desvire | Acorda; o sono escolhido no menu continua até BOOT/menu ou energia cheia |
-| Status | Espere ou clique | Fome → alegria → energia → saúde → idade → volta ao pet |
+| Status | Espere ou clique | Nome → comida → alegria → energia → saúde → idade → volta ao pet |
 | Status | Segure BOOT por 0,6 s e solte | Volta ao pet na hora |
 | Qualquer cena | Segure BOOT por 8 s | Recomeça na seleção; barra vermelha a partir de 3 s |
 | Após a morte | Segure BOOT por 0,6 s e solte | Recomeça na seleção |
@@ -90,15 +96,17 @@ barras · voltar (branco)**. O ponto branco na última linha indica a posição.
 O menu fecha após 8 s sem entrada. Sem IMU, todos os cuidados continuam
 acessíveis pelo BOOT.
 
-**Pontinho piscando no canto superior direito** = o bicho precisa de algo.
-A cor é a do ícone que resolve: verde doente, azul-claro sujo, vermelho
-fome, amarelo cansado, roxo entediado/triste. Segurar o BOOT abre o menu
-já nesse ícone.
+**Quando o bicho precisa de algo**, a cada 4 s a tela mostra por um
+instante o ícone do menu que resolve. No resto do tempo, um pontinho pisca
+no canto superior direito com a cor desse ícone: verde doente, azul-claro
+sujo, vermelho fome, amarelo cansado, roxo entediado/triste. Segurar o BOOT
+abre o menu já nesse ícone.
 
-**Status**: uma página por atributo, com o ícone em cima e uma barra de
-8 LEDs embaixo: maçã = fome (cheia = satisfeito), coração = alegria,
-raio = energia, cruz = saúde (cai quando você descuida). Ícone piscando =
-atributo baixo. Depois passa a idade em dias.
+**Status**: primeiro passa o nome do bicho. Depois vem uma página por
+atributo: ícone em cima, barra de 8 LEDs embaixo e o nome escrito rolando.
+COMIDA cheia = satisfeito, ALEGRIA, ENERGIA e SAUDE (vira DOENTE ou SUJO
+quando for o caso; cai quando você descuida). Ícone piscando = atributo
+baixo. Por fim, a idade em dias.
 
 O menu sugere acordar se estiver dormindo; caso contrário, prioriza doença,
 sujeira, fome, cansaço e tristeza. Quando está tudo bem, sugere carinho.
@@ -182,11 +190,12 @@ Veja também a [referência oficial da Waveshare](https://docs.waveshare.com/ESP
 
 | Componente | Pinos |
 |---|---|
-| 64 LEDs WS2812B | GPIO14 |
+| 64 LEDs WS2812B, ordem de cor **RGB** (não o GRB comum) | GPIO14 |
 | QMI8658, I²C | SDA GPIO11, SCL GPIO12 |
 | BOOT | GPIO0 |
 
-O firmware limita o brilho a **13/255** (antes 30, depois 18), a corrente da matriz
+O firmware limita o brilho a **5/255** (antes 30, 18 e 13: com mais brilho as
+cores vizinhas "sangram" e ficam difíceis de separar), a corrente da matriz
 a **400 mA** e usa FastLED **3.6.0**, com driver RMT e sem dithering temporal.
 A Waveshare informa que brilho excessivo aquece e pode danificar a placa.
 

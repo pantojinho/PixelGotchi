@@ -23,7 +23,10 @@ uint16_t physicalIndex(uint8_t x, uint8_t y) {
 namespace Display {
 
 void begin() {
-    FastLED.addLeds<WS2812B, PIN_MATRIX_DATA, GRB>(leds, MATRIX_W * MATRIX_H);
+    // Ordem RGB: os LEDs desta placa (Waveshare ESP32-S3-Matrix) recebem
+    // vermelho primeiro, não o GRB comum dos WS2812. Com GRB, vermelho e
+    // verde saem trocados (rosa vira ciano, amarelo vira verde).
+    FastLED.addLeds<WS2812B, PIN_MATRIX_DATA, RGB>(leds, MATRIX_W * MATRIX_H);
     FastLED.setBrightness(MAX_BRIGHTNESS);
     // Limite de corrente: se o quadro pedir mais que isso, o FastLED
     // reduz o brilho antes de mandar pro fio.

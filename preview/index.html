@@ -37,7 +37,7 @@
 <p class="sub">Simulação da matriz 8×8 WS2812B. Os sprites vêm de <code>art/*.art</code> via <code>tools/gen_art.py</code> — os mesmos dados que vão pro firmware. As <b>cenas</b> são uma maquete de como o jogo compõe bicho + comida + efeitos. Clique numa matriz pra ampliar.</p>
 <div class="controls">
   <label>Modo <select id="mode"><option value="led">LED (simulado)</option><option value="flat">Cores de design</option></select></label>
-  <label>Brilho <input id="bright" type="range" min="1" max="30" value="18"><span id="brightV">18</span></label>
+  <label>Brilho <input id="bright" type="range" min="1" max="30" value="5"><span id="brightV">5</span></label>
   <span>Ver: <a href="?">tudo</a> · <a href="?view=scenes">só cenas</a> · <a href="?view=sprites">todos os frames</a></span>
 </div>
 <section id="demo" aria-label="Experimentar os controles">
@@ -131,7 +131,9 @@ const animFrame = (name, t) => { const a = A.anims[name]; return a.frames[Math.f
 const spriteW = ref => frameRef(ref).s.w;
 
 // Mesma LUT e scale8 fixo do firmware/FastLED 3.6.0, sem dithering.
-// Referência visual fixa: baixar brilho também escurece o preview.
+// Referência visual = brilho do perfil (o da placa): no máximo o LED aparece
+// aceso de verdade na tela, como o olho vê o LED real (mesmo a 5/255 ele é
+// forte). Baixar o controle abaixo disso escurece o preview.
 // A potência 0.55 só aproxima a percepção no monitor; não vai para a placa.
 // Brilho por cor: espelha LedProfile::color() (gama, azul atenuado, teto de
 // ofuscamento R+G+B, piso das cores escuras) gerado de art/led-profile.json.
@@ -149,7 +151,8 @@ function ledColor(rgb) {
   if (mode === 'flat') return rgb;
   const out = profileColor(rgb).map(v => Math.floor(v * (bright + 1) / 256));
   if (out.every(v => v === 0)) return null;
-  return out.map(v => Math.round(255 * Math.pow(Math.min(1, v / 30), 0.55)));
+  const ref = A.ledProfile.brightness;
+  return out.map(v => Math.round(255 * Math.pow(Math.min(1, v / ref), 0.55)));
 }
 
 function drawBuf(ctx, buf, cell) {
@@ -209,6 +212,7 @@ function scenes(pet) {
       }
       return b;
     },
+    'cansado': t => { const b = newBuf(); blitA(b, animFrame(id + '_tired', t), 3, 7); return b; },
     'dormindo': t => {
       const b = newBuf();
       blitA(b, animFrame(id + '_sleep', t), 3, 7);

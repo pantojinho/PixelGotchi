@@ -68,6 +68,7 @@ CRGB ledOutput(Rgb color, bool night = false) {
 int luminance(CRGB c) { return (54 * c.r + 183 * c.g + 19 * c.b); }
 void testLedContrast() {
     assert(FastLED.brightness == LedProfile::BRIGHTNESS && FastLED.count == 64);
+    assert(FastLED.order == RGB); // conferido na placa: com GRB o vermelho sai verde
     assert(FastLED.volts == 5 && FastLED.milliamps == 400 && FastLED.dither == 0);
     assert(LedProfile::channel(0) == 0 && LedProfile::channel(255) == 255);
     for (int i = 1; i < 256; i++) assert(LedProfile::channel(i) >= LedProfile::channel(i - 1));
@@ -89,7 +90,7 @@ void testLedContrast() {
         const Rgb body = capy.get(0, 5), muzzle = capy.get(4, 3), nose = capy.get(6, 3);
         CRGB b = ledOutput(body), m = ledOutput(muzzle), n = ledOutput(nose);
         assert(luminance(m) >= 2 * luminance(b));
-        assert(luminance(b) > luminance(n) && n.r >= 3);
+        assert(luminance(b) >= luminance(n) && n.r >= LedProfile::MIN_PEAK);
         // Dormindo: tudo no degrau mínimo, mas nada some.
         CRGB night = ledOutput(nose, true), nightBody = ledOutput(body, true);
         assert(night.r == NIGHT_LEVEL && nightBody.r == NIGHT_LEVEL);
@@ -158,6 +159,15 @@ int main() {
     dispatch(Ev::Short); assert(menuIdx == 5);
     tiltValue = 0; testMs += MENU_TIMEOUT_MS + 1; Game::update(); assert(scene == Scene::Life);
 
+    // Cansado e sem clique/gesto por 30 s: dorme sozinho. Descansado, não.
+    alive(); PetState tired = sim.s(); tired.energy = 10;
+    Storage::save(&tired, sizeof(tired)); sim.begin();
+    lastInputAt = testMs; testMs += AUTO_SLEEP_IDLE_MS - 1000; Game::update();
+    assert(!sim.s().asleep);
+    testMs += 2000; Game::update(); assert(sim.s().asleep);
+    alive(); lastInputAt = testMs; testMs += AUTO_SLEEP_IDLE_MS + 1000; Game::update();
+    assert(!sim.s().asleep);
+
     // Segurar no menu não confirma cuidados antes do reset.
     alive(); dispatch(Ev::Long); menuIdx = 0;
     down(); advance(8000); Game::update();
@@ -168,10 +178,17 @@ int main() {
     testMs += 1000; Game::update(); assert(sim.s().incubationMs == 0);
 
     // As poses cabem sem clipping; boca e patas sobrevivem à alimentação.
+    // Triste e cansado (poses paradas, em qualquer ponto) nunca são mais largos que o idle.
+    for (uint8_t species = 0; species < PET_COUNT; species++) {
+        const PetDef &d = PETS[species];
+        const Anim *still[] = {d.sad, d.tired};
+        for (const Anim *a : still)
+            for (uint8_t i = 0; i < a->count; i++) assert(a->frames[i]->w <= d.idle->frames[0]->w);
+    }
     for (uint8_t species = 0; species < 2; species++) {
         alive(species);
         const PetDef &d = def();
-        const Anim *poses[] = {d.idle, d.blink, d.walk, d.eat, d.sleep, d.happy, d.sad, d.hungry};
+        const Anim *poses[] = {d.idle, d.blink, d.walk, d.eat, d.sleep, d.happy, d.sad, d.hungry, d.tired};
         const int positions[] = {minCx(), maxCx()};
         for (const Anim *a : poses) {
             for (uint8_t i = 0; i < a->count; i++) {

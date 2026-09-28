@@ -10,8 +10,10 @@
 #
 # Vocabulário de expressões (igual pra todos, pra ficar legível):
 #   feliz   = olhos fechadinhos + boca/bochecha colorida
-#   triste  = lágrima azul (T) embaixo do olho + orelhas/brânquias caídas
+#   triste  = lágrima azul (T) embaixo do olho + orelhas/brânquias caídas;
+#             no 2º frame fecha os olhos e a lágrima escorre
 #   fome    = boca aberta (buraco) + babinha azul (T)
+#   cansado = cabeça/orelhas baixas, piscadas lentas e bocejo (em pé, sem Zzz)
 #   dormindo= olhos fechados, corpo mais baixo (os Zzz vêm do código)
 
 # ------------------------------------------------------------ CAPIVARA
@@ -19,7 +21,11 @@
 # na ponta; o recorte abaixo da mandíbula separa a cabeça do corpo.
 # Orelha pequena atrás do olho; no "feliz" ganha a tangerina na cabeça.
 palette capy
-  B #A85A24
+  # Corpo: marrom mais claro que o "de tela" (#A85A24) de propósito. No
+  # brilho 5/255 só sobram ~6 degraus por canal; um marrom escuro satura
+  # o vermelho e zera o verde, virando quase vermelho puro. Escolhido
+  # comparando candidatos direto na placa.
+  B #BE7828
   L #F4CA78
   D #754526
   O #FF8A00
@@ -133,14 +139,54 @@ BBBBB..
 D....D.
 end
 
+# triste: fecha o olho e a lágrima escorre pela bochecha
+sprite capy_sad1 capy
+..DL...
+..LDLLD
+.BBLLLD
+BBBTB..
+BBBBB..
+.D..D..
+end
+
+# cansado: cabeça caída sobre o corpo; olho abre e fecha devagar
+sprite capy_tired0 capy
+.......
+..DL...
+..L.LLD
+BBBLLLD
+BBBBB..
+.D..D..
+end
+
+sprite capy_tired1 capy
+.......
+..DL...
+..LDLLD
+BBBLLLD
+BBBBB..
+.D..D..
+end
+
+# bocejo: olho fechado, boca aberta
+sprite capy_yawn capy
+.......
+..DL...
+..LDLLD
+BBBLL.D
+BBBBB..
+.D..D..
+end
+
 anim capy_idle   450 capy_idle0 capy_idle0 capy_idle0 capy_ear capy_idle0 capy_idle0 capy_idle0 capy_idle0
 anim capy_blink  150 capy_blink
 anim capy_walk   240 capy_idle0 capy_walk1 capy_idle0 capy_walk2
 anim capy_eat    260 capy_idle0 capy_eat1
 anim capy_sleep  900 capy_sleep0 capy_sleep1
 anim capy_happy  420 capy_happy capy_happy1
-anim capy_sad    800 capy_sad
+anim capy_sad    700 capy_sad capy_sad capy_sad1
 anim capy_hungry 450 capy_hungry0 capy_idle0
+anim capy_tired  450 capy_tired0 capy_tired1 capy_tired1 capy_tired0 capy_tired1 capy_tired1 capy_tired1 capy_yawn capy_yawn capy_tired1
 
 # ------------------------------------------------------------ GATO
 # Sentado de frente: orelhas triangulares com interior rosa, olhos
@@ -228,13 +274,53 @@ BWPWB..
 .S.SBB.
 end
 
+# triste: orelhas baixas (sem o rosa), cabeça afundada, rabo largado no
+# chão e lágrima; no 2º frame aperta os olhos e a lágrima pinga pro lado.
 sprite cat_sad cat
+.......
+B...B..
+BBBBB..
+B.B.B..
+BTPWB..
+.BWB...
+.S.SBBB
+end
+
+sprite cat_sad1 cat
+.......
+B...B..
+BBBBB..
+BSBSB..
+BWPWB..
+TBWB...
+.S.SBB.
+end
+
+# cansado: sem pescoço (cabeça afundada), piscadas lentas, bocejo com língua
+sprite cat_tired0 cat
 B...B..
 BPBPB..
 B.B.B..
-BTPWB..
-.BWB..B
+BWPWB.B
 .BWB.BB
+.S.SBB.
+end
+
+sprite cat_tired1 cat
+B...B..
+BPBPB..
+BSBSB..
+BWPWB.B
+.BWB.BB
+.S.SBB.
+end
+
+sprite cat_yawn cat
+B...B..
+BPBPB..
+BSBSB..
+BWRWB.B
+.BRB.BB
 .S.SBB.
 end
 
@@ -274,8 +360,9 @@ anim cat_walk    220 cat_idle0 cat_walk1 cat_idle0 cat_walk2
 anim cat_eat    260 cat_idle0 cat_eat1
 anim cat_sleep  900 cat_sleep0 cat_sleep1
 anim cat_happy   420 cat_happy cat_happy1
-anim cat_sad    800 cat_sad
+anim cat_sad    650 cat_sad cat_sad cat_sad1
 anim cat_hungry 450 cat_hungry0 cat_idle0
+anim cat_tired  450 cat_tired0 cat_tired1 cat_tired1 cat_tired0 cat_tired1 cat_tired1 cat_tired1 cat_yawn cat_yawn cat_tired1
 
 # ------------------------------------------------------------ SAPO
 # Olhos em "bolinha" em cima: branco em cima, pupila (buraco) embaixo.
@@ -384,8 +471,37 @@ anim frog_walk   240 frog_idle0 frog_walk1
 anim frog_eat    200 frog_idle0 frog_eat1
 anim frog_sleep  900 frog_sleep0 frog_sleep1
 anim frog_happy  280 frog_happy frog_idle0
-anim frog_sad    800 frog_sad
+sprite frog_sad1 frog
+......
+.G..G.
+GGGGGG
+GDGGDG
+GTGGGG
+.DDDD.
+end
+
+# cansado: pálpebra verde cobre o branco do olho (fica só a pupila)
+sprite frog_tired0 frog
+.G..G.
+GGGGGG
+G.GG.G
+DGGGGD
+.DDDD.
+YY..YY
+end
+
+sprite frog_yawn frog
+.G..G.
+GGGGGG
+GDGGDG
+DRRRRD
+.DDDD.
+YY..YY
+end
+
+anim frog_sad    700 frog_sad frog_sad frog_sad1
 anim frog_hungry 400 frog_hungry0 frog_idle0
+anim frog_tired  450 frog_tired0 frog_blink frog_blink frog_tired0 frog_blink frog_blink frog_blink frog_yawn frog_yawn frog_blink
 
 # ------------------------------------------------------------ PINTINHO
 # Bolinha redonda (5 de largura), uma peninha no topo, bico no meio.
@@ -484,8 +600,46 @@ anim chick_walk   200 chick_idle0 chick_walk1
 anim chick_eat    220 chick_idle0 chick_eat1
 anim chick_sleep  900 chick_sleep0 chick_sleep1
 anim chick_happy  220 chick_happy chick_idle0
-anim chick_sad    800 chick_sad
+sprite chick_sad1 chick
+.....
+.YYY.
+YLYLY
+YYOYY
+.TYY.
+.O.O.
+end
+
+# cansado: peninha tombada, piscadas lentas, bocejo de bico aberto
+sprite chick_tired0 chick
+.Y...
+.YYY.
+Y.Y.Y
+YYOYY
+.YYY.
+.O.O.
+end
+
+sprite chick_tired1 chick
+.Y...
+.YYY.
+YLYLY
+YYOYY
+.YYY.
+.O.O.
+end
+
+sprite chick_yawn chick
+.Y...
+.YYY.
+YLYLY
+YYOYY
+.YOY.
+.O.O.
+end
+
+anim chick_sad    700 chick_sad chick_sad chick_sad1
 anim chick_hungry 350 chick_hungry0 chick_idle0
+anim chick_tired  450 chick_tired0 chick_tired1 chick_tired1 chick_tired0 chick_tired1 chick_tired1 chick_tired1 chick_yawn chick_yawn chick_tired1
 
 # ------------------------------------------------------------ COELHO
 palette bunny
@@ -592,8 +746,46 @@ anim bunny_walk   200 bunny_idle0 bunny_walk1
 anim bunny_eat    160 bunny_idle0 bunny_eat1
 anim bunny_sleep  900 bunny_sleep0 bunny_sleep1
 anim bunny_happy  240 bunny_happy bunny_idle0
-anim bunny_sad    800 bunny_sad
+sprite bunny_sad1 bunny
+.....
+WW.WW
+WWWWW
+WGWGW
+WWPWW
+TW.W.
+end
+
+# cansado: orelhas caídas pros lados, piscadas lentas, bocejo
+sprite bunny_tired0 bunny
+.....
+WW.WW
+WWWWW
+W.W.W
+WWPWW
+.W.W.
+end
+
+sprite bunny_tired1 bunny
+.....
+WW.WW
+WWWWW
+WGWGW
+WWPWW
+.W.W.
+end
+
+sprite bunny_yawn bunny
+.....
+WW.WW
+WWWWW
+WGWGW
+WW.WW
+.W.W.
+end
+
+anim bunny_sad    700 bunny_sad bunny_sad bunny_sad1
 anim bunny_hungry 400 bunny_hungry0 bunny_idle0
+anim bunny_tired  450 bunny_tired0 bunny_tired1 bunny_tired1 bunny_tired0 bunny_tired1 bunny_tired1 bunny_tired1 bunny_yawn bunny_yawn bunny_tired1
 
 # ------------------------------------------------------------ AXOLOTE
 # O favorito. Brânquias em "franja" magenta dos dois lados da cabeça.
@@ -684,8 +876,42 @@ anim axo_walk   260 axo_idle0 axo_gill
 anim axo_eat    220 axo_idle0 axo_eat1
 anim axo_sleep  900 axo_sleep0 axo_sleep1
 anim axo_happy  260 axo_happy axo_idle0
-anim axo_sad    800 axo_sad
+sprite axo_sad1 axo
+.......
+.MPPPM.
+.PDPDP.
+.PPDPP.
+.TLLLL.
+end
+
+# cansado: brânquias murchas pros lados, piscadas lentas, bocejo
+sprite axo_tired0 axo
+.......
+.MPPPM.
+MP.P.PM
+.PPDPP.
+.LLLLL.
+end
+
+sprite axo_tired1 axo
+.......
+.MPPPM.
+MPDPDPM
+.PPDPP.
+.LLLLL.
+end
+
+sprite axo_yawn axo
+.......
+.MPPPM.
+MPDPDPM
+.PP.PP.
+.LLLLL.
+end
+
+anim axo_sad    700 axo_sad axo_sad axo_sad1
 anim axo_hungry 400 axo_hungry0 axo_idle0
+anim axo_tired  450 axo_tired0 axo_tired1 axo_tired1 axo_tired0 axo_tired1 axo_tired1 axo_tired1 axo_yawn axo_yawn axo_tired1
 
 # ------------------------------------------------------------ OVOS
 # Um único desenho de ovo, recolorido por bicho via sprite@paleta.

@@ -34,7 +34,7 @@ OUT_CPP = os.path.join(ROOT, "src", "art", "ArtData.cpp")
 OUT_JS = os.path.join(ROOT, "preview", "art.js")
 OUT_LED = os.path.join(ROOT, "src", "art", "LedProfile.h")
 
-PET_ANIMS = ["idle", "blink", "walk", "eat", "sleep", "happy", "sad", "hungry"]
+PET_ANIMS = ["idle", "blink", "walk", "eat", "sleep", "happy", "sad", "hungry", "tired"]
 PET_EGG_ANIMS = ["egg"]
 
 

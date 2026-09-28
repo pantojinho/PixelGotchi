@@ -1,4 +1,5 @@
 #pragma once
+#include <stddef.h>
 #include <stdint.h>
 
 // "DNA" do bichinho: 32 bits sorteados na escolha do ovo (MAC da placa +
@@ -15,6 +16,23 @@ struct Dna {
     uint8_t activity() const { return (bits >> 12) & 0xFF; }
     // 0..255: curiosidade; mais fuçar/olhar em volta.
     uint8_t curiosity() const { return (bits >> 20) & 0xFF; }
+
+    // Nome próprio: 2 ou 3 sílabas consoante+vogal ("KALU", "MOBITE"),
+    // tirado de um hash do DNA (só maiúsculas: é o que a fonte 3x5 tem).
+    void name(char *out, size_t n) const {
+        static const char CONS[] = "BCDFGJKLMNPRSTVZ";
+        static const char VOW[] = "AEIOU";
+        uint32_t h = bits * 2654435761u;
+        h ^= h >> 15; h *= 2246822519u; h ^= h >> 13;
+        uint8_t syllables = 2 + (h & 1);
+        h >>= 1;
+        size_t i = 0;
+        for (uint8_t s = 0; s < syllables && i + 2 < n; s++) {
+            out[i++] = CONS[h & 15]; h >>= 4;
+            out[i++] = VOW[(h & 7) % 5]; h >>= 3;
+        }
+        if (n) out[i] = 0;
+    }
 
     // Leve variação de cor (cada canal entre ~86% e 100%).
     uint32_t tone() const {

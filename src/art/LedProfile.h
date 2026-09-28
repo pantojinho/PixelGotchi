@@ -3,7 +3,7 @@
 #include <stdint.h>
 
 namespace LedProfile {
-constexpr uint8_t BRIGHTNESS = 13;
+constexpr uint8_t BRIGHTNESS = 5;
 // Curva suave gamma 1.6; mantém preto/primárias e separa meios-tons.
 constexpr uint8_t GAMMA_LUT[256] = {
     0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 2, 2, 2, 2, 3,
@@ -25,7 +25,7 @@ constexpr uint8_t GAMMA_LUT[256] = {
 };
 constexpr uint16_t GLARE_CAP = 420;
 constexpr uint8_t BLUE_GAIN = 204; // /255
-constexpr uint8_t MIN_PEAK = 3;
+constexpr uint8_t MIN_PEAK = 2;
 inline uint8_t channel(uint8_t value) { return GAMMA_LUT[value]; }
 
 // Brilho por cor, antes do teto global do FastLED (BRIGHTNESS):

@@ -198,9 +198,12 @@ palette icons
   g #1C8A2A
   C #8A4A1E
   W #FFFFFF
-  V #9A5CFF
+  V #B040FF
   b #7FD8FF
-  Y #FFD62E
+  # Amarelo "de LED": no WS2812 o verde brilha muito mais, então um amarelo
+  # de tela (#FFD62E) aparece esverdeado. Escolhido olhando a placa num teste
+  # lado a lado: na tela parece laranja, no LED é o amarelo mais limpo.
+  Y #FF8A1A
   O #FF8A1A
   P #FF6FA8
   Z #7FC8FF
@@ -217,12 +220,13 @@ RRRRRRRR
 ..RRrr..
 end
 
-# controle de videogame: cruz branca, botões vermelho e amarelo
+# controle de videogame roxo: a cruz é "vazada" (LEDs apagados contrastam
+# muito mais que branco sobre roxo) e dois botões, amarelo e verde.
 sprite icon_play icons
 .VVVVVV.
-VVWVVVRV
-VWWWVYVV
-VVWVVVVV
+VV.VVVYV
+V...VGVV
+VV.VVVVV
 VVV..VVV
 VV....VV
 end
@@ -238,14 +242,15 @@ b...b...
 .bbb....
 end
 
-# cruz de farmácia
+# cruz de farmácia: cruz branca bem grossa sobre fundo verde (o desenho
+# antigo virava uma bolha verde sem formato de cruz reconhecível)
 sprite icon_medicine icons
-..GGGG..
-..GWGG..
-GGGGGGGG
-GGGGGGGG
-..GGGG..
-..gggg..
+GGGWWGGG
+GGGWWGGG
+WWWWWWWW
+WWWWWWWW
+GGGWWGGG
+GGGWWGGG
 end
 
 # lua crescente + "z"
@@ -269,14 +274,18 @@ PPPPPPP
 ...P...
 end
 
-# barrinhas nas cores das páginas do status (fome, alegria, energia, saúde)
+# Exemplo do ícone de status. No firmware ele é desenhado "ao vivo"
+# (drawStatusIcon): uma barrinha por atributo, na cor da página dele —
+# comida vermelha, alegria rosa, energia amarela, saúde verde — com a
+# altura do valor atual.
 sprite icon_status icons
-......GG
-......GG
-....Y.GG
-..P.Y.GG
-R.P.Y.GG
-R.P.Y.GG
+.......G
+.R.....G
+.R.P...G
+.R.P...G
+.R.P.Y.G
+.R.P.Y.G
+.R.P.Y.G
 end
 
 # seta de voltar (↶): ponta à esquerda, faz a curva e volta por baixo

@@ -20,7 +20,7 @@ struct Anim {
 struct PetDef {
     const char *id;
     const char *name;
-    const Anim *idle, *blink, *walk, *eat, *sleep, *happy, *sad, *hungry, *egg;
+    const Anim *idle, *blink, *walk, *eat, *sleep, *happy, *sad, *hungry, *tired, *egg;
     const Sprite *food;
     const uint32_t *wildPal; // mesma ordem de cores da paleta normal; nullptr se não tiver
     bool side;               // desenhado de perfil olhando pra direita (espelha ao andar pra esquerda)

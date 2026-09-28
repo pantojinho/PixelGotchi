@@ -1,7 +1,7 @@
 {
-  "brightness": 13,
+  "brightness": 5,
   "gamma": 1.6,
   "glare_cap": 420,
   "blue_gain": 0.8,
-  "min_peak": 3
+  "min_peak": 2
 }

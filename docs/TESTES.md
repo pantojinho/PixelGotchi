@@ -32,13 +32,13 @@ DNA, incubação, descuido nem persistência.
 ## Rodada de brilho e cores — 28/09/2026
 
 Motivo: relato do autor de brilho excessivo e pouca separação de cores na
-placa. Ajuste: teto 13/255, gamma 1,6 compartilhado pelo firmware/preview e
+placa. Ajuste: teto 5/255, gamma 1,6 compartilhado pelo firmware/preview e
 nova paleta da capivara. A silhueta e o estado salvo não mudam.
 
 | Verificação | Resultado / limite |
 |---|---|
 | Display C++ real com saída FastLED capturada | Passou: brilho 18, corrente 400 mA, dithering desligado, preto apagado e primárias sem mistura |
-| Contraste digital da capivara | Passou nos 64 tons possíveis do DNA: luminância RGB ponderada do focinho ≥ 2× corpo, corpo > nariz; nariz mantém ao menos um nível de vermelho no sono |
+| Contraste digital da capivara | Passou nos 64 tons possíveis do DNA: luminância RGB ponderada do focinho ≥ 2× corpo, corpo ≥ nariz (no brilho 5 os dois podem cair no mesmo degrau); nariz mantém ao menos um nível de vermelho no sono |
 | Controles e composição | Passaram com o Display real incluído no teste nativo |
 | Compilação ESP32-S3 | Passou: RAM 20.536 bytes e flash de aplicação 330.637 bytes |
 | Curva compartilhada | Gerador entrega a mesma LUT no header C++ e nos dados do preview |
