@@ -247,9 +247,26 @@ Temperatura/consumo medidos, se disponíveis:
 Correções de orientação ou sensibilidade utilizadas:
 ```
 
+## Editor e envio de bichinhos pela USB
+
+Resultado registrado em 28/09/2026, em software. Veja o [guia do editor](EDITOR.md).
+
+| Verificação | Resultado / limite |
+|---|---|
+| Formato PGP1 nos dois lados | `test_petpack.cjs` gera o pacote dos seis modelos; o teste C++ carrega as fixtures de capivara e gato no firmware e confere frame a frame que desenham igual aos de fábrica |
+| Protocolo USB | Teste C++: `PG?`, envio em blocos de 64 bytes, `PGEND`, adoção, troca ao vivo com o pet ativo e remoção; erros de CRC, tamanho, excesso, comando, nome e falha de gravação mantêm o pacote anterior |
+| Validação | Motivo específico para assinatura, comida, cores, índice de cor, referência de frame e bytes sobrando |
+| Persistência | Reinício simulado recarrega o pacote da NVS (mock); gravação real na flash pendente na placa |
+| Exportação `.art` | O gerador real aceita o texto exportado numa cópia temporária do repositório |
+| Editor no Chromium | Playwright com uma placa falsa em `navigator.serial` (mesmo protocolo): desenhar, conferência, conectar, enviar com adoção; bytes recebidos idênticos ao pacote; simulador abre com o bichinho; PT e EN; sem erros de console; celular sem rolagem lateral |
+| Build ESP32-S3 | Passou: RAM 27.744 bytes; flash de aplicação 373.297 bytes |
+| Placa física | Pendente: abrir a porta pelo Chrome/Edge (a placa pode reiniciar), enviar, adotar, reenviar com o pet ativo, puxar o cabo no meio do envio e desligar logo após gravar |
+
 ## Próxima sprint: testes planejados
 
-**Não executados: editor e envio de pacotes de pets ainda não existem.**
+**Os casos abaixo foram escritos antes do editor.** FUT-01 a FUT-04 e FUT-07 a
+FUT-09 já têm cobertura em software (tabela acima); todos continuam pendentes
+na placa física.
 O instalador web do firmware existe; seus testes estão no início deste documento.
 O [plano da próxima sprint](PROXIMA-SPRINT.md) separa um primeiro editor que
 exporta `.art` da etapa posterior de enviar pacotes diretamente ao firmware.

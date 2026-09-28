@@ -2,14 +2,18 @@
 
 [README](../README.md) · [Testes e critérios de aceite](TESTES.md#próxima-sprint-testes-planejados)
 
-**Proposta de produto e arquitetura para o editor de pets.**
+**Status: etapas A e B implementadas em software.** O [editor](EDITOR.md)
+desenha, valida, exporta `.art` e envia o bichinho pela USB; o firmware recebe,
+valida e grava o pacote na NVS (`src/CustomPet.*`). Falta o ensaio na placa
+física (Web Serial real, reinício ao abrir a porta, gravação na NVS e queda de
+energia) e a atualização de firmware que preserve os dados. O texto abaixo é o
+plano original, mantido como registro das decisões.
+
 O objetivo é permitir que qualquer pessoa desenhe o próprio bichinho,
 escolha suas cores e animações, experimente o resultado e envie para a
-Waveshare ESP32-S3-Matrix pelo USB. O instalador do firmware pelo navegador
-já foi implementado; o ensaio com a placa física e a atualização que preserva
-o pet continuam pendentes.
+Waveshare ESP32-S3-Matrix pelo USB.
 
-## O que existe hoje
+## O que existia antes do editor
 
 - Galeria e maquete de controles no navegador, com a arte compartilhada.
 - Sprites e paletas em `art/*.art`, convertidos por `tools/gen_art.py` em C++.

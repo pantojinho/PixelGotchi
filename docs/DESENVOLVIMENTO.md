@@ -1,6 +1,6 @@
 # Rodar localmente, testar e publicar
 
-[README](../README.md) · [Montar o seu](GUIA-MONTAGEM.md) · [Como jogar](JOGO.md) · [Hardware](HARDWARE.md) · [Desenvolvimento](DESENVOLVIMENTO.md) · [Prompts para IA](PROMPTS-IA.md)
+[README](../README.md) · [Montar o seu](GUIA-MONTAGEM.md) · [Como jogar](JOGO.md) · [Editor](EDITOR.md) · [Hardware](HARDWARE.md) · [Desenvolvimento](DESENVOLVIMENTO.md) · [Prompts para IA](PROMPTS-IA.md) · [English](en/DEVELOPMENT.md)
 
 Este guia é para quem quer rodar o site no próprio computador, mudar a arte
 ou o código, rodar os testes ou publicar uma cópia do projeto.
@@ -93,6 +93,7 @@ python tools/gen_art.py
 git diff --exit-code -- src/art/ArtData.h src/art/ArtData.cpp src/art/LedProfile.h preview/art.js
 python tools/test_controls.py
 node test/test_preview.cjs
+node test/test_petpack.cjs
 node --experimental-vm-modules test/test_installer.cjs
 python -m unittest discover -s test -p test_web_installer.py
 python -m platformio run -e esp32-s3-matrix
@@ -102,7 +103,7 @@ python -m platformio run -e esp32-s3-matrix
 |---|---|
 | Python 3.12 | gerador de arte, servidor local, teste do instalador |
 | `g++` ou `clang++` (ou `CXX`; ou `ZIG_BINARY` com o Zig) | testes C++ (`test_controls.py`) |
-| Node.js 22 | testes da maquete e do instalador |
+| Node.js 22 | testes da maquete, do pacote do editor e do instalador |
 | PlatformIO 6.2.0 | build do firmware ([instalação](INSTALAR.md#1-baixe-o-projeto-e-as-ferramentas)) |
 
 No Windows, o compilador C++ mais simples é o do
@@ -113,9 +114,15 @@ Zig. No macOS, `xcode-select --install`. No Linux, o pacote `g++`.
   Canvas, Display, Dream e arte, trocando só relógio, GPIO, sensor, NVS e
   saída LED. Cobre brilho/gamma, contraste da capivara nos 64 tons de DNA,
   BOOT (debounce, segurar, reset), IMU (histerese, gestos), sono, menu, ovo,
-  poses sem corte, refeição nas seis espécies, capítulos do sonho e Conway.
+  poses sem corte, refeição nas seis espécies, capítulos do sonho, Conway
+  e o bichinho do editor (protocolo USB, erros, NVS, adoção e troca ao vivo).
 - **`test_preview.cjs`** roda os renderizadores reais da maquete com relógio
   simulado: idle sem apagão, refeição, cuidados, 3 min de sonho, movimento e BOOT.
+- **`test_petpack.cjs`** confere o pacote do editor para os seis modelos,
+  a validação, a conversão para o simulador e a exportação `.art` (rodando o
+  gerador real numa cópia temporária). Ele também confere as fixtures de
+  `test/fixtures/`, que o teste C++ carrega no firmware: se mudar o formato,
+  rode `node test/test_petpack.cjs --update` e revise o teste C++.
 - **`test_installer.cjs`** e **`test_web_installer.py`** conferem o pacote do
   instalador, o SHA-256 e o bloqueio quando algo não bate.
 
@@ -124,22 +131,27 @@ roteiro de teste na placa física estão em [TESTES.md](TESTES.md).
 
 ## Editar a arte
 
+Para desenhar sem mexer em código, use o [editor](EDITOR.md); o botão
+**Exportar .art** gera o texto abaixo para incluir o bichinho no repositório.
+
 Edite **`art/*.art`** e execute `python tools/gen_art.py`. Não edite
 `src/art/ArtData.*` ou `preview/art.js` manualmente. Veja o formato e os
 critérios para LEDs em [art/README.md](../art/README.md).
 
 ```text
-art/           sprites, paletas, efeitos, fonte e perfil de cor dos LEDs
-tools/         gerador da arte e testes locais
-preview/       galeria e maquete de controles
-src/Game.*     cenas, entrada e animações
-src/PetSim.*   estado e regras
-src/Input.*    botão BOOT com debounce
-src/Imu.*      leitura e gestos do acelerômetro
-src/Canvas.*   composição em 8×8
-src/Display.*  saída FastLED, orientação e limites
-src/Storage.*  persistência NVS
-test/          testes C++ e mocks de hardware
+art/             sprites, paletas, efeitos, fonte e perfil de cor dos LEDs
+tools/           gerador da arte, servidor local, instalador, release e testes
+preview/         site: guia, simulador, editor e instalador (i18n.js, petpack.js)
+src/Game.*       cenas, entrada e animações
+src/PetSim.*     estado e regras
+src/Dream.*      autômato de Conway dos sonhos
+src/CustomPet.*  bichinho do editor: pacote PGP1 e protocolo USB
+src/Input.*      botão BOOT com debounce
+src/Imu.*        leitura e gestos do acelerômetro
+src/Canvas.*     composição em 8×8
+src/Display.*    saída FastLED, orientação e limites
+src/Storage.*    persistência NVS
+test/            testes C++, JS e Python, mocks de hardware e fixtures
 ```
 
 ## Pacote de release

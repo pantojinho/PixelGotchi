@@ -1,6 +1,6 @@
 # Montar o seu PixelGotchi em casa
 
-[README](../README.md) · [Montar o seu](GUIA-MONTAGEM.md) · [Como jogar](JOGO.md) · [Hardware](HARDWARE.md) · [Desenvolvimento](DESENVOLVIMENTO.md) · [Prompts para IA](PROMPTS-IA.md)
+[README](../README.md) · [Montar o seu](GUIA-MONTAGEM.md) · [Como jogar](JOGO.md) · [Editor](EDITOR.md) · [Hardware](HARDWARE.md) · [Desenvolvimento](DESENVOLVIMENTO.md) · [Prompts para IA](PROMPTS-IA.md) · [English](en/BUILD-GUIDE.md)
 
 Do zero até o bichinho chocando na sua mão. A versão básica **não precisa de
 solda, fios nem programação**: é uma plaquinha pronta, um cabo e o navegador.
@@ -13,6 +13,7 @@ solda, fios nem programação**: é uma plaquinha pronta, um cabo e o navegador.
 | 3. Chocar o ovo | Mexer a placa com calma | 5 min |
 | 4. Case impressa (opcional) | Impressora 3D ou serviço de impressão | ~1 h de impressão |
 | 5. Bateria (opcional, avançado) | Solda e alguns componentes | 1–2 h |
+| 6. Bichinho seu (opcional) | O editor no navegador | 15 min ou mais |
 
 ## 0. Experimente antes de comprar
 
@@ -112,6 +113,14 @@ placa e a troca de um resistor do carregador**; ligar errado pode danificar a
 placa ou a bateria. Autonomia estimada: ~1,5 h. Siga a
 [lista de compras, ligação e montagem](../hardware/case/README.md#versão-com-bateria)
 e teste tudo fora da case antes de fechar.
+
+## 6. Crie o seu bichinho (opcional)
+
+No [editor do site](https://pantojinho.github.io/PixelGotchi/editor.html)
+você parte de um dos seis bichinhos, redesenha as poses, testa no simulador
+e envia para a placa pelo mesmo cabo USB, sem compilar. Ele vira a 7ª
+espécie ou substitui o pet atual por um ovo dele. Passo a passo em
+[Editor](EDITOR.md).
 
 ## Deu problema?
 

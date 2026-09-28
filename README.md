@@ -1,5 +1,7 @@
 # PixelGotchi
 
+**Português** · [English](README.en.md)
+
 [![verify](https://github.com/pantojinho/PixelGotchi/actions/workflows/verify.yml/badge.svg)](https://github.com/pantojinho/PixelGotchi/actions/workflows/verify.yml)
 
 Um bichinho virtual de **64 pixels** que cabe num chaveiro. Roda na
@@ -10,7 +12,8 @@ placa. Ele tem nome próprio, personalidade tirada do DNA e sonha com o
 [Jogo da Vida de Conway](https://pt.wikipedia.org/wiki/Jogo_da_vida).
 
 **▶ [Experimente agora no navegador](https://pantojinho.github.io/PixelGotchi/guia.html)**:
-simulador com os mesmos desenhos do firmware e instalador USB para a placa.
+simulador com os mesmos desenhos do firmware, editor de bichinhos e
+instalador USB para a placa.
 
 | Capivara | Gato |
 |---|---|
@@ -22,17 +25,19 @@ simulador com os mesmos desenhos do firmware e instalador USB para a placa.
 |---|---|
 | **Só ver e brincar**, sem comprar nada | [Simulador no navegador](https://pantojinho.github.io/PixelGotchi/) |
 | **Montar o meu** do zero: o que comprar, gravar, chocar o ovo | [Guia de montagem](docs/GUIA-MONTAGEM.md) |
-| **Já tenho a placa** e quero gravar o jogo | [Instalador pelo navegador](https://pantojinho.github.io/PixelGotchi/install.html) (Chrome/Edge + cabo USB-C) |
+| **Já tenho a placa** e quero gravar o jogo | [Instalador pelo navegador](https://pantojinho.github.io/PixelGotchi/install.html) (Chrome/Edge + cabo USB-C) · [arquivos da release](https://github.com/pantojinho/PixelGotchi/releases) |
 | **Imprimir a case** (chaveiro, difusor, versão com bateria) | [Case 3D](docs/GUIA-MONTAGEM.md#4-case-impressa-em-3d-opcional) · [arquivos e detalhes](hardware/case/README.md) |
 | **Criar o meu próprio bichinho** e mandar para a placa | [Editor de bichinhos](https://pantojinho.github.io/PixelGotchi/editor.html) · [como funciona](#criar-o-seu-bichinho) |
 | **Rodar no meu computador**, mexer no código, rodar os testes | [Desenvolvimento](docs/DESENVOLVIMENTO.md) |
 | **Pedir ajuda a uma IA** para instalar, desenhar ou montar | [Prompts prontos](docs/PROMPTS-IA.md) |
+| **Contribuir** com o projeto | [CONTRIBUTING](CONTRIBUTING.md) |
 | Entender as regras, o menu e os sonhos | [Como jogar](docs/JOGO.md) |
 
 ## O que ele faz
 
 - **Seis espécies**: capivara, gato, sapo, pintinho, coelho e axolote, cada
   uma com descanso, caminhada, comer, dormir, feliz, triste, fome e cansaço.
+  E mais **o seu**, desenhado no editor.
 - **Nasce de um ovo** que choca com 5 minutos de movimento, e se apresenta
   com um **nome próprio** (KALU, MOBITE…) tirado do DNA dele.
 - **Vive de verdade**: fome, alegria e energia caem com o tempo, ele fica
@@ -50,7 +55,7 @@ simulador com os mesmos desenhos do firmware e instalador USB para a placa.
 
 | Para | Precisa de |
 |---|---|
-| Simulador | Qualquer navegador moderno |
+| Simulador e editor | Qualquer navegador moderno |
 | Placa funcionando | [Waveshare ESP32-S3-Matrix](https://www.waveshare.com/esp32-s3-matrix.htm) ([AliExpress](https://www.aliexpress.com/w/wholesale-waveshare-esp32%2Ds3%2Dmatrix.html), [Mercado Livre](https://lista.mercadolivre.com.br/esp32-s3-matrix)), cabo USB-C **de dados** e um computador com Chrome ou Edge |
 | Case | Impressora 3D (PLA, sem suporte) ou um serviço de impressão |
 | Versão com bateria | LiPo 160 mAh, TP4056, chave e diodo, **mais solda**: [lista completa](hardware/case/README.md#lista-de-compras) |
@@ -122,19 +127,21 @@ Também dá para pedir um desenho a uma IA com o
 | [Hardware](docs/HARDWARE.md) | Placa, pinos, brilho e cor dos LEDs, calibração do sensor |
 | [Case 3D](hardware/case/README.md) | STLs, impressão, montagem, versão com bateria |
 | [Desenvolvimento](docs/DESENVOLVIMENTO.md) | Rodar local, editar arte, testes, publicar o fork, release |
+| [Editor](docs/EDITOR.md) | Criar um bichinho, testar e enviar pela USB; formato e protocolo |
 | [Prompts para IA](docs/PROMPTS-IA.md) | Instalar, desenhar um bichinho, montar, mexer no código |
 | [Arte para 64 LEDs](art/README.md) | Formato `.art` e critérios de desenho |
+| [Contribuir](CONTRIBUTING.md) | Como ajudar, o que pode mudar e a lista de conferência |
 | [Testes](docs/TESTES.md) | Resultados e roteiros de teste na placa |
 | [Animações e Conway](docs/ANIMACOES-E-CONWAY.md) · [Próxima sprint](docs/PROXIMA-SPRINT.md) | Planos de evolução |
 
 ## Estado do projeto
 
-Verificado em software a cada push: testes do firmware com hardware
-simulado, testes do simulador e do instalador, e build do ESP32-S3
-([CI](https://github.com/pantojinho/PixelGotchi/actions)). **Ainda falta
-ensaiar na placa física** a gravação pelo navegador, os gestos, a aparência
-dos LEDs e a case; os roteiros estão em [Testes](docs/TESTES.md). Relatos de
-quem montar são muito bem-vindos em
+**v0.1.0 — primeira release.** Verificado em software a cada push: testes do
+firmware com hardware simulado, testes do simulador, do pacote do editor e do
+instalador, e build do ESP32-S3 ([CI](https://github.com/pantojinho/PixelGotchi/actions)).
+**Ainda falta ensaiar na placa física** a gravação pelo navegador, o envio de
+bichinhos pela USB, os gestos, a aparência dos LEDs e a case; os roteiros estão
+em [Testes](docs/TESTES.md). Relatos de quem montar são muito bem-vindos em
 [issues](https://github.com/pantojinho/PixelGotchi/issues).
 
 Os desenhos são originais, feitos diretamente na grade de pixels.

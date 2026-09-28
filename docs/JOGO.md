@@ -1,6 +1,6 @@
 # Como jogar e como o bichinho vive
 
-[README](../README.md) · [Montar o seu](GUIA-MONTAGEM.md) · [Como jogar](JOGO.md) · [Hardware](HARDWARE.md) · [Desenvolvimento](DESENVOLVIMENTO.md) · [Prompts para IA](PROMPTS-IA.md)
+[README](../README.md) · [Montar o seu](GUIA-MONTAGEM.md) · [Como jogar](JOGO.md) · [Editor](EDITOR.md) · [Hardware](HARDWARE.md) · [Desenvolvimento](DESENVOLVIMENTO.md) · [Prompts para IA](PROMPTS-IA.md) · [English](en/GAME.md)
 
 Tudo aqui vale igual para a placa e para o simulador do site, exceto onde
 estiver indicado. Os tempos do simulador são encurtados para demonstração.
@@ -99,7 +99,7 @@ pode soltar. A ação longa só acontece ao soltar o botão.
 
 | Situação | Entrada | Resultado |
 |---|---|---|
-| Seleção inicial | Clique no BOOT ou incline para um lado | Próxima espécie; inclinar à esquerda volta |
+| Seleção inicial | Clique no BOOT ou incline para um lado | Próxima espécie; inclinar à esquerda volta. Um bichinho enviado pelo [editor](EDITOR.md) aparece como 7ª espécie |
 | Seleção inicial | Segure BOOT por 0,6 s e solte | Escolhe a espécie e começa o ovo |
 | Ovo | Movimente suavemente a placa | Acumula incubação: 5 minutos; parar por 15 s pausa, sem zerar |
 | Ovo | Clique no BOOT | Mostra o progresso no topo por 2 s |

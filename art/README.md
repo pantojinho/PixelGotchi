@@ -1,5 +1,7 @@
 # Arte para 64 LEDs
 
+**Português** · [English](README.en.md)
+
 `pets.art`, `props.art` e `font.art` são a fonte da arte do firmware e
 do preview. `python tools/gen_art.py` valida referências, dimensões,
 caracteres e paletas, depois gera C++ e JavaScript.

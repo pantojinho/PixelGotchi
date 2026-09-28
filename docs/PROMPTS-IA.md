@@ -1,6 +1,6 @@
 # Prompts para usar com IA
 
-[README](../README.md) · [Montar o seu](GUIA-MONTAGEM.md) · [Como jogar](JOGO.md) · [Hardware](HARDWARE.md) · [Desenvolvimento](DESENVOLVIMENTO.md) · [Prompts para IA](PROMPTS-IA.md)
+[README](../README.md) · [Montar o seu](GUIA-MONTAGEM.md) · [Como jogar](JOGO.md) · [Editor](EDITOR.md) · [Hardware](HARDWARE.md) · [Desenvolvimento](DESENVOLVIMENTO.md) · [Prompts para IA](PROMPTS-IA.md) · [English](en/AI-PROMPTS.md)
 
 Copie o bloco inteiro e cole na IA. Há dois tipos de assistente:
 
@@ -48,9 +48,11 @@ as ferramentas, compilar e gravar o firmware nessa placa.
 
 ## 2. Desenhar um bichinho novo (chat comum)
 
-Troque o que está entre `< >`. A IA devolve o texto no formato `.art` do
-projeto; depois use o prompt 3 ou siga
-[Editar a arte](DESENVOLVIMENTO.md#editar-a-arte) para testar e gravar.
+O jeito mais fácil de criar um bichinho é o [editor do site](EDITOR.md),
+que desenha, testa e envia para a placa sem IA nem compilação. Este prompt é
+para quem prefere pedir o desenho a uma IA: troque o que está entre `< >`. A
+IA devolve o texto no formato `.art` do projeto; depois use o prompt 3 ou
+siga [Editar a arte](DESENVOLVIMENTO.md#editar-a-arte) para testar e gravar.
 
 ```text
 Quero criar um bichinho novo para o PixelGotchi, um bichinho virtual numa
@@ -148,12 +150,13 @@ bateria no 3V3) antes de qualquer solda.
 Quero modificar o PixelGotchi (https://github.com/pantojinho/PixelGotchi):
 <descreva a mudança>.
 
-Antes de editar, leia README.md, docs/DESENVOLVIMENTO.md, docs/JOGO.md,
-src/Config.h e os testes em test/. Regras do projeto:
+Antes de editar, leia README.md, CONTRIBUTING.md, docs/DESENVOLVIMENTO.md,
+docs/JOGO.md, src/Config.h e os testes em test/. Regras do projeto:
 - Arte só em art/*.art, gerada por tools/gen_art.py; nunca edite
   src/art/ArtData.* nem preview/art.js à mão.
 - Firmware (src/) e maquete (preview/) precisam continuar equivalentes:
   mude os dois lados quando a mudança for visível.
+- Os textos do site vêm em português e inglês (preview/i18n.js).
 - Não aumente brilho (art/led-profile.json), corrente (MAX_MILLIAMPS) nem
   troque a versão do FastLED.
 - Antes de concluir, rode os mesmos comandos da CI (docs/DESENVOLVIMENTO.md,

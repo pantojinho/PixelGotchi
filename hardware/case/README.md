@@ -1,5 +1,7 @@
 # Case do PixelGochi
 
+**Português** · [English](README.en.md)
+
 Case impressa em 3D para a Waveshare ESP32-S3-Matrix: **28,7 × 28,7 × 8,6 mm**
 (11 mm na versão com difusor), com acesso ao USB-C, aos dois botões de
 trás (BOOT e RESET) e argolinha de chaveiro.

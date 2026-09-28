@@ -1,6 +1,6 @@
 # Instalar o firmware
 
-[README](../README.md) · [Montar o seu](GUIA-MONTAGEM.md) · [Como jogar](JOGO.md) · [Hardware](HARDWARE.md) · [Desenvolvimento](DESENVOLVIMENTO.md) · [Prompts para IA](PROMPTS-IA.md)
+[README](../README.md) · [Montar o seu](GUIA-MONTAGEM.md) · [Como jogar](JOGO.md) · [Editor](EDITOR.md) · [Hardware](HARDWARE.md) · [Desenvolvimento](DESENVOLVIMENTO.md) · [Prompts para IA](PROMPTS-IA.md) · [English](en/INSTALL.md)
 
 Há dois jeitos de gravar o PixelGotchi na placa. **Para a maioria das pessoas,
 o instalador pelo navegador basta**: não precisa instalar nada no computador.
@@ -31,9 +31,10 @@ compilado automaticamente pelo GitHub Actions.
 serial, Arduino IDE), troque o cabo e tente o modo de gravação: segure
 **BOOT**, toque em **RESET**, solte **BOOT** e escolha a porta de novo.
 
-O instalador grava o jogo PixelGotchi como ele está no repositório. Enviar
-um bichinho criado por você ainda não é possível por aqui; veja
-[Criar o seu bichinho](../README.md#criar-o-seu-bichinho).
+O instalador grava o jogo PixelGotchi como ele está no repositório e **apaga
+a placa inteira**, inclusive o pet salvo e o bichinho enviado pelo editor.
+Para mandar um bichinho seu depois da instalação, use o [editor](EDITOR.md):
+ele envia só a arte, sem regravar o firmware.
 
 ## Instalação manual via USB
 
