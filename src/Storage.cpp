@@ -24,4 +24,25 @@ void save(const void *data, size_t len) {
     prefs.end();
 }
 
+size_t loadBlob(const char *key, void *data, size_t max) {
+    prefs.begin(NS, false);
+    size_t len = prefs.isKey(key) ? prefs.getBytesLength(key) : 0;
+    if (len > max || (len && prefs.getBytes(key, data, len) != len)) len = 0;
+    prefs.end();
+    return len;
+}
+
+bool saveBlob(const char *key, const void *data, size_t len) {
+    prefs.begin(NS, false);
+    const bool ok = prefs.putBytes(key, data, len) == len;
+    prefs.end();
+    return ok;
+}
+
+void eraseBlob(const char *key) {
+    prefs.begin(NS, false);
+    prefs.remove(key);
+    prefs.end();
+}
+
 } // namespace Storage

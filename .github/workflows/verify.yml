@@ -23,6 +23,7 @@ jobs:
       - name: Test preview and installer regressions
         run: |
           node test/test_preview.cjs
+          node test/test_petpack.cjs
           node --experimental-vm-modules test/test_installer.cjs
           python -m unittest discover -s test -p test_web_installer.py
       - name: Build ESP32-S3 firmware

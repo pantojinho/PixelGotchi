@@ -3,7 +3,7 @@
   const el = id => document.getElementById(id);
   const labels = ['Alimentar', 'Brincar', 'Limpar', 'Remédio', 'Dormir / acordar', 'Carinho', 'Status', 'Voltar'];
   const icons = ['icon_food', 'icon_play', 'icon_clean', 'icon_medicine', 'icon_sleep', 'icon_pet', 'icon_status', 'icon_back'];
-  let pet = A.pets[0], pose = scenes(pet), state, screen = 'life', item = 0, page = 0;
+  let pet = A.pets.find(p => p.id === Q.get('pet')) || A.pets[0], pose = scenes(pet), state, screen = 'life', item = 0, page = 0;
   let action = '', actionAt = 0, deadline = 0, heldAt = null, resetSent = false;
   let holdResetTimer = null;
   let sleepByGesture = false, playedAt = -Infinity, pageAt = 0;
@@ -409,6 +409,7 @@
     if (!cancel && !resetSent) input(duration >= 600);
   }
   A.pets.forEach(p => { const o = new Option(p.name, p.id); el('demo-pet').add(o); });
+  el('demo-pet').value = pet.id;
   el('demo-pet').onchange = e => { pet = A.pets.find(p => p.id === e.target.value); pose = scenes(pet); dna = (Math.random() * 2 ** 32) >>> 0; reset(); };
   el('demo-need').onchange = e => {
     const need = e.target.value; reset(); el('demo-need').value = need;

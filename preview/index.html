@@ -61,9 +61,21 @@
 </section>
 <div id="root"></div>
 <div id="zoom"><canvas id="zc" width="480" height="480"></canvas><div class="n" id="zn"></div></div>
+<script src="i18n.js"></script>
 <script src="art.js"></script>
+<script src="petpack.js"></script>
 <script>
 const A = window.ART;
+// Bichinho criado no editor (editor.html), salvo neste navegador: entra como
+// mais uma espécie, desenhado com o mesmo recorte que o firmware usa.
+try {
+  const saved = typeof PetPack !== 'undefined' && JSON.parse(localStorage.getItem('pixelgotchi.project') || 'null');
+  if (saved && !PetPack.validate(saved).errors.length) {
+    const art = PetPack.toArt(saved, 'meu');
+    Object.assign(A.palettes, art.palettes); Object.assign(A.sprites, art.sprites); Object.assign(A.anims, art.anims);
+    A.pets.push(art.pet);
+  }
+} catch (_) {}
 // Parâmetros de URL: ?cell=36&only=capy&view=scenes|sprites|anims&mode=flat&bright=18
 const Q = new URLSearchParams(location.search);
 const CELL = +(Q.get('cell') || 18), N = 8;

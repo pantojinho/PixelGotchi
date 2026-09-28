@@ -1,5 +1,6 @@
 #include "Game.h"
 #include "Canvas.h"
+#include "CustomPet.h"
 #include "Config.h"
 #include "Display.h"
 #include "Events.h"
@@ -40,7 +41,13 @@ const Sprite &frame(const Anim &a, uint32_t t) { return frameAt(a, t); }
 // cx que centraliza um sprite de largura w na matriz.
 int centerCx(int w) { return (MATRIX_W - w) / 2 + w / 2; }
 
-const PetDef &def() { return PETS[sim.s().species % PET_COUNT]; }
+// Espécies de fábrica (0..PET_COUNT-1) e, se houver, a do editor (PET_COUNT).
+uint8_t speciesCount() { return PET_COUNT + (CustomPet::available() ? 1 : 0); }
+const PetDef &petAt(uint8_t species) {
+    if (species < PET_COUNT) return PETS[species];
+    return CustomPet::available() ? CustomPet::def() : PETS[0];
+}
+const PetDef &def() { return petAt(sim.s().species); }
 
 // Cor principal do bicho (1ª cor da paleta), pra escrever o nome dele.
 Rgb petColor() { return rgb(frameAt(*def().idle, 0).pal[1]); }
@@ -932,22 +939,24 @@ void drawLife(uint32_t now) {
 
 // ============================================================ cenas: lógica + desenho
 void sceneSelect(uint32_t now, Ev e) {
-    if (e == Ev::None && !Input::heldMs()) tiltStep(selIdx, PET_COUNT);
-    if (e == Ev::Short) selIdx = (selIdx + 1) % PET_COUNT;
+    const uint8_t count = speciesCount();
+    if (selIdx >= count) selIdx = 0;
+    if (e == Ev::None && !Input::heldMs()) tiltStep(selIdx, count);
+    if (e == Ev::Short) selIdx = (selIdx + 1) % count;
     if (e == Ev::Long) {
         // "Semente" do DNA: MAC da placa + instante do clique + RNG de hardware.
         uint64_t mac = ESP.getEfuseMac();
         uint32_t seed = (uint32_t)mac ^ (uint32_t)(mac >> 32) ^ (now * 2654435761UL) ^ esp_random();
         sim.choose(selIdx, seed);
-        Serial.printf("[Game] escolheu %s, dna=%08lx\n", PETS[selIdx].name, (unsigned long)seed);
+        Serial.printf("[Game] escolheu %s, dna=%08lx\n", petAt(selIdx).name, (unsigned long)seed);
         lastEggMs = now;
         go(Scene::Egg);
         return;
     }
 
-    const PetDef &d = PETS[selIdx];
-    int x0 = (MATRIX_W - PET_COUNT) / 2;
-    for (uint8_t i = 0; i < PET_COUNT; i++) cv.set(x0 + i, 0, i == selIdx ? C_WHITE : C_DIM);
+    const PetDef &d = petAt(selIdx);
+    int x0 = (MATRIX_W - count) / 2;
+    for (uint8_t i = 0; i < count; i++) cv.set(x0 + i, 0, i == selIdx ? C_WHITE : C_DIM);
     const Sprite &f = frame(*d.idle, now);
     cv.blitAnchored(f, centerCx(f.w), 7, false);
 }
@@ -1345,6 +1354,7 @@ uint32_t swatchUntil = 0;
 namespace Game {
 
 void begin() {
+    CustomPet::begin();
     sim.begin();
     lastInputAt = millis();
     observedMotionAt = Imu::lastMotionMs();
@@ -1426,6 +1436,42 @@ void update() {
                       s.hunger, s.happy, s.energy, s.poop, s.sick, s.asleep, s.neglect, s.wild,
                       (unsigned long)s.ageMin);
     }
+}
+
+bool customPetActive() {
+    return sim.s().phase != Phase::Select && sim.s().species == PET_COUNT && CustomPet::available();
+}
+
+// Arte nova do bichinho do editor: se ele é o pet atual, a troca aparece na
+// hora; se o pacote foi apagado, o pet dele não tem mais desenho e recomeça.
+void customPetChanged() {
+    const PetState &s = sim.s();
+    if (s.phase == Phase::Select || s.species != PET_COUNT) return;
+    if (!CustomPet::available()) {
+        sim.restart();
+        act = Act::None;
+        selIdx = 0;
+        go(Scene::Select);
+        return;
+    }
+    act = Act::None;
+    petX = centerCx(idleW());
+    beh = Beh::Stand;
+    behUntil = millis() + 2000;
+}
+
+// Troca o bichinho atual por um ovo do bichinho do editor.
+void adoptCustomPet() {
+    if (!CustomPet::available()) return;
+    const uint32_t now = millis();
+    const uint64_t mac = ESP.getEfuseMac();
+    const uint32_t seed = (uint32_t)mac ^ (uint32_t)(mac >> 32) ^ (now * 2654435761UL) ^ esp_random();
+    sim.choose(PET_COUNT, seed);
+    act = Act::None;
+    gestureSleep = false;
+    lastEggMs = now;
+    progressUntil = 0;
+    go(Scene::Egg);
 }
 
 void showSwatches(const uint32_t colors[4], uint32_t ms) {

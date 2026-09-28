@@ -29,7 +29,6 @@
   code { background:#0b0e0a; border:1px solid var(--line); border-radius:6px; padding:1px 6px; font-size:14px; color:var(--text); overflow-wrap:anywhere }
   pre { background:#0b0e0a; border:1px solid var(--line); border-radius:10px; padding:12px 14px; overflow-x:auto; font-size:14px; margin:8px 0 12px }
   .where { border-color:#556b3c; background:#1c261a }
-  .soon { display:inline-block; font-size:12px; font-weight:700; color:#17200d; background:var(--orange); border-radius:999px; padding:1px 8px; margin-left:6px; vertical-align:2px }
   footer { max-width:980px; margin:0 auto; padding:0 20px 40px; color:var(--muted); font-size:14px }
   footer a { color:var(--lime) }
   @media (max-width:520px) { nav .brand { width:100% } }
@@ -40,6 +39,7 @@
   <span class="brand">PixelGotchi</span>
   <a href="guia.html" aria-current="page">Comece aqui</a>
   <a href="index.html">Simulador</a>
+  <a href="editor.html">Editor</a>
   <a href="install.html">Instalar na placa</a>
   <a href="https://github.com/pantojinho/PixelGotchi">GitHub</a>
 </nav>
@@ -104,14 +104,14 @@
   <h2>Criar o seu bichinho</h2>
   <div class="cards">
     <section class="card">
-      <h3>Hoje: desenho em texto</h3>
-      <p>Cada bichinho é um arquivo de texto em <code>art/</code>, um caractere por LED. Rode a página no seu computador: ela recarrega sozinha ao salvar e aponta erros de formato. Depois grave compilando localmente ou pelo site do seu fork.</p>
-      <p><a href="https://github.com/pantojinho/PixelGotchi/blob/master/docs/DESENVOLVIMENTO.md#editar-a-arte">Editar a arte →</a></p>
+      <h3>No editor, sem instalar nada</h3>
+      <p>Comece de um dos seis bichinhos, desenhe pixel a pixel, monte as animações, teste no simulador e envie para a placa pelo cabo USB, sem compilar. O projeto fica salvo no navegador e pode ser baixado.</p>
+      <p><a href="editor.html">Abrir o editor →</a></p>
     </section>
     <section class="card">
-      <h3>Editor no simulador <span class="soon">planejado</span></h3>
-      <p>Modelo para começar, desenho pixel a pixel, animações, salvar o projeto e enviar para a placa pelo cabo USB, sem compilar.</p>
-      <p><a href="https://github.com/pantojinho/PixelGotchi/blob/master/docs/PROXIMA-SPRINT.md">Ver o plano →</a></p>
+      <h3>No código do projeto</h3>
+      <p>Quem quiser incluir o bichinho no repositório exporta o <code>.art</code> no editor (ou desenha em texto) e compila localmente ou pelo site do próprio fork.</p>
+      <p><a href="https://github.com/pantojinho/PixelGotchi/blob/master/docs/DESENVOLVIMENTO.md#editar-a-arte">Editar a arte →</a></p>
     </section>
   </div>
 </main>

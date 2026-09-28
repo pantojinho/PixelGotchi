@@ -24,7 +24,7 @@ simulador com os mesmos desenhos do firmware e instalador USB para a placa.
 | **Montar o meu** do zero: o que comprar, gravar, chocar o ovo | [Guia de montagem](docs/GUIA-MONTAGEM.md) |
 | **Já tenho a placa** e quero gravar o jogo | [Instalador pelo navegador](https://pantojinho.github.io/PixelGotchi/install.html) (Chrome/Edge + cabo USB-C) |
 | **Imprimir a case** (chaveiro, difusor, versão com bateria) | [Case 3D](docs/GUIA-MONTAGEM.md#4-case-impressa-em-3d-opcional) · [arquivos e detalhes](hardware/case/README.md) |
-| **Criar o meu próprio bichinho** | [Criar o seu bichinho](#criar-o-seu-bichinho) |
+| **Criar o meu próprio bichinho** e mandar para a placa | [Editor de bichinhos](https://pantojinho.github.io/PixelGotchi/editor.html) · [como funciona](#criar-o-seu-bichinho) |
 | **Rodar no meu computador**, mexer no código, rodar os testes | [Desenvolvimento](docs/DESENVOLVIMENTO.md) |
 | **Pedir ajuda a uma IA** para instalar, desenhar ou montar | [Prompts prontos](docs/PROMPTS-IA.md) |
 | Entender as regras, o menu e os sonhos | [Como jogar](docs/JOGO.md) |
@@ -93,23 +93,24 @@ site e todos os testes: [Desenvolvimento](docs/DESENVOLVIMENTO.md).
 
 ## Criar o seu bichinho
 
-**Hoje** os bichinhos são desenhos em texto (`art/*.art`), um caractere por
-LED. O caminho é:
+Abra o **[editor de bichinhos](https://pantojinho.github.io/PixelGotchi/editor.html)**
+no navegador, sem instalar nada:
 
-1. Desenhe à mão ou peça a uma IA com o
-   [prompt de bichinho novo](docs/PROMPTS-IA.md#2-desenhar-um-bichinho-novo-chat-comum).
-2. Cole no fim de `art/pets.art` e veja no simulador local: ele recarrega ao
-   salvar e o gerador aponta qualquer erro de formato.
-3. Grave na placa compilando no seu computador ([Instalar](docs/INSTALAR.md#instalação-manual-via-usb)),
-   **ou** sem instalar compilador: faça um fork, ative o GitHub Pages e o seu
-   site próprio compila e publica o instalador com o seu bichinho
-   ([como](docs/DESENVOLVIMENTO.md#publicar-a-sua-cópia-fork-com-site-próprio)).
+1. Comece de um dos seis bichinhos (ou do zero) e desenhe cada pose na grade
+   8×8 real: descanso, piscar, andar, comer, dormir, feliz, triste, com fome e
+   cansado. Escolha as cores, a comida favorita e o tempo de cada animação.
+2. A conferência avisa o que a placa não aceitaria (cores demais, animação
+   vazia, nome com acento) e o que vai ficar estranho (largo demais para andar).
+3. **Testar no simulador** mostra o bichinho no jogo, com os mesmos controles.
+4. **Enviar para a placa** (Chrome/Edge + cabo USB): ele vira a 7ª espécie da
+   seleção, ou você pode trocar o bichinho atual por um ovo dele. Não precisa
+   compilar; a placa só precisa do firmware atual, gravado pelo instalador.
 
-**Planejado:** um editor dentro do simulador, com modelo para começar,
-desenho pixel a pixel, animações, salvar/abrir o projeto e **envio direto
-para a placa pelo cabo USB**, sem compilar nada. O envio direto exige um
-firmware que receba e guarde pacotes de arte; o plano está em
-[Próxima sprint](docs/PROXIMA-SPRINT.md).
+O projeto fica salvo no navegador e pode ser baixado como arquivo. Para
+incluir o bichinho no código do repositório, **Exportar .art** gera o texto
+no formato de `art/*.art` ([como compilar](docs/DESENVOLVIMENTO.md#editar-a-arte)).
+Também dá para pedir um desenho a uma IA com o
+[prompt de bichinho novo](docs/PROMPTS-IA.md#2-desenhar-um-bichinho-novo-chat-comum).
 
 ## Documentação
 

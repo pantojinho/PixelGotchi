@@ -5,6 +5,9 @@
 #include "../src/Imu.cpp"
 #include "../src/Storage.h"
 #include "../src/Dream.h"
+#include "../src/CustomPet.h"
+#include <vector>
+#include <string>
 #include <assert.h>
 #include <FastLED.h>
 
@@ -23,6 +26,16 @@ bool load(void *dst, size_t n) {
 void save(const void *src, size_t n) {
     assert(n <= sizeof(stored)); memcpy(stored, src, n); storedSize = n;
 }
+uint8_t blob[4096]; size_t blobSize = 0; bool failBlobWrite = false;
+size_t loadBlob(const char *, void *dst, size_t max) {
+    if (!blobSize || blobSize > max) return 0;
+    memcpy(dst, blob, blobSize); return blobSize;
+}
+bool saveBlob(const char *, const void *src, size_t n) {
+    if (failBlobWrite || n > sizeof(blob)) return false;
+    memcpy(blob, src, n); blobSize = n; return true;
+}
+void eraseBlob(const char *) { blobSize = 0; }
 }
 
 void advance(uint32_t ms) { testMs += ms; Input::update(); }
@@ -186,6 +199,174 @@ void testAmbientConway() {
     }
 }
 
+// ---- Bichinho do editor (CustomPet)
+// Codifica um pet de fábrica no formato PGP1 (espelha preview/petpack.js).
+std::vector<uint8_t> encodePet(const PetDef &d, uint8_t food, const char *name) {
+    const Anim *list[] = {d.idle, d.blink, d.walk, d.eat, d.sleep, d.happy, d.sad, d.hungry, d.tired};
+    const uint32_t *pal = d.idle->frames[0]->pal;
+    std::vector<const Sprite *> frames;
+    uint8_t colors = 1;
+    for (const Anim *a : list)
+        for (uint8_t i = 0; i < a->count; ++i) {
+            const Sprite *f = a->frames[i];
+            assert(f->pal == pal); // um pacote tem uma paleta só
+            bool seen = false;
+            for (const Sprite *g : frames) seen |= g == f;
+            if (!seen) frames.push_back(f);
+            for (int p = 0; p < f->w * f->h; ++p) if (f->px[p] > colors) colors = f->px[p];
+        }
+    std::vector<uint8_t> out = {'P', 'G', 'P', '1', (uint8_t)(d.side ? 1 : 0), food, (uint8_t)strlen(name)};
+    out.insert(out.end(), name, name + strlen(name));
+    auto rgbOut = [&](uint32_t c) { out.push_back(c >> 16); out.push_back(c >> 8); out.push_back(c); };
+    out.push_back(colors);
+    for (uint8_t i = 1; i <= colors; ++i) rgbOut(pal[i]);
+    const uint32_t *egg = frameAt(*d.egg, 0).pal;
+    for (uint8_t i = 1; i <= 4; ++i) rgbOut(egg[i]);
+    out.push_back((uint8_t)frames.size());
+    for (const Sprite *f : frames) {
+        out.push_back(f->w); out.push_back(f->h);
+        out.insert(out.end(), f->px, f->px + f->w * f->h);
+    }
+    for (const Anim *a : list) {
+        out.push_back(a->frameMs & 0xFF); out.push_back(a->frameMs >> 8); out.push_back(a->count);
+        for (uint8_t i = 0; i < a->count; ++i)
+            for (size_t k = 0; k < frames.size(); ++k) if (frames[k] == a->frames[i]) out.push_back((uint8_t)k);
+    }
+    const uint32_t crc = CustomPet::crc32(out.data(), out.size());
+    for (int i = 0; i < 4; ++i) out.push_back(crc >> (8 * i));
+    return out;
+}
+
+void resign(std::vector<uint8_t> &pack) { // recalcula o CRC depois de mexer no conteúdo
+    pack.resize(pack.size() - 4);
+    const uint32_t crc = CustomPet::crc32(pack.data(), pack.size());
+    for (int i = 0; i < 4; ++i) pack.push_back(crc >> (8 * i));
+}
+
+std::string pg(const char *line) {
+    char reply[96];
+    assert(CustomPet::handleLine(line, reply, sizeof(reply)));
+    return reply;
+}
+
+std::string sendPack(const std::vector<uint8_t> &pack) {
+    std::string r = pg(("PGPUT " + std::to_string(pack.size())).c_str());
+    assert(r == "PG READY");
+    for (size_t at = 0; at < pack.size(); at += 64) {
+        std::string line = "PGD ";
+        char hex[3];
+        for (size_t i = at; i < pack.size() && i < at + 64; ++i) { snprintf(hex, sizeof(hex), "%02x", pack[i]); line += hex; }
+        r = pg(line.c_str());
+        assert(r == "PG ACK " + std::to_string(pack.size() < at + 64 ? pack.size() : at + 64));
+    }
+    return pg("PGEND");
+}
+
+// O pet recebido desenha, frame a frame, exatamente como o de fábrica.
+void assertSameArt(const PetDef &a, const PetDef &b) {
+    const Anim *la[] = {a.idle, a.blink, a.walk, a.eat, a.sleep, a.happy, a.sad, a.hungry, a.tired, a.egg};
+    const Anim *lb[] = {b.idle, b.blink, b.walk, b.eat, b.sleep, b.happy, b.sad, b.hungry, b.tired, b.egg};
+    for (int k = 0; k < 10; ++k) {
+        assert(la[k]->count == lb[k]->count && la[k]->frameMs == lb[k]->frameMs);
+        for (uint8_t i = 0; i < la[k]->count; ++i) {
+            Canvas ca, cb; ca.clear(); cb.clear();
+            ca.blitAnchored(*la[k]->frames[i], 3, 7); cb.blitAnchored(*lb[k]->frames[i], 3, 7);
+            assert(memcmp(ca.px, cb.px, sizeof(ca.px)) == 0);
+        }
+    }
+    assert(a.side == b.side);
+}
+
+// Pacotes gerados pelo navegador (test/test_petpack.cjs grava estas fixtures).
+std::vector<uint8_t> fixture(const char *path) {
+    FILE *f = fopen(path, "r");
+    assert(f && "rode a partir da raiz do repositório");
+    std::vector<uint8_t> out;
+    unsigned byte;
+    while (fscanf(f, "%2x", &byte) == 1) out.push_back((uint8_t)byte);
+    fclose(f);
+    return out;
+}
+
+void testCustomPet() {
+    // O firmware entende os bytes que o editor do site monta.
+    const char *files[] = {"test/fixtures/capy.pgp.hex", "test/fixtures/cat.pgp.hex"};
+    for (int i = 0; i < 2; ++i) {
+        const std::vector<uint8_t> web = fixture(files[i]);
+        assert(!CustomPet::validate(web.data(), web.size()));
+        assert(!CustomPet::install(web.data(), web.size()));
+        assertSameArt(CustomPet::def(), PETS[i]);
+    }
+    Storage::blobSize = 0;
+    CustomPet::begin();
+    char reply[96];
+    assert(!CustomPet::handleLine("imu on", reply, sizeof(reply))); // outros comandos seguem normais
+    assert(pg("PG?") == "PG HELLO 1 3072 0 0 -");
+    const std::vector<uint8_t> capy = encodePet(PETS[0], 0, "Capi");
+    assert(capy.size() <= CustomPet::MAX_BYTES);
+    assert(sendPack(capy) == "PG SAVED Capi");
+    assert(CustomPet::available() && Storage::blobSize == capy.size());
+    assertSameArt(CustomPet::def(), PETS[0]);
+    assert(CustomPet::def().food == &SPR_food_melon);
+    CustomPet::begin(); // reinício da placa: o pacote volta da NVS
+    assert(CustomPet::available());
+    assertSameArt(CustomPet::def(), PETS[0]);
+
+    // Envio corrompido, incompleto ou sem espaço mantém o pacote anterior.
+    std::vector<uint8_t> bad = capy; bad[20] ^= 0x55;
+    assert(sendPack(bad) == "PG ERR crc");
+    assert(pg("PGPUT 10") == "PG READY");
+    assert(pg("PGD 00112233445566778899aabbccdd") == "PG ERR overflow");
+    assert(pg("PGEND") == "PG ERR incomplete");
+    assert(pg("PGD 00") == "PG ERR noput");
+    assert(pg("PGPUT 999999") == "PG ERR size");
+    assert(pg("PGXYZ") == "PG ERR command");
+    Storage::failBlobWrite = true;
+    assert(sendPack(encodePet(PETS[1], 1, "Gato")) == "PG ERR storage");
+    Storage::failBlobWrite = false;
+    assert(CustomPet::available() && strcmp(CustomPet::def().name, "Capi") == 0);
+    assertSameArt(CustomPet::def(), PETS[0]);
+
+    // Validação de conteúdo: cada regra tem seu motivo.
+    auto broken = [&](size_t at, uint8_t value) { std::vector<uint8_t> p = capy; p[at] = value; resign(p); return p; };
+    assert(strcmp(CustomPet::validate(broken(0, 'X').data(), capy.size()), "magic") == 0);
+    assert(strcmp(CustomPet::validate(broken(5, 9).data(), capy.size()), "food") == 0);
+    const size_t colorsAt = 7 + 4; // flags, comida, tamanho do nome e "Capi"
+    assert(strcmp(CustomPet::validate(broken(colorsAt, 0).data(), capy.size()), "colors") == 0);
+    const size_t framesAt = colorsAt + 1 + capy[colorsAt] * 3 + 12;
+    const size_t firstPixel = framesAt + 3;
+    assert(strcmp(CustomPet::validate(broken(firstPixel, 15).data(), capy.size()), "color_index") == 0);
+    std::vector<uint8_t> refBad = capy; refBad[refBad.size() - 5] = 200; resign(refBad);
+    assert(strcmp(CustomPet::validate(refBad.data(), refBad.size()), "frame_ref") == 0);
+    std::vector<uint8_t> extra = capy; extra.insert(extra.end() - 4, 0); resign(extra);
+    assert(strcmp(CustomPet::validate(extra.data(), extra.size()), "trailing") == 0);
+
+    // Na seleção ele aparece como 7ª espécie; adotar troca o pet por um ovo dele.
+    alive(0);
+    assert(speciesCount() == PET_COUNT + 1);
+    assert(pg("PG?") == "PG HELLO 1 3072 1 0 Capi");
+    assert(pg("PGADOPT") == "PG ADOPTED");
+    assert(scene == Scene::Egg && sim.s().species == PET_COUNT && Game::customPetActive());
+    sim.hatch(); go(Scene::Life); petX = centerCx(idleW());
+    assert(pg("PG?") == "PG HELLO 1 3072 1 1 Capi");
+    for (uint32_t t = 0; t < 5000; t += 100) { cv.clear(); drawLife(testMs + t); assert(litCount(cv) > 0); }
+    doMenu(0, testMs); assert(act == Act::Eat && meal.x1 >= 0); // a boca é achada no desenho novo
+
+    // Arte nova chegando com ele ativo: a troca aparece na hora.
+    act = Act::None;
+    assert(sendPack(encodePet(PETS[1], 1, "Gatinho de pano")) == "PG ERR name"); // 15 > 12 letras
+    assert(sendPack(encodePet(PETS[1], 1, "Gato de pano")) == "PG SAVED Gato de pano");
+    assert(sim.s().species == PET_COUNT && scene == Scene::Life);
+    assertSameArt(def(), PETS[1]);
+    assert(pg("PG?") == "PG HELLO 1 3072 1 1 Gato de pano");
+
+    // Apagar o pacote com o pet dele ativo volta para a seleção.
+    assert(pg("PGDEL") == "PG DELETED");
+    assert(!CustomPet::available() && Storage::blobSize == 0);
+    assert(scene == Scene::Select && sim.s().phase == Phase::Select && speciesCount() == PET_COUNT);
+    assert(pg("PGADOPT") == "PG ERR nopet");
+}
+
 // Acontecimentos ociosos cedem a BOOT e movimento.
 void testIdlePriority() {
     alive();
@@ -310,6 +491,7 @@ int main() {
     testMealSequence();
     testAmbientConway();
     testIdlePriority();
+    testCustomPet();
     Display::begin(); testLedContrast();
     Input::begin(); Imu::begin();
     // Contato instável nunca vira clique.
@@ -415,5 +597,5 @@ int main() {
             }
         }
     }
-    puts("PASS: Conway dreams/chapters/ambient, meal sequence, idle priority, LED contrast, BOOT, IMU, sleep/wake, menu, egg and sprite composition");
+    puts("PASS: custom pet (web package, USB protocol, NVS), Conway dreams/chapters/ambient, meal sequence, idle priority, LED contrast, BOOT, IMU, sleep/wake, menu, egg and sprite composition");
 }

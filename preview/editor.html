@@ -1,0 +1,176 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#10130f">
+<title>PixelGotchi — Editor de bichinhos</title>
+<meta name="title-en" content="PixelGotchi — Pet editor">
+<style>
+  :root { color-scheme:dark; --bg:#10130f; --panel:#1a201a; --panel2:#141914; --line:#303b30; --text:#f3f5ed; --muted:#b1bbae; --lime:#c6f36b; --orange:#ffb865; --red:#ff8a8a; }
+  * { box-sizing:border-box }
+  body { margin:0; background:radial-gradient(ellipse at 50% 0,#273421 0,transparent 55%),var(--bg); color:var(--text); font:15px/1.5 system-ui,sans-serif }
+  nav { display:flex; flex-wrap:wrap; gap:6px 18px; align-items:center; max-width:1240px; margin:0 auto; padding:16px 20px; font-size:14px }
+  nav .brand { color:var(--lime); font:700 13px ui-monospace,monospace; letter-spacing:.16em; text-transform:uppercase; margin-right:auto }
+  nav a { color:var(--muted); text-decoration:none } nav a:hover, nav a[aria-current] { color:var(--text) }
+  .lang-switch a { color:var(--muted) } .lang-switch a[aria-current] { color:var(--lime); font-weight:700 }
+  main { max-width:1240px; margin:0 auto; padding:0 20px 48px }
+  h1 { font-size:clamp(26px,4vw,38px); letter-spacing:-.03em; margin:8px 0 6px }
+  .lead { color:var(--muted); margin:0 0 18px; max-width:75ch }
+  .layout { display:grid; grid-template-columns:260px minmax(330px,1fr) 330px; gap:16px; align-items:start }
+  @media (max-width:1100px) { .layout { grid-template-columns:1fr 1fr } .center { grid-column:1 / -1; order:-1 } }
+  @media (max-width:700px) { .layout { grid-template-columns:1fr } }
+  .panel { background:var(--panel); border:1px solid var(--line); border-radius:16px; padding:16px }
+  .panel + .panel { margin-top:16px }
+  h2 { font-size:13px; letter-spacing:.1em; text-transform:uppercase; color:var(--orange); margin:0 0 10px }
+  label { display:block; font-size:13px; color:var(--muted); margin:10px 0 4px }
+  label.inline { display:flex; gap:8px; align-items:center; color:var(--text); font-size:14px }
+  input[type=text], input[type=number], select { width:100%; font:inherit; padding:7px 9px; border-radius:8px; border:1px solid #454951; background:#23262e; color:var(--text) }
+  button { font:inherit; font-size:14px; padding:7px 11px; border-radius:8px; border:1px solid #454951; background:#23262e; color:var(--text); cursor:pointer }
+  button:hover:not(:disabled) { border-color:var(--lime) }
+  button:disabled { opacity:.45; cursor:default }
+  button.main { background:var(--lime); color:#17200d; border-color:var(--lime); font-weight:800 }
+  button[aria-pressed=true] { background:#34422a; border-color:var(--lime) }
+  :focus-visible { outline:2px solid var(--lime); outline-offset:2px }
+  .row { display:flex; flex-wrap:wrap; gap:6px; margin:8px 0 }
+  .center { display:flex; flex-direction:column; align-items:center }
+  #grid { touch-action:none; cursor:crosshair; border-radius:12px; background:#050506; max-width:100%; height:auto }
+  .palette { display:flex; flex-wrap:wrap; gap:6px; margin:10px 0 }
+  .sw { width:34px; height:34px; border-radius:8px; border:2px solid #454951; padding:0; position:relative }
+  .sw[aria-pressed=true] { border-color:#fff; box-shadow:0 0 0 2px var(--lime) }
+  .sw.erase { background:repeating-linear-gradient(45deg,#2a2d35 0 5px,#16181d 5px 10px) }
+  .anims { display:flex; flex-wrap:wrap; gap:5px }
+  .anims button { font-size:13px; padding:5px 8px }
+  .timeline { display:flex; flex-wrap:wrap; gap:6px; margin:10px 0 }
+  .step { padding:3px; border-radius:8px; border:2px solid #454951; background:#050506; line-height:0 }
+  .step[aria-pressed=true] { border-color:var(--lime) }
+  .step canvas { width:44px; height:44px }
+  .hint { color:var(--muted); font-size:13px; margin:6px 0 }
+  #preview { border-radius:10px; background:#050506 }
+  .issues { margin:8px 0 0; padding-left:18px; font-size:14px }
+  .issues .err { color:var(--red) } .issues .warn { color:var(--orange) } .issues .ok { color:var(--lime); list-style:none; margin-left:-18px }
+  progress { width:100%; height:10px; accent-color:var(--lime) }
+  #board-status { font-size:14px; min-height:1.5em; color:var(--muted) }
+  #board-status.good { color:var(--lime) } #board-status.bad { color:var(--red) }
+  .warning { margin-top:10px; padding:10px 12px; border:1px solid #745a34; border-radius:10px; background:#322819; color:#f6ddb5; font-size:13px }
+  a { color:var(--lime) }
+  .sr { position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0) }
+</style>
+</head>
+<body>
+<nav aria-label="Páginas" data-en-aria-label="Pages">
+  <span class="brand">PixelGotchi</span>
+  <a href="guia.html" data-en="Start here">Comece aqui</a>
+  <a href="index.html" data-en="Simulator">Simulador</a>
+  <a href="editor.html" aria-current="page" data-en="Pet editor">Editor</a>
+  <a href="install.html" data-en="Install on the board">Instalar na placa</a>
+  <a href="https://github.com/pantojinho/PixelGotchi">GitHub</a>
+  <span class="lang-switch"></span>
+</nav>
+<main>
+  <h1 data-en="Create your own pet">Crie o seu bichinho</h1>
+  <p class="lead" data-en="Start from one of the six pets, draw each pose in the real 8×8 grid, test it in the simulator and send it to your board over USB. Everything is saved in this browser; download the project file to keep it safe.">Comece de um dos seis bichinhos, desenhe cada pose na grade 8×8 de verdade, teste no simulador e envie para a sua placa pelo cabo USB. Tudo fica salvo neste navegador; baixe o arquivo do projeto para guardar.</p>
+
+  <div class="layout">
+    <div>
+      <section class="panel">
+        <h2 data-en="Project">Projeto</h2>
+        <label for="template" data-en="Start from">Começar de</label>
+        <select id="template"></select>
+        <div class="row"><button id="use-template" data-en="Use this template">Usar este modelo</button></div>
+        <label for="name" data-en="Name (up to 12 letters, no accents)">Nome (até 12 letras, sem acento)</label>
+        <input id="name" type="text" maxlength="12" autocomplete="off">
+        <label for="food" data-en="Favorite food">Comida favorita</label>
+        <select id="food"></select>
+        <label class="inline"><input id="side" type="checkbox"> <span data-en="Drawn in profile facing right (flips when walking left)">Desenhado de perfil olhando para a direita (espelha ao andar para a esquerda)</span></label>
+      </section>
+      <section class="panel">
+        <h2 data-en="File">Arquivo</h2>
+        <div class="row">
+          <button id="undo" data-en="Undo">Desfazer</button>
+          <button id="redo" data-en="Redo">Refazer</button>
+        </div>
+        <div class="row">
+          <button id="save-file" data-en="Download project">Baixar projeto</button>
+          <button id="open-file" data-en="Open project">Abrir projeto</button>
+          <input id="file-input" type="file" accept=".json,application/json" class="sr" tabindex="-1">
+        </div>
+        <div class="row"><button id="export-art" data-en="Export .art (for the repository)">Exportar .art (para o repositório)</button></div>
+        <p class="hint" data-en="The .art file is the text format of the repository, for those who want to include the pet in the code.">O .art é o formato de texto do repositório, para quem quiser incluir o bichinho no código.</p>
+      </section>
+    </div>
+
+    <div class="center">
+      <section class="panel" style="width:100%">
+        <h2 id="frame-title"></h2>
+        <canvas id="grid" width="400" height="400" aria-label="Grade 8×8 de desenho" data-en-aria-label="8×8 drawing grid"></canvas>
+        <div class="palette" id="palette" role="group" aria-label="Cores" data-en-aria-label="Colors"></div>
+        <div class="row">
+          <label class="inline" style="margin:0"><span data-en="Selected color">Cor selecionada</span> <input id="color-edit" type="color"></label>
+          <button id="add-color" data-en="+ Color">+ Cor</button>
+          <button id="remove-color" data-en="− Remove color">− Remover cor</button>
+        </div>
+        <div class="row" role="group" aria-label="Ferramentas" data-en-aria-label="Tools">
+          <button id="tool-pen" aria-pressed="true" data-en="Pencil">Lápis</button>
+          <button id="tool-fill" aria-pressed="false" data-en="Fill">Balde</button>
+          <button id="flip" data-en="Mirror">Espelhar</button>
+          <button id="shift-left" aria-label="Mover para a esquerda" data-en-aria-label="Move left">←</button>
+          <button id="shift-right" aria-label="Mover para a direita" data-en-aria-label="Move right">→</button>
+          <button id="shift-up" aria-label="Mover para cima" data-en-aria-label="Move up">↑</button>
+          <button id="shift-down" aria-label="Mover para baixo" data-en-aria-label="Move down">↓</button>
+          <button id="clear" data-en="Clear">Limpar</button>
+        </div>
+        <p class="hint" data-en="Click or drag to paint; right click erases. Black is an unlit LED: the silhouette is made of color, not outlines. The pet stands on the bottom row.">Clique ou arraste para pintar; botão direito apaga. Preto é LED apagado: a silhueta é feita de cor, não de contorno. O bichinho fica apoiado na última linha.</p>
+      </section>
+    </div>
+
+    <div>
+      <section class="panel">
+        <h2 data-en="Animations">Animações</h2>
+        <div class="anims" id="anims" role="group"></div>
+        <div class="timeline" id="timeline"></div>
+        <p class="hint" id="frame-use"></p>
+        <div class="row">
+          <button id="step-new" data-en="+ New frame (copy)">+ Frame novo (cópia)</button>
+          <button id="step-repeat" data-en="+ Repeat this one">+ Repetir este</button>
+        </div>
+        <div class="row">
+          <button id="step-left" aria-label="Mover passo para a esquerda" data-en-aria-label="Move step left">◀</button>
+          <button id="step-right" aria-label="Mover passo para a direita" data-en-aria-label="Move step right">▶</button>
+          <button id="step-remove" data-en="Remove step">Remover passo</button>
+        </div>
+        <label for="ms" data-en="Time per step (ms)">Tempo de cada passo (ms)</label>
+        <input id="ms" type="number" min="40" max="5000" step="10">
+        <div class="row" style="align-items:center; gap:14px">
+          <canvas id="preview" width="120" height="120" aria-label="Prévia da animação" data-en-aria-label="Animation preview"></canvas>
+          <div>
+            <p class="hint" data-en="Preview with the LED look.">Prévia com a aparência dos LEDs.</p>
+            <button id="open-sim" data-en="Test in the simulator">Testar no simulador</button>
+          </div>
+        </div>
+      </section>
+      <section class="panel">
+        <h2 data-en="Check">Conferência</h2>
+        <ul class="issues" id="issues"></ul>
+      </section>
+      <section class="panel">
+        <h2 data-en="Send to the board">Enviar para a placa</h2>
+        <p class="hint" data-en="Chrome or Edge on a computer, with the board on a data USB-C cable. The board needs the current firmware: if it does not answer, update it in the installer first.">Chrome ou Edge no computador, com a placa num cabo USB-C de dados. A placa precisa do firmware atual: se ela não responder, atualize antes pelo instalador.</p>
+        <div class="row">
+          <button id="connect" data-en="Connect board">Conectar placa</button>
+          <button id="send" class="main" disabled data-en="Send pet">Enviar bichinho</button>
+        </div>
+        <label class="inline"><input id="adopt" type="checkbox"> <span data-en="Replace my current pet with an egg of this one (the current pet is lost)">Trocar o meu bichinho atual por um ovo deste (o atual é perdido)</span></label>
+        <progress id="progress" max="1" value="0" hidden></progress>
+        <p id="board-status" role="status" aria-live="polite"></p>
+        <p class="hint" data-en="Without replacing, the pet shows up as a 7th species in the selection. If your current pet is already the custom one, the new drawing appears right away.">Sem trocar, ele aparece como 7ª espécie na seleção. Se o seu bichinho atual já for o do editor, o desenho novo aparece na hora.</p>
+      </section>
+    </div>
+  </div>
+</main>
+<script src="i18n.js"></script>
+<script src="art.js"></script>
+<script src="petpack.js"></script>
+<script src="editor.js"></script>
+</body>
+</html>
