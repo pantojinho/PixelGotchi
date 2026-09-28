@@ -561,6 +561,16 @@ int main() {
     testMs += 2000; Game::update(); assert(sim.s().asleep);
     alive(); lastInputAt = testMs; testMs += AUTO_SLEEP_IDLE_MS + 1000; Game::update();
     assert(!sim.s().asleep);
+    // Cochilo durante o dia: energia abaixo de 60 e 3 min sozinho. Com energia boa, não.
+    alive(); PetState drowsy = sim.s(); drowsy.energy = NAP_ENERGY - 5;
+    Storage::save(&drowsy, sizeof(drowsy)); sim.begin();
+    lastInputAt = testMs; testMs += NAP_IDLE_MS - 1000; Game::update();
+    assert(!sim.s().asleep);
+    testMs += 2000; Game::update(); assert(sim.s().asleep);
+    alive(); PetState rested = sim.s(); rested.energy = NAP_ENERGY + 10;
+    Storage::save(&rested, sizeof(rested)); sim.begin();
+    lastInputAt = testMs; testMs += NAP_IDLE_MS + 1000; Game::update();
+    assert(!sim.s().asleep);
 
     // Segurar no menu não confirma cuidados antes do reset.
     alive(); dispatch(Ev::Long); menuIdx = 0;
@@ -597,5 +607,5 @@ int main() {
             }
         }
     }
-    puts("PASS: custom pet (web package, USB protocol, NVS), Conway dreams/chapters/ambient, meal sequence, idle priority, LED contrast, BOOT, IMU, sleep/wake, menu, egg and sprite composition");
+    puts("PASS: custom pet (web package, USB protocol, NVS), daytime nap, Conway dreams/chapters/ambient, meal sequence, idle priority, LED contrast, BOOT, IMU, sleep/wake, menu, egg and sprite composition");
 }

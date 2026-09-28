@@ -40,9 +40,11 @@ and a wild variant.
 - Each pet has its **own name** derived from its DNA (e.g. KALU, MOBITE).
   It introduces itself when it hatches, opens the status screen and goes on
   the gravestone.
-- Tired (energy < 25), it stands still nodding off. If nobody clicks or
-  gestures for 30 s it falls asleep on its own; asleep it recovers 1 energy
-  per minute and wakes up by itself when full.
+- **Energy and sleep:** awake it spends 1 energy every 12 minutes (full to
+  empty in ~20 h) and each play session costs 5. With energy below 60 and
+  nobody around for 3 minutes, it takes a **nap** on its own; tired (below
+  25), it sleeps after 30 s without clicks or gestures. Asleep it recovers 1
+  per minute, dreams and wakes up by itself when its energy is full.
 
 The words the board scrolls (status pages, gravestone) are in Portuguese:
 COMIDA = food, ALEGRIA = joy, ENERGIA = energy, SAUDE = health, DOENTE = sick,
@@ -111,7 +113,7 @@ The long action only happens when you release the button.
 | Life | Hold BOOT 0.6 s and release | Opens the menu on the most urgent care |
 | Menu | Click or tilt | Changes the icon; return to center before the next tilt |
 | Menu | Hold BOOT 0.6 s and release | Runs the selected care |
-| Life | Shake | Plays: joy +20, energy −8, fullness −3; 5 s pause between gestures |
+| Life | Shake | Plays: joy +20, energy −5, fullness −3; 5 s pause between gestures |
 | Life | Tilt sideways | The pet goes to the lower side |
 | Life | Turn the matrix face down for 1.5 s | Sleeps |
 | Sleep started by the gesture | Turn it back up | Wakes up; sleep chosen in the menu continues until BOOT/menu or full energy |

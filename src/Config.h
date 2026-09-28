@@ -66,11 +66,16 @@ constexpr uint32_t INCUBATION_IDLE_GRACE_MS = 15UL * 1000UL;
 // Tudo em minutos de jogo. Stats vão de 0 a 100.
 constexpr uint8_t HUNGER_EVERY_MIN = 4;     // -1 de saciedade
 constexpr uint8_t HAPPY_EVERY_MIN = 5;      // -1 de alegria
-constexpr uint8_t ENERGY_EVERY_MIN = 6;     // -1 de energia acordado
+constexpr uint8_t ENERGY_EVERY_MIN = 12;    // -1 de energia acordado (100→0 em ~20 h)
 constexpr uint8_t SLEEP_GAIN_EVERY_MIN = 1; // +1 de energia dormindo (0→100 em ~1h40)
 // Cansado (energia < NEED_LOW) e ninguém brinca com ele (sem clique nem gesto)
 // por esse tempo: pega no sono sozinho. Só segurar a placa não o mantém acordado.
 constexpr uint32_t AUTO_SLEEP_IDLE_MS = 30000;
+// Cochilo durante o dia: com energia abaixo de NAP_ENERGY e ninguém por perto
+// (sem clique, gesto nem movimento) por NAP_IDLE_MS, ele dorme sozinho, sonha
+// e acorda quando a energia enche. Assim a energia quase nunca chega a zero.
+constexpr uint8_t NAP_ENERGY = 60;
+constexpr uint32_t NAP_IDLE_MS = 3UL * 60UL * 1000UL;
 // Em energia boa, depois de 2 min sem BOOT/gesto/movimento, o mundo de Conway
 // aparece ao redor do pet por 7 s a cada 45 s (glider ou blinker, só nos
 // pixels livres). Ao dormir, sonha após 8 s de pet visível.
@@ -108,7 +113,7 @@ constexpr uint8_t WILD_DEATH_DAYS = 5;
 
 constexpr uint8_t FEED_GAIN = 30;
 constexpr uint8_t PLAY_GAIN = 20;
-constexpr uint8_t PLAY_ENERGY_COST = 8;
+constexpr uint8_t PLAY_ENERGY_COST = 5;
 constexpr uint8_t PET_GAIN = 5;             // carinho no menu
 constexpr uint16_t PLAY_COOLDOWN_MS = 5000; // sacudidas repetidas não gastam energia em sequência
 constexpr uint16_t TEXT_STEP_MS = 150;      // texto rolando: ms por coluna (maior = mais devagar)

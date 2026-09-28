@@ -1186,11 +1186,14 @@ void sceneLife(uint32_t now, Ev e) {
         default: break;
     }
 
-    // Cansado e sozinho: dorme por conta própria (e recupera até acordar cheio).
-    if (!s.asleep && act == Act::None && s.energy < NEED_LOW && now - lastInputAt > AUTO_SLEEP_IDLE_MS &&
-        sim.lightsOff() == Result::Ok) {
+    // Dorme por conta própria (e recupera até acordar cheio): logo, se estiver
+    // cansado; depois de alguns minutos sozinho, se a energia já estiver baixando.
+    const uint32_t alone = now - lastInputAt;
+    const bool tired = s.energy < NEED_LOW && alone > AUTO_SLEEP_IDLE_MS;
+    const bool drowsy = s.energy < NAP_ENERGY && alone > NAP_IDLE_MS;
+    if (!s.asleep && act == Act::None && (tired || drowsy) && sim.lightsOff() == Result::Ok) {
         gestureSleep = false;
-        Serial.println("[Game] cansado e sozinho: dormiu");
+        Serial.println(tired ? "[Game] cansado e sozinho: dormiu" : "[Game] sozinho: cochilou");
     }
 
     // Durante a visita de Conway ele para e observa; cuidados continuam por cima.

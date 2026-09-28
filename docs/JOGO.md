@@ -40,9 +40,11 @@ além de uma paleta de ovo e uma variante selvagem.
   O DNA continua variando personalidade e tonalidade de cada indivíduo.
 - Cada bicho tem um **nome próprio** tirado do DNA (ex.: KALU, MOBITE).
   Ele se apresenta ao nascer, abre a tela de status e vai na lápide.
-- Cansado (energia < 25), ele fica parado cabeceando. Se ninguém clicar
-  nem fizer um gesto por 30 s, dorme sozinho; dormindo recupera 1 de
-  energia por minuto e acorda sozinho quando enche.
+- **Energia e sono:** acordado ele gasta 1 de energia a cada 12 minutos (de
+  cheio a vazio em ~20 h) e cada brincadeira custa 5. Com a energia abaixo de
+  60 e ninguém por perto por 3 minutos, ele tira um **cochilo** sozinho;
+  cansado (abaixo de 25), dorme depois de 30 s sem clique nem gesto. Dormindo
+  recupera 1 por minuto, sonha e acorda sozinho quando a energia enche.
 
 ## Acontecimentos, refeição e sonhos
 
@@ -108,7 +110,7 @@ pode soltar. A ação longa só acontece ao soltar o botão.
 | Vida | Segure BOOT por 0,6 s e solte | Abre o menu no cuidado mais urgente |
 | Menu | Clique ou incline | Troca o ícone; volte ao centro antes da próxima inclinação |
 | Menu | Segure BOOT por 0,6 s e solte | Executa o cuidado selecionado |
-| Vida | Chacoalhe | Brinca: alegria +20, energia −8, saciedade −3; pausa de 5 s entre gestos |
+| Vida | Chacoalhe | Brinca: alegria +20, energia −5, saciedade −3; pausa de 5 s entre gestos |
 | Vida | Incline lateralmente | O pet acompanha o lado mais baixo |
 | Vida | Vire a matriz para baixo por 1,5 s | Dorme |
 | Sono iniciado pelo gesto | Desvire | Acorda; o sono escolhido no menu continua até BOOT/menu ou energia cheia |

@@ -38,6 +38,7 @@
   // capítulos e bolha usam os mesmos tempos do firmware.
   const IDLE_DREAM_AFTER = 12000, IDLE_DREAM_CYCLE = 20000, IDLE_DREAM_SHOW = 7000;
   const SLEEP_DREAM_AFTER = 8000, SLEEP_PET_REVEAL = 8000, DREAM_STEP = 500;
+  const NAP_IDLE = 45000; // cochilo diurno (NAP_IDLE_MS = 3 min no firmware)
   const DREAM_BUBBLE = 2400, BUBBLE_GROW = 900, DREAM_FADE = 1000;
   const CHAPTER_MIN = 20000, CHAPTER_MAX = 40000, STILL_STEPS = 6, OSC_MAX = 10000;
   function dreamHash(value) {
@@ -356,7 +357,7 @@
         break;
       case 1:
         ok = !state.asleep && state.energy >= 10;
-        if (ok) { add('happy', 20); add('energy', -8); add('hunger', -3); action = 'brincando'; B.x = centerCx(idleW()); }
+        if (ok) { add('happy', 20); add('energy', -5); add('hunger', -3); action = 'brincando'; B.x = centerCx(idleW()); }
         break;
       case 2: ok = state.poop > 0; if (ok) { state.poop = 0; action = 'limpar'; } break;
       case 3: ok = state.sick; if (ok) { state.sick = false; action = 'remedio'; } break;
@@ -467,8 +468,13 @@
     if (screen !== 'life' && now >= deadline && heldAt === null) { screen = 'life'; say(L('Menu fechado por inatividade.', 'Menu closed after inactivity.')); }
     const actionMs = { comendo:3000, brincando:3000, carinho:1600, limpar:1600, remedio:2000, recusa:900 };
     if (action && now - actionAt >= actionMs[action]) action = '';
-    if(screen==='life'&&!state.asleep&&!action&&state.energy<25&&now-lastActivityAt>30000) {
-      startSleep(now); say(L('Cansado e sozinho: cochilou. Ele também vai sonhar.', 'Tired and alone: it dozed off. It will dream too.'));
+    // Espelha o firmware: cansado dorme após 30 s sozinho; com energia < 60, cochila
+    // após um tempo sozinho (3 min na placa, 45 s aqui).
+    const alone = now - lastActivityAt;
+    if(screen==='life'&&!state.asleep&&!action&&((state.energy<25&&alone>30000)||(state.energy<60&&alone>NAP_IDLE))) {
+      startSleep(now);
+      say(state.energy<25 ? L('Cansado e sozinho: cochilou. Ele também vai sonhar.', 'Tired and alone: it dozed off. It will dream too.')
+                          : L('Sozinho e com a energia baixando: tirou um cochilo.', 'Alone with energy running low: it took a nap.'));
     }
     let buf = b, fullDream = false;
     if (screen === 'menu') {
