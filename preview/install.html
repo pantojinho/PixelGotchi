@@ -20,6 +20,10 @@
   .install { margin:24px 0 10px }
   esp-web-install-button { display:block; --esp-tools-button-color:var(--lime); --esp-tools-button-text-color:#17200d; --esp-tools-button-border-radius:12px; --esp-tools-button-padding:14px 22px; --esp-tools-button-font-size:17px }
   .install button { width:100%; padding:14px 18px; border:0; border-radius:12px; background:var(--lime); color:#17200d; font-size:17px; font-weight:800 }
+  button:disabled { opacity:.45; cursor:wait }
+  .consent { display:flex; gap:10px; align-items:flex-start; margin:16px 0; font-size:14px }
+  .consent input { margin-top:5px }
+  #retry { margin-top:10px; background:transparent; border:1px solid var(--line); color:var(--text); padding:8px 12px; border-radius:8px }
   .note { margin:10px 0 0; color:var(--muted); font-size:13px }
   .warning { margin-top:24px; padding:14px 16px; border:1px solid #745a34; border-radius:12px; background:#322819; color:#f6ddb5; font-size:14px }
   .links { margin-top:26px; padding-top:18px; border-top:1px solid var(--line); display:flex; flex-wrap:wrap; gap:12px 20px; font-size:14px }
@@ -27,7 +31,7 @@
   #support { min-height:1.5em; color:var(--muted); font-size:14px; margin:8px 0 }
   @media(prefers-reduced-motion:no-preference) { main { animation:rise .35s ease-out } @keyframes rise { from { opacity:0; transform:translateY(8px) } } }
 </style>
-<script type="module" src="https://unpkg.com/esp-web-tools@10/dist/web/install-button.js?module"></script>
+<script type="module" src="install.js"></script>
 </head>
 <body>
 <main>
@@ -38,30 +42,28 @@
   <ol>
     <li>Use um computador com <strong>Chrome ou Edge</strong> e um cabo USB-C que transfira dados.</li>
     <li>Conecte a Waveshare ESP32-S3-Matrix diretamente ao computador.</li>
-    <li>Clique em instalar, escolha a porta da placa na janela do navegador e autorize a conexão.</li>
+    <li>Confirme o aviso abaixo, clique em conectar e escolha a porta da placa. Na janela seguinte, selecione <strong>Install</strong> e confirme.</li>
     <li>Aguarde a confirmação de conclusão antes de desconectar. Se não conectar, siga a dica abaixo.</li>
   </ol>
   <div class="install">
-    <esp-web-install-button manifest="manifest.json">
-      <button slot="activate">Conectar e instalar o PixelGotchi</button>
+    <label class="consent"><input id="consent" type="checkbox">Entendo que esta instalação apaga o pet salvo e inicia um novo jogo.</label>
+    <esp-web-install-button>
+      <button id="install" slot="activate" disabled>Conectar e instalar o PixelGotchi</button>
       <span slot="unsupported">Este navegador não oferece a conexão USB necessária. Tente Chrome ou Edge em um computador.</span>
       <span slot="not-allowed">O USB exige uma página HTTPS ou localhost. Abra a página segura do instalador.</span>
     </esp-web-install-button>
     <p id="support" role="status" aria-live="polite"></p>
+    <p id="version" class="note"></p>
+    <button id="retry" type="button" hidden>Tentar carregar novamente</button>
     <p class="note">Disponível em página HTTPS ou em localhost, nos navegadores compatíveis.</p>
   </div>
   <aside class="warning"><strong>Atenção:</strong> esta imagem completa apaga e regrava os dados da placa, inclusive o pet salvo. Só prossiga se estiver de acordo. Atualização que preserve os dados exige um pacote próprio; não use este instalador para esse fim.</aside>
   <h2>Não apareceu a placa?</h2>
   <p class="lead">Confirme que o cabo transmite dados e feche monitores seriais ou IDEs. Se necessário, segure <strong>BOOT</strong>, toque em <strong>RESET</strong>, solte BOOT e tente novamente. Nunca desconecte durante a gravação.</p>
+  <h2>Depois de instalar</h2>
+  <p class="lead">Se a matriz não iniciar, toque em RESET com BOOT solto. Escolha o pet: clique para trocar; segure BOOT por 0,6 s e solte para confirmar. O ovo choca após 5 minutos acumulados de movimento suave.</p>
   <div class="links"><a href="./">Voltar ao preview</a><a href="https://github.com/pantojinho/PixelGotchi#instalação-manual-via-usb">Instalação manual</a><a href="https://github.com/pantojinho/PixelGotchi">Código e documentação</a></div>
 </main>
-<script>
-const support = document.querySelector('#support');
-const secure = window.isSecureContext;
-const serial = 'serial' in navigator;
-if (!secure) support.textContent = 'Abra esta página em HTTPS ou localhost para liberar o USB no navegador.';
-else if (!serial) support.textContent = 'Este navegador não oferece USB serial. Use Chrome ou Edge em um computador, ou siga a instalação manual.';
-else support.textContent = 'USB disponível. Conecte a placa e clique no botão para escolher o dispositivo.';
-</script>
+<noscript>Ative JavaScript para usar a instalação USB ou siga a instalação manual.</noscript>
 </body>
 </html>

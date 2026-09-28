@@ -506,7 +506,7 @@
       B.x = drawMeal(b, pet, meal, now - actionAt); B.faceRight = meal.dir > 0;
     } else if (screen === 'life' && action && pose[action]) buf = careFrame(pet, action, now - actionAt, B.x);
     else if (screen === 'life' && action === 'recusa') blitA(b, animFrame(pet.id + '_sad', t), B.x + (Math.floor((now - actionAt) / 120) % 2 ? 1 : -1), 7);
-    else if (screen === 'life' && action === 'limpar') { blitA(b, animFrame(pet.id + '_idle', t), B.x, 7); blit(b, animFrame('fx_sparkle_anim', t), Math.floor((now-actionAt)/140)-2, 5); }
+    else if (screen === 'life' && action === 'limpar') { blitA(b, animFrame(pet.id + '_idle', t), B.x, 7); blitFree(b, animFrame('fx_sparkle_anim', t), Math.floor((now-actionAt)/140)-2, 5); }
     else if (screen === 'life' && action === 'remedio') buf=careFrame(pet,'remedio',now-actionAt,B.x);
     else if (screen === 'life' && state.sick) buf = pose.doente(t);
     else if (screen === 'life' && state.hunger < 25) buf = pose['com fome'](t);
@@ -528,7 +528,7 @@
       drawBehavior(b, now, now - B.at, visiting);
       if (visiting) drawAmbient(b, now); // máscara só visual; o autômato continua completo
     }
-    if (screen === 'life' && !fullDream && state.poop && action !== 'limpar') blit(buf, 'fx_poop', 5, 6);
+    if (screen === 'life' && !fullDream && state.poop && action !== 'limpar') blitFree(buf, 'fx_poop', 5, 6);
     // Pedido de ajuda: ícone do menu que resolve a cada 4 s; senão, pontinho na cor dele.
     const need = screen === 'life' && !action && !fullDream ? urgentNeed() : -1;
     if (need >= 0 && now % 4000 < 900) {

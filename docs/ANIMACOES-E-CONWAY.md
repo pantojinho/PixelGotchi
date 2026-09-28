@@ -106,9 +106,10 @@ gliders atravessando, pequenas pulsações e grupos nascendo e se desfazendo.
 Detectar um padrão vazio ou parado e preparar o capítulo seguinte. Um
 oscilador pode continuar por algum tempo antes da próxima mudança.
 
-O código atual reinicia padrões turbulentos apenas quando ficam vazios.
-Um padrão que se estabiliza pode permanecer imóvel durante o restante do
-sono; essa situação precisa de tratamento.
+Na implementação anterior, um padrão estabilizado podia permanecer imóvel
+durante o restante do sono. Agora um padrão vazio troca de capítulo na hora,
+um imóvel após 3 s, um oscilador residual após 10 s, e todo capítulo dura
+entre 20 e 40 s.
 
 Variar posição, orientação e semente com o DNA e um contador de capítulos
 para ter variedade reproduzível. Cada capítulo usa uma paleta pequena,
@@ -153,7 +154,7 @@ depois de validar a alimentação contínua e os capítulos dos sonhos.
 | 5 — sonho com capítulos | Bolhinhas da cabeça, bolha crescendo até cobrir a matriz (2,4 s). Capítulos `Gliders`, `Pulse`, `Soup` de 20–40 s, sementes por DNA + contador, troca por substituição de pixels; vazio passa de capítulo na hora, imóvel após 3 s, oscilador que sobrou pulsa no máximo 10 s | Pendente |
 | 6 — controles | Menu, gesto e cochilo automático entram pelo mesmo `updateDreamView()`. Movimento revela o pet dormindo, o sonho volta pela bolha; BOOT acorda; desvirar acorda o sono do gesto | Pendente |
 
-## Orientação de execução para o Cláudio
+## Orientação para próximas revisões
 
 Implementar uma etapa por vez, começando pelo defeito do preview. Em cada
 etapa, conferir a sequência visual completa no navegador e a composição

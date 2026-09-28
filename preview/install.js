@@ -1,0 +1,67 @@
+// Verifica o pacote antes de disponibilizar o fluxo USB do ESP Web Tools.
+const support = document.querySelector('#support');
+const button = document.querySelector('#install');
+const consent = document.querySelector('#consent');
+const widget = document.querySelector('esp-web-install-button');
+const retry = document.querySelector('#retry');
+let ready = false;
+
+function updateButton() { button.disabled = !ready || !consent.checked; }
+consent.addEventListener('change', updateButton);
+widget.addEventListener('click', event => {
+  if (!ready || !consent.checked) { event.preventDefault(); event.stopImmediatePropagation(); }
+}, true);
+
+async function getJson(path) {
+  const response = await fetch(path, { cache: 'no-store' });
+  if (!response.ok) throw new Error('O pacote de instalação não está disponível.');
+  return response.json();
+}
+
+async function loadInstaller() {
+  ready = false; updateButton(); retry.hidden = true;
+  if (!window.isSecureContext) {
+    support.textContent = 'Abra esta página em HTTPS ou localhost para liberar o USB.'; return;
+  }
+  if (!('serial' in navigator)) {
+    support.textContent = 'Este navegador não oferece USB serial. Use Chrome ou Edge em um computador.'; return;
+  }
+  support.textContent = 'Conferindo o firmware e carregando a conexão USB…';
+  try {
+    const [manifest, info] = await Promise.all([getJson('manifest.json'), getJson('firmware-info.json')]);
+    const build = manifest.builds?.find(item => item.chipFamily === 'ESP32-S3');
+    const part = build?.parts?.[0];
+    if (build?.parts?.length !== 1 || part?.offset !== 0 || part.path !== info.path ||
+        manifest.version !== info.version || info.chipFamily !== 'ESP32-S3' ||
+        info.flashSize !== 4194304 || !Number.isInteger(info.size) || info.size < 65536 ||
+        info.size > info.flashSize || !/^firmware\/PixelGotchi-esp32s3-[A-Za-z0-9._-]+\.bin$/.test(info.path) ||
+        !/^[a-f0-9]{64}$/.test(info.sha256)) {
+      throw new Error('O pacote de instalação está inconsistente.');
+    }
+    const binary = await fetch(new URL(part.path, new URL('manifest.json', location.href)), { cache: 'no-store' });
+    if (!binary.ok) throw new Error('O arquivo do firmware não está disponível.');
+    const bytes = await binary.arrayBuffer();
+    const digest = await crypto.subtle.digest('SHA-256', bytes);
+    const hash = [...new Uint8Array(digest)].map(value => value.toString(16).padStart(2, '0')).join('');
+    if (bytes.byteLength !== info.size || new Uint8Array(bytes)[0] !== 0xE9 || hash !== info.sha256) {
+      throw new Error('O arquivo do firmware está incompleto ou não corresponde à versão publicada.');
+    }
+    await import('https://unpkg.com/esp-web-tools@10.4.0/dist/web/install-button.js?module');
+    await customElements.whenDefined('esp-web-install-button');
+    // A biblioteca baixa novamente o binário ao gravar. URLs blob mantêm os
+    // mesmos bytes conferidos acima, mesmo se houver outra publicação do site.
+    const imageUrl = URL.createObjectURL(new Blob([bytes], {type:'application/octet-stream'}));
+    const locked = {...manifest, builds:[{...build, parts:[{path:imageUrl, offset:0}]}]};
+    locked.new_install_prompt_erase = false;
+    locked.new_install_improv_wait_time = 0;
+    widget.manifest = URL.createObjectURL(new Blob([JSON.stringify(locked)], {type:'application/json'}));
+    document.querySelector('#version').textContent = `Versão ${info.version} · Waveshare ESP32-S3-Matrix · flash 4 MB`;
+    ready = true; updateButton();
+    support.textContent = 'Firmware conferido. Confirme acima, escolha a porta USB e selecione Install na janela. Acompanhe a gravação e a conclusão nessa janela.';
+  } catch (error) {
+    support.textContent = `${error.message} Confira sua conexão ou use a instalação manual.`;
+    retry.hidden = false;
+  }
+}
+retry.addEventListener('click', loadInstaller);
+loadInstaller();

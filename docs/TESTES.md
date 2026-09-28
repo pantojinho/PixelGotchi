@@ -14,12 +14,29 @@ não substituem ensaio com placa real.
 
 | Verificação | Resultado | Observação |
 |---|---|---|
-| Geração da imagem e manifesto | Passou localmente | `python tools/build_web_installer.py`; imagem ESP32-S3 de 429.248 bytes, offset 0 e revisão `efaff67` |
-| Carregamento e estado da página | Passou localmente | Preview em localhost abriu em Chrome; estado de USB disponível e botão visíveis. Sem placa conectada, a seleção da porta não foi exercitada |
+| Geração da imagem e manifesto | Passou localmente | `python tools/build_web_installer.py`; imagem ESP32-S3 combinada, offset 0, flash de 4 MB, versão e SHA-256 em `firmware-info.json` |
+| Carregamento e estado da página | Passou localmente | Biblioteca 10.4.0 carregou em localhost; botão só habilitou após confirmação; console sem erros. Seleção da porta e gravação não foram exercitadas |
+| Integridade e bloqueios | Passou em Node/Python | Código real bloqueia pacote ausente, versão divergente e SHA-256 inválido; bytes usados na gravação são os mesmos conferidos. Cobertos também HTTPS/Web Serial indisponíveis e runtime Python do CI |
 | Gravação em Matrix física | Pendente | Usar placa de teste; confirmar que o aviso de apagamento aparece e esperar conclusão |
 | Inicialização após gravação | Pendente | Reiniciar, conferir pets/LEDs, BOOT, IMU e logs USB |
 | Falha e recuperação | Pendente | Desconectar/cancelar antes de gravar; testar BOOT + RESET e caminho manual |
 | Atualização preservando o pet | Pendente | O instalador de imagem completa não promete preservar estado; validar fluxo parcial separado |
+
+### Revisão das animações e do instalador — 28/09/2026
+
+- Firmware compilado: RAM **20.720 bytes**, aplicação **367.017 bytes**.
+- Pacote combinado local: **432.912 bytes**, ESP32-S3, offset 0, flash de 4 MB.
+  Revisão local de desenvolvimento `e4b0f66-dev`; o CI gera a revisão do commit publicado.
+- Passaram `tools/test_controls.py`, `test/test_preview.cjs`,
+  `test/test_installer.cjs` e os dois testes Python de `test_web_installer.py`.
+- Preview: alimentação elevou saciedade de 80 a 100; página USB carregou
+  o pacote, e a confirmação habilitou/desabilitou o botão. Sem erros registrados
+  nos consoles. A ferramenta de captura de tela estava indisponível; não foi
+  registrada nova imagem nesta revisão.
+- GitHub Pages habilitado com fonte **GitHub Actions**. O workflow gera a
+  imagem e publica o site; falhas de configuração agora aparecem como falhas.
+- Seleção real de porta, gravação, reset pós-upload e aparência nos LEDs
+  permanecem pendentes de ensaio físico.
 
 Este documento reúne as evidências do software atual, o roteiro para testar
 a placa e os critérios do futuro editor de pets. **Passar no preview ou no
@@ -138,7 +155,8 @@ Implementação do [plano de animações e Conway](ANIMACOES-E-CONWAY.md)
 | Conway acordado | Teste nativo (capivara e gato): células só em pixels livres sem vizinho do pet; população do autômato preservada; glider e blinker aparecem |
 | Prioridade | BOOT durante cochilo ocioso inicia a refeição; movimento interrompe um acontecimento; todos os comportamentos desenham o pet |
 | Temporização e controles | Visitas ociosas, sono contínuo, movimento revelando o pet sem acordá-lo, cochilo automático no mesmo sonho |
-| Build ESP32-S3 | Passou: RAM 20.776 bytes; flash de aplicação 370.061 bytes |
+| Build ESP32-S3 | Passou: RAM 20.776 bytes; flash de aplicação 370.085 bytes |
+| Regressão web | `node test/test_preview.cjs` executa os renderizadores reais nas 6 espécies: idle sem apagão, refeição com a nova sequência sem cobrir o pet, cuidados, 3 min de cochilo, movimento sem acordar e BOOT |
 | Preview no Chromium | Playwright com relógio simulado, modo de cores de design, capivara e gato: início, refeição, 70 s de descanso, 45 s de visitas, 190 s de sono pelo gesto, movimento, retorno do sonho e BOOT. Nenhum quadro vazio, nenhum erro de console; capítulos mudaram entre os três tipos |
 | Preview | Só a espera ociosa é encurtada (12 s, ciclos de 20 s); bolha, capítulos e passos usam os tempos do firmware |
 | Matriz física e IMU | Pendente: conforto visual, leitura das cores do sonho no brilho 5, glider perceptível, retorno após mover a placa |
@@ -231,7 +249,8 @@ Correções de orientação ou sensibilidade utilizadas:
 
 ## Próxima sprint: testes planejados
 
-**Não executados: editor, pacotes de pets e instalador web ainda não existem.**
+**Não executados: editor e envio de pacotes de pets ainda não existem.**
+O instalador web do firmware existe; seus testes estão no início deste documento.
 O [plano da próxima sprint](PROXIMA-SPRINT.md) separa um primeiro editor que
 exporta `.art` da etapa posterior de enviar pacotes diretamente ao firmware.
 
