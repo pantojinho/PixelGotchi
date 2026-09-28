@@ -34,15 +34,28 @@ void begin() {
     FastLED.clear(true);
 }
 
-void show(const Canvas &c) {
+void show(const Canvas &c, bool night) {
+    // Saída do FastLED = v * (BRIGHTNESS + 1) / 256: este v vira exatamente
+    // NIGHT_LEVEL degraus no canal mais forte.
+    const float nightV = (NIGHT_LEVEL * 256.0f + MAX_BRIGHTNESS) / (MAX_BRIGHTNESS + 1);
     for (uint8_t y = 0; y < MATRIX_H; y++) {
         for (uint8_t x = 0; x < MATRIX_W; x++) {
             const Rgb &p = c.px[y][x];
-            // A arte é RGB de design. Corrige uma vez, no fim da composição,
-            // antes do teto de brilho aplicado pelo FastLED. Sem pow() por pixel.
-            leds[physicalIndex(x, y)] = CRGB(LedProfile::channel(p.r),
-                                           LedProfile::channel(p.g),
-                                           LedProfile::channel(p.b));
+            // A arte é RGB de design; o brilho por cor (gama, azul, teto de
+            // ofuscamento, piso das escuras) é aplicado uma vez, aqui no fim,
+            // antes do teto global do FastLED. Ver art/led-profile.json.
+            CRGB &out = leds[physicalIndex(x, y)];
+            LedProfile::color(p.r, p.g, p.b, out.r, out.g, out.b);
+            if (night) {
+                uint8_t peak = out.r > out.g ? out.r : out.g;
+                if (out.b > peak) peak = out.b;
+                if (peak) {
+                    float k = nightV / peak;
+                    out.r = (uint8_t)(out.r * k);
+                    out.g = (uint8_t)(out.g * k);
+                    out.b = (uint8_t)(out.b * k);
+                }
+            }
         }
     }
     FastLED.show();

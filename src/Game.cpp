@@ -80,6 +80,7 @@ uint32_t actAt = 0, actDur = 0;
 uint32_t lastPlayAt = 0;
 bool playedOnce = false;
 bool gestureSleep = false;
+bool nightFrame = false; // quadro atual é de "luz apagada" (brilho mínimo)
 
 // ---- menu / status
 const Sprite *const MENU_ICONS[] = {&SPR_icon_food, &SPR_icon_play, &SPR_icon_clean,
@@ -361,7 +362,7 @@ void drawLife(uint32_t now) {
         drawPet(*d.sleep, now, petX, 7, now);
         drawPoop(now);
         drawRising(SPR_fx_z, 0, now, 2400, 0);
-        cv.scale(NIGHT_DIM);
+        nightFrame = true; // luz apagada: Display manda tudo no brilho mínimo
         return;
     }
     if (act != Act::None) {
@@ -430,6 +431,45 @@ void sceneSelect(uint32_t now, Ev e) {
     cv.blitAnchored(f, centerCx(f.w), 7, false);
 }
 
+// ============================================================ ovo: cor e eclosão
+uint32_t lerpHex(uint32_t a, uint32_t b, float t) {
+    auto ch = [&](int s) {
+        int va = (a >> s) & 0xFF, vb = (b >> s) & 0xFF;
+        return (uint32_t)(va + (vb - va) * t + 0.5f) << s;
+    };
+    return ch(16) | ch(8) | ch(0);
+}
+
+// Paleta do ovo "esquentando": a casca vai do creme pra cor do bicho que
+// está dentro, e na reta final pulsa cada vez mais rápido. Ordem das cores
+// nas paletas egg_*: [0]=nada, E casca, S pintas, H brilho, C rachadura.
+uint32_t eggPal[5];
+Look eggLook(float p, uint32_t now, float flash = 0) {
+    const uint32_t *base = frame(*def().egg, 0).pal;
+    for (int i = 0; i < 5; i++) eggPal[i] = base[i];
+    eggPal[1] = lerpHex(base[1], base[2], p * 0.55f);
+    if (p > 0.7f) {
+        uint16_t period = p > 0.9f ? 500 : 1100;
+        float phase = (float)(now % period) / period;
+        float pulse = (phase < 0.5f ? phase : 1 - phase) * 2 * (p - 0.7f) / 0.3f;
+        eggPal[1] = lerpHex(eggPal[1], 0xFFFFFF, pulse * 0.35f);
+        eggPal[2] = lerpHex(eggPal[2], 0xFFFFFF, pulse * 0.25f);
+    }
+    if (flash > 0)
+        for (int i = 1; i < 5; i++) eggPal[i] = lerpHex(eggPal[i], 0xFFFFFF, flash);
+    Look l;
+    l.pal = eggPal;
+    return l;
+}
+
+// Desenha só um pedaço (sx0, sy0, w, h) de um sprite — pra quebrar a casca.
+void blitPart(const Sprite &s, int x, int y, int sx0, int sy0, int w, int h, const Look &look) {
+    const uint32_t *pal = look.pal ? look.pal : s.pal;
+    for (int sy = sy0; sy < sy0 + h && sy < s.h; sy++)
+        for (int sx = sx0; sx < sx0 + w && sx < s.w; sx++)
+            if (uint8_t idx = s.px[sy * s.w + sx]) cv.set(x + sx - sx0, y + sy - sy0, rgb(pal[idx]));
+}
+
 void sceneEgg(uint32_t now, Ev e) {
     uint32_t dt = now - lastEggMs;
     lastEggMs = now;
@@ -445,11 +485,9 @@ void sceneEgg(uint32_t now, Ev e) {
     static const Sprite *const STAGES[] = {&SPR_egg0, &SPR_egg1, &SPR_egg2, &SPR_egg3};
     int stage = (int)(p * 4);
     stage = stage > 3 ? 3 : stage;
-    Look l;
-    l.pal = frame(*def().egg, 0).pal;
     bool wobbling = now - Imu::lastMotionMs() < 400;
     int off = wobbling ? (((now / 90) % 2) ? 1 : -1) : 0;
-    cv.blitAnchored(*STAGES[stage], centerCx(STAGES[stage]->w) + off, 7, false, l);
+    cv.blitAnchored(*STAGES[stage], centerCx(STAGES[stage]->w) + off, 7, false, eggLook(p, now));
 
     if (now - Imu::lastMotionMs() > 20000 && (now / 400) % 2) {
         cv.blit(SPR_fx_arrow_l, 0, 0); // "me chacoalha!"
@@ -461,27 +499,50 @@ void sceneEgg(uint32_t now, Ev e) {
     }
 }
 
+void sparkles(uint32_t t, uint8_t count) {
+    // brilhinhos que acendem e apagam em lugares "aleatórios" mas estáveis
+    static const uint8_t spots[][2] = {{0, 1}, {7, 2}, {1, 4}, {6, 0}, {7, 5}, {0, 6}, {2, 0}, {5, 3}};
+    for (uint8_t i = 0; i < count && i < 8; i++)
+        if (((t / 130) + i * 3) % 5 < 2) cv.set(spots[i][0], spots[i][1], {255, 240, 150});
+}
+
 void sceneHatch(uint32_t now) {
     uint32_t t = now - sceneAt;
     const PetDef &d = def();
-    Look egg;
-    egg.pal = frame(*d.egg, 0).pal;
-    if (t < 1200) {
-        int off = ((t / 60) % 2) ? 1 : -1;
-        cv.blitAnchored(SPR_egg3, centerCx(SPR_egg3.w) + off, 7, false, egg);
-    } else if (t < 1700) {
-        // casca estourando: pedaços voando pra fora + brilhos
-        int k = (t - 1200) / 100;
-        Rgb shell = rgb(egg.pal[1]);
-        cv.set(3 - k, 4 - k, shell);
-        cv.set(4 + k, 4 - k, shell);
-        cv.set(2 - k, 6, shell);
-        cv.set(5 + k, 6, shell);
-        cv.blit(SPR_fx_sparkle, 2, 3);
-    } else if (t < 3400) {
-        petX = centerCx(idleW());
+    const Sprite &egg = SPR_egg3;
+    const int ex = centerCx(egg.w) - egg.w / 2, ey = MATRIX_H - egg.h; // canto do ovo
+    petX = centerCx(idleW());
+
+    if (t < 1600) {
+        // 1) tremendo cada vez mais rápido e brilhando
+        uint32_t period = 200 - t / 10;
+        int off = ((t / period) % 2) ? 1 : -1;
+        cv.blit(egg, ex + off, ey, false, eggLook(1.0f, now));
+    } else if (t < 2000) {
+        // 2) clarão
+        float flash = 1.0f - (float)(t - 1600) / 400 * 0.5f;
+        cv.blit(egg, ex, ey, false, eggLook(1.0f, now, flash));
+    } else if (t < 2900) {
+        // 3) a tampa voa pra cima e o bicho espia de dentro da casca
+        uint32_t k = t - 2000;
+        Look shell = eggLook(1.0f, now);
+        int rise = k < 600 ? 2 - (int)(k / 300) : 0; // 2 -> 0: vai saindo
+        drawPet(*d.idle, t, petX, 7 + rise, now);
+        blitPart(egg, ex, ey + 3, 0, 3, egg.w, egg.h - 3, shell);     // metade de baixo, na frente
+        blitPart(egg, ex, ey - (int)(k / 110), 0, 0, egg.w, 3, shell); // tampa subindo
+        sparkles(t, 2);
+    } else if (t < 3500) {
+        // 4) a casca se abre pros lados
+        int k = (t - 2900) / 150;
+        Look shell = eggLook(1.0f, now);
+        drawPet(*d.happy, t, petX, 7, now);
+        blitPart(egg, ex - k, ey + 3 + k / 2, 0, 3, 3, egg.h - 3, shell);
+        blitPart(egg, ex + 3 + k, ey + 3 + k / 2, 3, 3, 3, egg.h - 3, shell);
+        sparkles(t, 4);
+    } else if (t < 5200) {
+        // 5) comemoração
         drawPet(*d.happy, t, petX, 7 - (int)((t / 250) % 2), now);
-        if ((t / 200) % 2) cv.set(0, 1, C_WHITE), cv.set(7, 2, C_WHITE);
+        sparkles(t, 8);
     } else {
         sim.hatch();
         petX = centerCx(idleW());
@@ -726,6 +787,7 @@ void update() {
     lastFrame = now;
 
     cv.clear();
+    nightFrame = false;
     switch (scene) {
         case Scene::Select: sceneSelect(now, e); break;
         case Scene::Egg: sceneEgg(now, e); break;
@@ -736,7 +798,7 @@ void update() {
         case Scene::Dead: sceneDead(now, e); break;
     }
     drawResetBar();
-    Display::show(cv);
+    Display::show(cv, nightFrame && Input::heldMs() < BUTTON_RESET_SHOW_MS);
 
     if (now - lastLog > 30000 && sim.s().phase == Phase::Alive) {
         lastLog = now;

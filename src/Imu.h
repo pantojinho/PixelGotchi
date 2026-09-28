@@ -13,4 +13,7 @@ float tilt();              // ~ -1 (esquerda pra baixo) .. +1 (direita pra baixo
 uint32_t lastMotionMs();   // millis() do último movimento perceptível
 void accel(float &x, float &y, float &z); // m/s^2, pra debug/calibração
 
+// Transmite "A,<ms>,x,y,z" pela serial a cada 50 ms (tools/calibrate_imu.py).
+void setStreaming(bool on);
+
 } // namespace Imu

@@ -13,7 +13,7 @@ bool load(void *data, size_t len) {
     // Abre em leitura-escrita: em modo só-leitura o ESP32 loga erro
     // quando o namespace ainda não existe (primeiro boot).
     prefs.begin(NS, false);
-    bool ok = prefs.getBytesLength(KEY) == len && prefs.getBytes(KEY, data, len) == len;
+    bool ok = prefs.isKey(KEY) && prefs.getBytesLength(KEY) == len && prefs.getBytes(KEY, data, len) == len;
     prefs.end();
     return ok;
 }

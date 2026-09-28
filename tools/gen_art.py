@@ -289,7 +289,17 @@ def load_led_profile():
         raise ArtError("led-profile.json: brightness deve ser inteiro de 1 a 30")
     if type(gamma) not in (int, float) or not math.isfinite(gamma) or not 1 <= gamma <= 2.2:
         raise ArtError("led-profile.json: gamma deve estar entre 1 e 2.2")
-    return {"brightness": brightness, "gamma": gamma,
+    glare_cap = profile.get("glare_cap", 765)
+    blue_gain = profile.get("blue_gain", 1.0)
+    min_peak = profile.get("min_peak", 0)
+    if type(glare_cap) is not int or not 255 <= glare_cap <= 765:
+        raise ArtError("led-profile.json: glare_cap deve ser inteiro de 255 a 765")
+    if type(blue_gain) not in (int, float) or not 0.3 <= blue_gain <= 1.0:
+        raise ArtError("led-profile.json: blue_gain deve estar entre 0.3 e 1.0")
+    if type(min_peak) is not int or not 0 <= min_peak <= brightness:
+        raise ArtError("led-profile.json: min_peak deve ser inteiro de 0 até o brightness")
+    return {"brightness": brightness, "gamma": gamma, "glareCap": glare_cap,
+            "blueGain": blue_gain, "minPeak": min_peak,
             "gammaLut": [int(255 * (v / 255) ** gamma + 0.5) for v in range(256)]}
 
 
@@ -301,8 +311,38 @@ def emit_led_profile(profile):
              "constexpr uint8_t GAMMA_LUT[256] = {"]
     for i in range(0, 256, 16):
         lines.append("    " + ", ".join(map(str, profile["gammaLut"][i:i+16])) + ",")
-    lines += ["};", "inline uint8_t channel(uint8_t value) { return GAMMA_LUT[value]; }",
-              "} // namespace LedProfile", ""]
+    lines += [
+        "};",
+        f"constexpr uint16_t GLARE_CAP = {profile['glareCap']};",
+        f"constexpr uint8_t BLUE_GAIN = {round(profile['blueGain'] * 255)}; // /255",
+        f"constexpr uint8_t MIN_PEAK = {profile['minPeak']};",
+        "inline uint8_t channel(uint8_t value) { return GAMMA_LUT[value]; }",
+        "",
+        "// Brilho por cor, antes do teto global do FastLED (BRIGHTNESS):",
+        "// 1) gama; 2) azul atenuado; 3) soma R+G+B limitada a GLARE_CAP (branco e",
+        "// tons claros ofuscam menos, cores puras intactas); 4) cor acesa nunca fica",
+        "// abaixo de MIN_PEAK níveis na saída (escuras não somem), mantendo o tom.",
+        "// Espelhado em preview/index.html (ledColor).",
+        "inline void color(uint8_t r, uint8_t g, uint8_t b, uint8_t &outR, uint8_t &outG, uint8_t &outB) {",
+        "    float fr = GAMMA_LUT[r], fg = GAMMA_LUT[g], fb = GAMMA_LUT[b] * BLUE_GAIN / 255.0f;",
+        "    float sum = fr + fg + fb;",
+        "    if (sum > GLARE_CAP) {",
+        "        float k = GLARE_CAP / sum;",
+        "        fr *= k; fg *= k; fb *= k;",
+        "    }",
+        "    float peak = fr > fg ? (fr > fb ? fr : fb) : (fg > fb ? fg : fb);",
+        "    // saída do FastLED = v * (BRIGHTNESS + 1) / 256; arredonda pra cima",
+        "    const float floorV = (MIN_PEAK * 256 + BRIGHTNESS) / (BRIGHTNESS + 1);",
+        "    if (peak > 0 && peak < floorV) {",
+        "        float k = floorV / peak;",
+        "        fr *= k; fg *= k; fb *= k;",
+        "    }",
+        "    auto q = [](float v) -> uint8_t { return v >= 255 ? 255 : (uint8_t)(v + 0.5f); };",
+        "    outR = q(fr); outG = q(fg); outB = q(fb);",
+        "}",
+        "} // namespace LedProfile",
+        "",
+    ]
     return "\n".join(lines)
 
 

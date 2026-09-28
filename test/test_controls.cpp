@@ -39,10 +39,18 @@ void sample(float x, float y, float z, uint32_t ms = 20) {
     testMs += ms; testAccel = {{x, y, z}}; testSampleReady = true; Imu::update();
 }
 
-CRGB ledOutput(Rgb color) {
+// Amostra com a tela a `up` m/s² "pra cima" (negativo = virada pra mesa),
+// usando a calibração real do sensor (ele fica no verso da placa).
+void sampleScreen(float up, uint32_t ms = 20) {
+    float v[3] = {0, 0, 0};
+    v[SCREEN_AXIS] = SCREEN_SIGN * up;
+    sample(v[0], v[1], v[2], ms);
+}
+
+CRGB ledOutput(Rgb color, bool night = false) {
     Canvas canvas;
     canvas.clear(); canvas.set(0, 0, color);
-    Display::show(canvas);
+    Display::show(canvas, night);
     assert(canvas.get(0, 0).r == color.r && canvas.get(0, 0).g == color.g && canvas.get(0, 0).b == color.b);
     CRGB result;
     for (int i = 0; i < FastLED.count; i++) {
@@ -65,12 +73,15 @@ void testLedContrast() {
     for (int i = 1; i < 256; i++) assert(LedProfile::channel(i) >= LedProfile::channel(i - 1));
     CRGB black = ledOutput({0, 0, 0}), white = ledOutput({255, 255, 255});
     assert(black.r == 0 && black.g == 0 && black.b == 0);
-    assert(white.r == 18 && white.g == 18 && white.b == 18);
-    const Rgb primaries[] = {{255, 0, 0}, {0, 255, 0}, {0, 0, 255}};
-    for (Rgb color : primaries) {
-        CRGB wire = ledOutput(color);
-        assert(wire.r == (color.r ? 18 : 0) && wire.g == (color.g ? 18 : 0) && wire.b == (color.b ? 18 : 0));
-    }
+    // Brilho por cor: branco (3 canais) ofusca menos que uma cor pura; azul atenuado.
+    CRGB red = ledOutput({255, 0, 0}), green = ledOutput({0, 255, 0}), blue = ledOutput({0, 0, 255});
+    assert(red.r == 18 && red.g == 0 && red.b == 0);
+    assert(green.g == 18 && green.r == 0 && green.b == 0);
+    assert(blue.b < 18 && blue.b >= 12 && blue.r == 0 && blue.g == 0);
+    assert(white.r == white.g && white.r > 0 && white.r < red.r && white.b <= white.r);
+    // Piso: uma cor bem escura não some.
+    CRGB darkest = ledOutput({30, 10, 5});
+    assert(darkest.r >= LedProfile::MIN_PEAK);
     // Todos os 64 tons possíveis do DNA: focinho destaca, nariz não vira preto.
     for (uint32_t variant = 0; variant < 64; variant++) {
         Look look; look.tone = Dna{variant << 26}.tone();
@@ -79,7 +90,9 @@ void testLedContrast() {
         CRGB b = ledOutput(body), m = ledOutput(muzzle), n = ledOutput(nose);
         assert(luminance(m) >= 2 * luminance(b));
         assert(luminance(b) > luminance(n) && n.r >= 3);
-        assert(ledOutput(dim(nose, NIGHT_DIM)).r >= 1);
+        // Dormindo: tudo no degrau mínimo, mas nada some.
+        CRGB night = ledOutput(nose, true), nightBody = ledOutput(body, true);
+        assert(night.r == NIGHT_LEVEL && nightBody.r == NIGHT_LEVEL);
     }
 }
 
@@ -100,15 +113,15 @@ int main() {
     up(); assert(Events::pop() == Ev::None); // reset não produz Long/Short
 
     // Primeira amostra invertida não dispara movimento ou sacudida.
-    sample(0, 0, -GRAVITY);
+    sampleScreen(-GRAVITY);
     assert(Imu::lastMotionMs() == 0 && Events::pop() == Ev::None);
     // FaceDown exige orientação contínua por 1,5 s.
-    sample(0, 0, -GRAVITY, 1499); assert(Events::pop() == Ev::None);
-    sample(0, 0, -GRAVITY, 1); assert(Events::pop() == Ev::FaceDown);
+    sampleScreen(-GRAVITY, 1499); assert(Events::pop() == Ev::None);
+    sampleScreen(-GRAVITY, 1); assert(Events::pop() == Ev::FaceDown);
     // Zona de histerese não acorda. Mais tarde, posição normal acorda uma vez.
-    for (int i = 0; i < 60; i++) sample(0, 0, -5);
+    for (int i = 0; i < 60; i++) sampleScreen(-5);
     assert(Events::pop() == Ev::None);
-    for (int i = 0; i < 60; i++) sample(0, 0, GRAVITY);
+    for (int i = 0; i < 60; i++) sampleScreen(GRAVITY);
     bool sawUp = false;
     for (Ev e; (e = Events::pop()) != Ev::None;) if (e == Ev::FaceUp) { assert(!sawUp); sawUp = true; }
     assert(sawUp);

@@ -23,5 +23,31 @@ constexpr uint8_t GAMMA_LUT[256] = {
     207, 209, 210, 212, 213, 215, 216, 218, 219, 221, 222, 224, 225, 227, 228, 230,
     231, 233, 235, 236, 238, 239, 241, 242, 244, 245, 247, 249, 250, 252, 253, 255,
 };
+constexpr uint16_t GLARE_CAP = 420;
+constexpr uint8_t BLUE_GAIN = 204; // /255
+constexpr uint8_t MIN_PEAK = 3;
 inline uint8_t channel(uint8_t value) { return GAMMA_LUT[value]; }
+
+// Brilho por cor, antes do teto global do FastLED (BRIGHTNESS):
+// 1) gama; 2) azul atenuado; 3) soma R+G+B limitada a GLARE_CAP (branco e
+// tons claros ofuscam menos, cores puras intactas); 4) cor acesa nunca fica
+// abaixo de MIN_PEAK níveis na saída (escuras não somem), mantendo o tom.
+// Espelhado em preview/index.html (ledColor).
+inline void color(uint8_t r, uint8_t g, uint8_t b, uint8_t &outR, uint8_t &outG, uint8_t &outB) {
+    float fr = GAMMA_LUT[r], fg = GAMMA_LUT[g], fb = GAMMA_LUT[b] * BLUE_GAIN / 255.0f;
+    float sum = fr + fg + fb;
+    if (sum > GLARE_CAP) {
+        float k = GLARE_CAP / sum;
+        fr *= k; fg *= k; fb *= k;
+    }
+    float peak = fr > fg ? (fr > fb ? fr : fb) : (fg > fb ? fg : fb);
+    // saída do FastLED = v * (BRIGHTNESS + 1) / 256; arredonda pra cima
+    const float floorV = (MIN_PEAK * 256 + BRIGHTNESS) / (BRIGHTNESS + 1);
+    if (peak > 0 && peak < floorV) {
+        float k = floorV / peak;
+        fr *= k; fg *= k; fb *= k;
+    }
+    auto q = [](float v) -> uint8_t { return v >= 255 ? 255 : (uint8_t)(v + 0.5f); };
+    outR = q(fr); outG = q(fg); outB = q(fb);
+}
 } // namespace LedProfile

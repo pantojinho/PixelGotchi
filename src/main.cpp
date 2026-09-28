@@ -16,7 +16,25 @@ void setup() {
     Game::begin();
 }
 
+// Comandos simples pela USB (usados por tools/calibrate_imu.py).
+void handleSerial() {
+    static char line[24];
+    static uint8_t len = 0;
+    while (Serial.available()) {
+        char c = Serial.read();
+        if (c == '\n' || c == '\r') {
+            line[len] = 0;
+            if (strcmp(line, "imu on") == 0) Imu::setStreaming(true);
+            else if (strcmp(line, "imu off") == 0) Imu::setStreaming(false);
+            len = 0;
+        } else if (len < sizeof(line) - 1) {
+            line[len++] = c;
+        }
+    }
+}
+
 void loop() {
+    handleSerial();
     Input::update();
     Imu::update();
     Game::update();

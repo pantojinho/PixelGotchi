@@ -2382,6 +2382,9 @@ window.ART = {
  "ledProfile": {
   "brightness": 18,
   "gamma": 1.6,
+  "glareCap": 420,
+  "blueGain": 0.8,
+  "minPeak": 3,
   "gammaLut": [
    0,
    0,

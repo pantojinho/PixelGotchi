@@ -26,7 +26,7 @@ constexpr bool DISPLAY_MIRROR_X = false;
 constexpr uint8_t MAX_BRIGHTNESS = LedProfile::BRIGHTNESS; // 18/255; art/led-profile.json
 constexpr uint16_t MAX_MILLIAMPS = 400;  // matriz inteira, a 5V
 constexpr uint16_t FRAME_MS = 20;        // ~50 fps
-constexpr uint8_t NIGHT_DIM = 110;       // brilho relativo (0-255) com a luz apagada
+constexpr uint8_t NIGHT_LEVEL = 1;       // dormindo: cada LED aceso no menor degrau visível
 
 // ============================================================ BOTÃO
 constexpr uint16_t BUTTON_DEBOUNCE_MS = 25;
@@ -35,11 +35,7 @@ constexpr uint16_t BUTTON_RESET_SHOW_MS = 3000; // a partir daqui mostra a barra
 constexpr uint16_t BUTTON_RESET_MS = 8000;      // segurou até aqui = recomeçar do zero
 
 // ============================================================ IMU / GESTOS
-// Mapeamento de eixos vindo do pomodoro_cube: com a imagem "em pé",
-// x > 0 aponta a gravidade pra linha 7 (baixo) e y < 0 pra coluna 7
-// (direita). Se inclinar pra direita mover o bicho pra esquerda,
-// troque o sinal aqui.
-constexpr float TILT_SIGN = -1.0f;
+// Eixos/sinais do sensor ficam em src/ImuCalib.h (tools/calibrate_imu.py).
 constexpr float GRAVITY = 9.80665f;
 constexpr float MOTION_THRESHOLD = 1.2f;   // m/s^2 de variação = "está mexendo"
 constexpr float SHAKE_THRESHOLD = 7.0f;    // m/s^2 de variação brusca = chacoalhada
@@ -55,8 +51,9 @@ constexpr float TILT_REARM = 0.20f;
 // regras rápido, suba (ex: 60 = um minuto de jogo por segundo).
 constexpr uint16_t TIME_SCALE = 1;
 
-// Ovo: minutos de *movimento* acumulado pra chocar (ficar parado pausa).
-constexpr uint32_t INCUBATION_MS = 10UL * 60UL * 1000UL;
+// Ovo: minutos de *movimento* acumulado pra chocar. Ficar parado só pausa
+// a contagem (sem perder nada); mexer de novo continua de onde parou.
+constexpr uint32_t INCUBATION_MS = 5UL * 60UL * 1000UL;
 constexpr uint32_t INCUBATION_IDLE_GRACE_MS = 15UL * 1000UL;
 
 // ============================================================ REGRAS DO BICHINHO

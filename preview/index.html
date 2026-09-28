@@ -133,9 +133,21 @@ const spriteW = ref => frameRef(ref).s.w;
 // Mesma LUT e scale8 fixo do firmware/FastLED 3.6.0, sem dithering.
 // Referência visual fixa: baixar brilho também escurece o preview.
 // A potência 0.55 só aproxima a percepção no monitor; não vai para a placa.
+// Brilho por cor: espelha LedProfile::color() (gama, azul atenuado, teto de
+// ofuscamento R+G+B, piso das cores escuras) gerado de art/led-profile.json.
+function profileColor(rgb) {
+  const P = A.ledProfile;
+  let [r, g, b] = [P.gammaLut[rgb[0]], P.gammaLut[rgb[1]], P.gammaLut[rgb[2]] * Math.round(P.blueGain * 255) / 255];
+  const sum = r + g + b;
+  if (sum > P.glareCap) { const k = P.glareCap / sum; r *= k; g *= k; b *= k; }
+  const peak = Math.max(r, g, b), floorV = Math.floor((P.minPeak * 256 + P.brightness) / (P.brightness + 1));
+  if (peak > 0 && peak < floorV) { const k = floorV / peak; r *= k; g *= k; b *= k; }
+  return [r, g, b].map(v => Math.min(255, Math.floor(v + 0.5)));
+}
+
 function ledColor(rgb) {
   if (mode === 'flat') return rgb;
-  const out = rgb.map(v => Math.floor(A.ledProfile.gammaLut[v] * (bright + 1) / 256));
+  const out = profileColor(rgb).map(v => Math.floor(v * (bright + 1) / 256));
   if (out.every(v => v === 0)) return null;
   return out.map(v => Math.round(255 * Math.pow(Math.min(1, v / 30), 0.55)));
 }

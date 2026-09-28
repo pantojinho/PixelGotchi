@@ -1,6 +1,7 @@
 #include "Imu.h"
 #include "Config.h"
 #include "Events.h"
+#include "ImuCalib.h"
 #include <Wire.h>
 #include <ImuDrv.hpp>
 
@@ -18,6 +19,9 @@ bool faceDown = false;
 uint32_t faceDownSince = 0;
 bool faceDownSent = false;
 bool firstSample = true;
+
+bool streaming = false;
+uint32_t lastStream = 0;
 } // namespace
 
 namespace Imu {
@@ -70,11 +74,19 @@ void update() {
         Events::push(Ev::Shake);
     }
 
-    // Inclinação lateral a partir da gravidade suavizada (ver TILT_SIGN).
-    float t = TILT_SIGN * sy / GRAVITY;
+    // Eixos e sinais vêm da calibração (src/ImuCalib.h): o sensor fica no
+    // verso da placa, então "tela pra cima" não é necessariamente +z.
+    const float g[3] = {sx, sy, sz};
+    float t = TILT_SIGN * g[TILT_AXIS] / GRAVITY;
     tiltValue = t < -1 ? -1 : (t > 1 ? 1 : t);
+    float screenUp = SCREEN_SIGN * g[SCREEN_AXIS]; // ~ +g com a tela pra cima
 
-    bool down = faceDown ? sz < FACE_UP_Z : sz < FACE_DOWN_Z;
+    if (streaming && now - lastStream >= 50) {
+        lastStream = now;
+        Serial.printf("A,%lu,%.2f,%.2f,%.2f\n", (unsigned long)now, ax, ay, az);
+    }
+
+    bool down = faceDown ? screenUp < FACE_UP_Z : screenUp < FACE_DOWN_Z;
     if (down && !faceDown) {
         faceDown = true;
         faceDownSince = now;
@@ -88,6 +100,8 @@ void update() {
         Events::push(Ev::FaceDown);
     }
 }
+
+void setStreaming(bool on) { streaming = on; }
 
 bool ok() { return ready; }
 float tilt() { return tiltValue; }
