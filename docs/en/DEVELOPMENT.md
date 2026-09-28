@@ -128,7 +128,7 @@ On Windows, the simplest C++ compiler is [MSYS2](https://www.msys2.org/)'s
   package, the SHA-256 and the lockout when something does not match.
 
 GitHub Actions runs all of this on every push and pull request. Results and
-the physical board test script are in [TESTES.md](../TESTES.md) (Portuguese).
+the physical board test script are in [Testing](TESTING.md).
 
 ## Editing the art
 
@@ -165,4 +165,5 @@ with a single merged image, binaries with offsets, the case STLs and
 `SHA256SUMS.txt`. To publish: **Actions → Release → Run workflow** with the
 version (or push a `v*` tag); the workflow builds, packages and creates the
 release with the notes from `docs/releases/<version>.md` (see
-[Releases](https://github.com/pantojinho/PixelGotchi/releases)).
+[Releases](https://github.com/pantojinho/PixelGotchi/releases)). Open items and ideas:
+[roadmap](ROADMAP.md).

@@ -6,13 +6,14 @@
 
 Obrigado por querer ajudar! O PixelGotchi é um projeto pequeno e aberto:
 qualquer contribuição conta, de um relato de teste a um bichinho novo.
-Pode escrever em português ou em inglês.
+Pode escrever em português ou em inglês. O que já está no ar, as pendências
+conhecidas e as próximas ideias estão no [roteiro do projeto](docs/ROADMAP.md).
 
 ### Formas de ajudar
 
 | Contribuição | Como |
 |---|---|
-| **Montou na placa de verdade?** É a ajuda mais valiosa agora | Abra uma issue "Relato de teste" com fotos/vídeo dos LEDs, o que funcionou e o que não. Os roteiros estão em [docs/TESTES.md](docs/TESTES.md) |
+| **Montou na placa de verdade?** É a ajuda mais valiosa agora | Abra uma issue "Relato de teste" com fotos/vídeo dos LEDs, o que funcionou e o que não. O roteiro está em [docs/TESTES.md](docs/TESTES.md#roteiro-na-placa) |
 | **Um bichinho novo** para vir de fábrica | Desenhe no [editor](https://pantojinho.github.io/PixelGotchi/editor.html), use **Exportar .art** e abra um PR colando o texto no fim de `art/pets.art` |
 | Achou um erro | Issue com os passos para repetir, o que esperava e o que aconteceu |
 | Documentação e tradução | PR direto: correções, exemplos, textos em inglês que faltam |
@@ -101,13 +102,14 @@ Ao contribuir, você concorda que a sua contribuição seja distribuída sob a
 
 Thanks for wanting to help! PixelGotchi is a small, open project: every
 contribution counts, from a test report to a new pet. English or Portuguese
-are both fine.
+are both fine. What is live, known open items and next ideas are in the
+[roadmap](docs/en/ROADMAP.md).
 
 ### Ways to help
 
 | Contribution | How |
 |---|---|
-| **Built one on a real board?** That is the most valuable help right now | Open a "Test report" issue with photos/video of the LEDs, what worked and what did not. The test scripts are in [docs/TESTES.md](docs/TESTES.md) (Portuguese) |
+| **Built one on a real board?** That is the most valuable help right now | Open a "Test report" issue with photos/video of the LEDs, what worked and what did not. The board script is in [docs/en/TESTING.md](docs/en/TESTING.md#board-script) |
 | **A new pet** to ship by default | Draw it in the [editor](https://pantojinho.github.io/PixelGotchi/editor.html?lang=en), use **Export .art** and open a PR pasting the text at the end of `art/pets.art` |
 | Found a bug | Issue with steps to reproduce, what you expected and what happened |
 | Docs and translation | Direct PR: fixes, examples, missing English texts |

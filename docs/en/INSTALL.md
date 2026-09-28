@@ -146,7 +146,7 @@ Open the monitor and, if needed, tap RESET to see the boot:
 ../pixelgotchi-env/bin/python -m platformio device monitor --port /dev/ttyACM0 --baud 115200
 ```
 
-Expected output: `[PixelGochi] iniciando...`, `[Imu] QMI8658 ok` and
+Expected output: `[PixelGotchi] iniciando...`, `[Imu] QMI8658 ok` and
 `[Game] fase=...` (the logs are in Portuguese). Use `Ctrl+C` to close the
 monitor before another upload. On the matrix, pick the pet with clicks; hold
 BOOT 0.6 s and release to start the egg. Gentle movement adds up to the five
@@ -189,5 +189,5 @@ the pet depends on the saved format and partitions being compatible between
 versions; it is not a guaranteed migration to any future firmware.
 
 **Verified in software:** build, C++ tests and simulator; see the evidence in
-[TESTES.md](../TESTES.md) (Portuguese). USB flashing, gestures and the real
+[Testing](TESTING.md). USB flashing, gestures and the real
 look still need the tests on a physical board.

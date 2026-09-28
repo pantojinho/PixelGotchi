@@ -89,7 +89,8 @@ tones mean a calm dream, warm tones a restless one. This only affects the
 display: it does not change hunger, energy or the feeding rules. The rules
 and the glider follow the
 [Game of Life on LED matrices](https://www.makerguides.com/game-of-life-dot-matrix-max7219/)
-reference. The simulator shortens only the idle wait (12 s instead of 2 min).
+reference. The simulator shortens only the waits (Conway visit after 12 s
+instead of 2 min, nap after 45 s instead of 3 min).
 
 The drawings are original, made directly on the pixel grid. Shape
 references: [capybara profile (WWF)](https://www.wwf.or.jp/staffblog/news/5510.html)

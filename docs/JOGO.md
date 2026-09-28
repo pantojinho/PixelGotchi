@@ -84,9 +84,8 @@ frios indicam um sonho tranquilo e tons quentes um sonho inquieto. Isso só
 muda a exibição: não altera fome, energia nem as regras de alimentação. As
 regras e o glider seguem a referência do
 [Jogo da Vida em matriz de LEDs](https://www.makerguides.com/game-of-life-dot-matrix-max7219/).
-O preview encurta só a espera ociosa (12 s em vez de 2 min); veja o
-[roteiro dos sonhos](TESTES.md#sonhos-e-conway) e o
-[plano de animações e Conway](ANIMACOES-E-CONWAY.md).
+O simulador encurta só as esperas (visita de Conway após 12 s em vez de
+2 min, cochilo após 45 s em vez de 3 min).
 
 Os desenhos são originais, feitos diretamente na grade de pixels.
 Referências de forma: [perfil de capivara (WWF)](https://www.wwf.or.jp/staffblog/news/5510.html)
@@ -157,4 +156,4 @@ O relógio só avança enquanto a placa está ligada.
 Sujeira e fome prolongada causam doença. O descuido acumula em estágios:
 normal → descuidado → quase selvagem → selvagem. O pet selvagem fica arisco,
 procura comida sozinho e pode morrer após cinco dias nessa condição.
-Bem cuidado, vive indefinidamente. Esses cuidados já existiam no projeto.
+Bem cuidado, vive indefinidamente.

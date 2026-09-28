@@ -131,8 +131,8 @@ Também dá para pedir um desenho a uma IA com o
 | [Prompts para IA](docs/PROMPTS-IA.md) | Instalar, desenhar um bichinho, montar, mexer no código |
 | [Arte para 64 LEDs](art/README.md) | Formato `.art` e critérios de desenho |
 | [Contribuir](CONTRIBUTING.md) | Como ajudar, o que pode mudar e a lista de conferência |
-| [Testes](docs/TESTES.md) | Resultados e roteiros de teste na placa |
-| [Animações e Conway](docs/ANIMACOES-E-CONWAY.md) · [Próxima sprint](docs/PROXIMA-SPRINT.md) | Planos de evolução |
+| [Testes](docs/TESTES.md) | O que os testes automáticos garantem e o roteiro na placa |
+| [Roteiro do projeto](docs/ROADMAP.md) | O que está no ar, pendências conhecidas e próximas ideias |
 
 ## Estado do projeto
 
@@ -141,7 +141,8 @@ firmware com hardware simulado, testes do simulador, do pacote do editor e do
 instalador, e build do ESP32-S3 ([CI](https://github.com/pantojinho/PixelGotchi/actions)).
 **Ainda falta ensaiar na placa física** a gravação pelo navegador, o envio de
 bichinhos pela USB, os gestos, a aparência dos LEDs e a case; os roteiros estão
-em [Testes](docs/TESTES.md). Relatos de quem montar são muito bem-vindos em
+em [Testes](docs/TESTES.md#roteiro-na-placa); pendências e ideias no
+[roteiro do projeto](docs/ROADMAP.md). Relatos de quem montar são muito bem-vindos em
 [issues](https://github.com/pantojinho/PixelGotchi/issues).
 
 Os desenhos são originais, feitos diretamente na grade de pixels.

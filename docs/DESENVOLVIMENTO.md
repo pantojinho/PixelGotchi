@@ -127,7 +127,7 @@ Zig. No macOS, `xcode-select --install`. No Linux, o pacote `g++`.
   instalador, o SHA-256 e o bloqueio quando algo não bate.
 
 O GitHub Actions roda tudo isso a cada push e pull request. Resultados e o
-roteiro de teste na placa física estão em [TESTES.md](TESTES.md).
+roteiro de teste na placa física estão em [Testes](TESTES.md).
 
 ## Editar a arte
 
@@ -160,5 +160,4 @@ test/            testes C++, JS e Python, mocks de hardware e fixtures
 com imagem única, binários com offsets, STLs da case e `SHA256SUMS.txt`.
 Para publicar: **Actions → Release → Run workflow** com a versão (ou enviar uma
 tag `v*`); o workflow compila, empacota e cria a release com as notas de
-`docs/releases/<versão>.md`.
-Veja as pendências em [PROXIMA-SPRINT.md](PROXIMA-SPRINT.md#pendências-case-3d-e-primeira-release).
+`docs/releases/<versão>.md`. Pendências e ideias: [roteiro do projeto](ROADMAP.md).

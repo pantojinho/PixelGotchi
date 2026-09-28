@@ -1,8 +1,0 @@
-{
-  "version": "e4b0f66-dev",
-  "path": "firmware/PixelGotchi-esp32s3-e4b0f66-dev.bin",
-  "size": 432912,
-  "sha256": "4d5170c10876e7500e14b40e709f485a3eb830507c3a0d6f10a3b86a80b538c6",
-  "chipFamily": "ESP32-S3",
-  "flashSize": 4194304
-}

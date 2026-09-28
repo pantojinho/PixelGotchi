@@ -1,4 +1,4 @@
-# Case do PixelGochi
+# Case do PixelGotchi
 
 **Português** · [English](README.en.md)
 
@@ -168,7 +168,7 @@ No módulo **simples** (sem proteção) não existe OUT+: a chave vai no **B+**.
 ## Montagem
 
 1. Faça a ligação acima **fora da case** e teste: com a chave ligada e sem USB,
-   o PixelGochi deve ligar; com USB, o LED do TP4056 deve indicar carga.
+   o PixelGotchi deve ligar; com USB, o LED do TP4056 deve indicar carga.
 2. Coloque a placa com os LEDs pra baixo no corpo (USB no rasgo de cima) e o
    TP4056 no compartimento abaixo dela (fita dupla face). O diodo e os fios dos
    pads ficam no vão atrás da placa.

@@ -6,6 +6,9 @@
 *.o
 *.bin
 preview/firmware/
+# gerados por tools/build_web_installer.py (o site publica os seus)
+preview/manifest.json
+preview/firmware-info.json
 .DS_Store
 Thumbs.db
 __pycache__/

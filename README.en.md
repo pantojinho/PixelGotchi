@@ -133,7 +133,8 @@ Details in [Editor](docs/en/EDITOR.md).
 | [AI prompts](docs/en/AI-PROMPTS.md) | Install, draw a pet, build, change the code |
 | [Art for 64 LEDs](art/README.en.md) | The `.art` format and drawing guidelines |
 | [Contributing](CONTRIBUTING.md#english) | How to help, what can change and the checklist |
-| [Tests](docs/TESTES.md) · [Animations and Conway](docs/ANIMACOES-E-CONWAY.md) · [Next sprint](docs/PROXIMA-SPRINT.md) | Test logs and plans (Portuguese) |
+| [Testing](docs/en/TESTING.md) | What the automatic tests guarantee and the board script |
+| [Roadmap](docs/en/ROADMAP.md) | What is live, known open items and next ideas |
 
 ## Project status
 
@@ -142,7 +143,8 @@ tests with simulated hardware, simulator, editor package and installer tests,
 and the ESP32-S3 build ([CI](https://github.com/pantojinho/PixelGotchi/actions)).
 **Still to be tried on a physical board**: browser flashing, sending a pet over
 USB, gestures, the look of the LEDs and the case; the test scripts are in
-[Tests](docs/TESTES.md) (Portuguese). Reports from people who build one are
+[Testing](docs/en/TESTING.md#board-script); open items and ideas are in the
+[roadmap](docs/en/ROADMAP.md). Reports from people who build one are
 very welcome in [issues](https://github.com/pantojinho/PixelGotchi/issues),
 in English or Portuguese.
 

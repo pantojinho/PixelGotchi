@@ -1,4 +1,4 @@
-# PixelGochi case
+# PixelGotchi case
 
 [Português](README.md) · **English**
 
@@ -171,7 +171,7 @@ On the **plain** module (no protection) there is no OUT+: the switch goes on **B
 ## Assembly
 
 1. Do the wiring above **outside the case** and test it: with the switch on
-   and no USB, PixelGochi should start; with USB, the TP4056 LED should show
+   and no USB, PixelGotchi should start; with USB, the TP4056 LED should show
    charging.
 2. Place the board LEDs facing down in the body (USB in the top opening) and
    the TP4056 in the compartment below it (double-sided tape). The diode and

@@ -147,7 +147,7 @@ Abra o monitor e, se necessário, toque RESET para ver a inicialização:
 ../pixelgotchi-env/bin/python -m platformio device monitor --port /dev/ttyACM0 --baud 115200
 ```
 
-Saída esperada: `[PixelGochi] iniciando...`, `[Imu] QMI8658 ok` e
+Saída esperada: `[PixelGotchi] iniciando...`, `[Imu] QMI8658 ok` e
 `[Game] fase=...`. Use `Ctrl+C` para fechar o monitor antes de outro upload.
 Na matriz, escolha o pet com cliques; segure BOOT por 0,6 s e solte para
 começar o ovo. Movimentos suaves acumulam os cinco minutos de incubação.
@@ -189,5 +189,5 @@ do pet depende da compatibilidade do formato salvo e das partições entre
 versões; não é garantia de migração para qualquer firmware futuro.
 
 **Verificado no software:** build, testes C++ e preview; veja as evidências
-em [TESTES.md](TESTES.md). Gravação USB, gestos e aparência real ainda
+em [Testes](TESTES.md). Gravação USB, gestos e aparência real ainda
 precisam da execução dos testes na placa física.
