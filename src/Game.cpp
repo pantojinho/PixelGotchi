@@ -98,6 +98,8 @@ uint32_t observedMotionAt = 0;
 Dream::Automaton dreamGrid;
 bool sleepWasActive = false, dreamSeeded = false, dreamView = false;
 uint32_t sleepStartedAt = 0, sleepPetUntil = 0, lastDreamStep = 0, dreamSeedValue = 1;
+uint32_t dreamBaseSeed = 1, dreamChapter = 0, dreamChapterAt = 0, dreamViewAt = 0;
+uint8_t dreamStillSteps = 0;
 bool dreamIsCalm = true;
 Rgb dreamBright{90, 210, 245}, dreamDim{28, 82, 135};
 
@@ -327,6 +329,67 @@ void drawRising(const Sprite &s, int x, uint32_t t, uint16_t period, int from = 
     cv.blit(s, x, y);
 }
 
+bool emptyPixel(int x, int y) {
+    if (x < 0 || x >= 8 || y < 0 || y >= 8) return false;
+    const Rgb c = cv.get(x, y);
+    return !(c.r || c.g || c.b);
+}
+
+void setFree(int x, int y, Rgb color) {
+    if (emptyPixel(x, y)) cv.set(x, y, color);
+}
+
+// Efeitos pequenos procuram espaço livre e preservam a anatomia do sprite.
+void tinyHeart(Rgb color = C_HAPPY) {
+    for (int y = 0; y < 3; ++y) for (int x = 1; x < 5; ++x) {
+        if (emptyPixel(x, y) && emptyPixel(x + 2, y) && emptyPixel(x + 1, y + 1)) {
+            cv.set(x, y, color); cv.set(x + 2, y, color); cv.set(x + 1, y + 1, color);
+            return;
+        }
+    }
+    setFree(0, 0, color);
+}
+
+void drawCrumbs(const Sprite &pet, uint32_t t) {
+    if (t >= 1400) return;
+    const int top = 8 - pet.h;
+    int x = petX + (petFlip() ? -(pet.w / 2) - 1 : pet.w - pet.w / 2);
+    int y = top + 2;
+    if (x < 0 || x >= 8) { x = petX; y = top - 1; }
+    const Rgb color = rgb(def().food->pal[1]);
+    // Dois pedaços chegam ao focinho; a mastigação consome o último.
+    setFree(x, t < 600 ? (int)(t * (y > 0 ? y : 0) / 600) : y, color);
+    if (t < 900) setFree(x - (petFlip() ? -1 : 1), y - 1, color);
+}
+
+void blitFree(const Sprite &sprite, int x, int y) {
+    Canvas effect; effect.clear(); effect.blit(sprite, x, y);
+    for (int sy = 0; sy < 8; ++sy) for (int sx = 0; sx < 8; ++sx) {
+        const Rgb c = effect.get(sx, sy);
+        if (c.r || c.g || c.b) setFree(sx, sy, c);
+    }
+}
+
+uint32_t dreamHash(uint32_t value) {
+    value ^= value >> 16; value *= 0x7FEB352Du;
+    value ^= value >> 15; value *= 0x846CA68Bu;
+    return value ^ (value >> 16);
+}
+
+void startDreamChapter(uint32_t now) {
+    dreamSeedValue = dreamHash(dreamBaseSeed + dreamChapter * 0x9E3779B9u);
+    dreamGrid.seed(dreamSeedValue, dreamIsCalm);
+    const Rgb calmBright[] = {{90, 210, 245}, {120, 235, 110}, {195, 138, 245}};
+    const Rgb calmDim[] = {{28, 82, 135}, {28, 90, 45}, {75, 36, 130}};
+    const Rgb warmBright[] = {{255, 112, 96}, {255, 155, 45}, {245, 95, 165}};
+    const Rgb warmDim[] = {{118, 35, 85}, {105, 42, 15}, {90, 25, 70}};
+    const uint8_t palette = dreamChapter % 3;
+    dreamBright = dreamIsCalm ? calmBright[palette] : warmBright[palette];
+    dreamDim = dreamIsCalm ? calmDim[palette] : warmDim[palette];
+    dreamChapterAt = lastDreamStep = now;
+    dreamStillSteps = 0;
+}
+
 void seedDream(uint32_t now) {
     const PetState &s = sim.s();
     Dna dna = sim.dna();
@@ -334,9 +397,9 @@ void seedDream(uint32_t now) {
                      ((uint32_t)s.happy << 8) ^ s.ageMin ^ ((uint32_t)s.poop << 4);
     dreamIsCalm = !s.sick && !s.wild && s.poop == 0 && s.hunger >= 50 &&
                   s.happy >= 50 && s.energy >= 50;
-    dreamGrid.seed(dreamSeedValue, dreamIsCalm);
-    dreamBright = dreamIsCalm ? Rgb{90, 210, 245} : Rgb{255, 112, 96};
-    dreamDim = dreamIsCalm ? Rgb{28, 82, 135} : Rgb{118, 35, 85};
+    dreamBaseSeed = dreamSeedValue;
+    dreamChapter = 0;
+    startDreamChapter(now);
     dreamSeeded = true;
     lastDreamStep = now;
 }
@@ -345,18 +408,21 @@ void advanceDream(uint32_t now) {
     if (!dreamSeeded) seedDream(now);
     if (now - lastDreamStep < DREAM_STEP_MS) return;
     lastDreamStep = now;
+    const uint64_t before = dreamGrid.signature();
     dreamGrid.step();
-    // Um sonho turbulento se desfaz; outra semente derivada do DNA começa
-    // um novo ciclo sem precisar de aleatoriedade nem de memória extra.
-    if (!dreamIsCalm && dreamGrid.population() == 0) {
-        dreamSeedValue = dreamSeedValue * 1664525u + 1013904223u;
-        dreamGrid.seed(dreamSeedValue, false);
+    dreamStillSteps = dreamGrid.signature() == before ? (dreamStillSteps < 255 ? dreamStillSteps + 1 : 255) : 0;
+    const uint32_t elapsed = now - dreamChapterAt;
+    if (!dreamGrid.population() || elapsed >= DREAM_CHAPTER_MS ||
+        (dreamStillSteps >= 8 && elapsed >= DREAM_STILL_MIN_MS)) {
+        ++dreamChapter;
+        startDreamChapter(now);
     }
 }
 
 bool untilActive(uint32_t now, uint32_t until) { return (int32_t)(until - now) > 0; }
 
 void updateDreamView(uint32_t now, bool activity) {
+    const bool wasDreamView = dreamView;
     dreamView = false;
     if (sim.s().asleep) {
         if (!sleepWasActive) {
@@ -368,6 +434,7 @@ void updateDreamView(uint32_t now, bool activity) {
         if (activity) sleepPetUntil = now + SLEEP_PET_REVEAL_MS;
         const bool initialPet = now - sleepStartedAt < SLEEP_DREAM_AFTER_MS;
         dreamView = !initialPet && !untilActive(now, sleepPetUntil);
+        if (dreamView && !wasDreamView) dreamViewAt = now;
         if (dreamView) advanceDream(now);
         return;
     }
@@ -392,11 +459,12 @@ void updateDreamView(uint32_t now, bool activity) {
     if (dreamView) advanceDream(now);
 }
 
-void drawDream(uint32_t now, bool bird) {
+void drawDream(uint32_t now, bool bird, bool freeOnly = false) {
     for (uint8_t y = 0; y < 8; ++y) {
         for (uint8_t x = 0; x < 8; ++x) {
             if (dreamGrid.alive(x, y))
-                cv.set(x, y, ((x + y) & 1) ? dreamBright : dreamDim);
+                if (freeOnly) setFree(x, y, ((x + y) & 1) ? dreamBright : dreamDim);
+                else cv.set(x, y, ((x + y) & 1) ? dreamBright : dreamDim);
         }
     }
     if (bird) {
@@ -404,9 +472,11 @@ void drawDream(uint32_t now, bool bird) {
         int x = 8 - (int)((now / 150) % 12);
         int y = 1 + (int)((now / 700) % 3);
         const Rgb color{205, 228, 255};
-        cv.set(x, y + 1, color);
-        cv.set(x + 1, y, color);
-        cv.set(x + 2, y + 1, color);
+        if (freeOnly) {
+            setFree(x, y + 1, color); setFree(x + 1, y, color); setFree(x + 2, y + 1, color);
+        } else {
+            cv.set(x, y + 1, color); cv.set(x + 1, y, color); cv.set(x + 2, y + 1, color);
+        }
     }
 }
 
@@ -415,43 +485,37 @@ void drawAction(uint32_t now) {
     uint32_t t = now - actAt;
     switch (act) {
         case Act::Eat: {
-            const Sprite &f = *d.food;
             petX = centerCx(idleW());
             faceRight = true;
-            if (t < 600) {
-                cv.blit(f, (MATRIX_W - f.w) / 2, (MATRIX_H - f.h) / 2);
-            } else if (t < actDur - 500) {
-                drawPet(*d.eat, t, petX, 7, now);
-            } else {
-                cv.blit(SPR_fx_heart, 2, 2);
-            }
+            const Anim &pose = t < 600 ? *d.idle : t < actDur - 500 ? *d.eat : *d.happy;
+            drawPet(pose, t, petX, 7, now);
+            drawCrumbs(frame(pose, t), t);
+            if (t >= actDur - 500) tinyHeart();
             break;
         }
         case Act::Play: {
             petX = centerCx(idleW());
-            if (t < 650) cv.blit(SPR_fx_ball, 1 + (t / 130) % 5, 2);
-            else if (t < actDur - 450) drawPet(*d.happy, t, petX, 7 - (int)((t / 350) % 2), now);
-            else cv.blit(SPR_fx_heart, 2, 2);
+            drawPet(t < 650 ? *d.idle : *d.happy, t, petX,
+                    t < 650 || t >= actDur - 450 ? 7 : 7 - (int)((t / 350) % 2), now);
+            if (t < 650) setFree(1 + (t / 130) % 5, 0, {255, 155, 45});
+            if (t >= actDur - 450) tinyHeart();
             break;
         }
         case Act::Clean: {
             drawPet(*d.idle, t, petX, 7, now);
             int sweep = (int)(t / 140) - 1;
             drawPoop(now, sweep);
-            cv.blit(frame(ANIM_fx_sparkle_anim, t), sweep - 1, MATRIX_H - 3);
+            blitFree(frame(ANIM_fx_sparkle_anim, t), sweep - 1, MATRIX_H - 3);
             break;
         }
         case Act::Medicine: {
-            if (t < 800) {
-                cv.blit(SPR_fx_pill, 2, 3);
-            } else {
-                drawPet(*d.happy, t, petX, 7, now);
-            }
+            drawPet(t < 800 ? *d.idle : *d.happy, t, petX, 7, now);
+            tinyHeart(C_SICK);
             break;
         }
         case Act::Pet:
-            if (t < 450) cv.blit(SPR_fx_heart, 2, 2);
-            else drawPet(*d.happy, t, petX, 7, now);
+            drawPet(*d.happy, t, petX, 7, now);
+            if ((t / 300) % 2 == 0) tinyHeart();
             break;
         case Act::Refuse:
             drawPet(*d.sad, t, petX + (((t / 120) % 2) ? 1 : -1), 7, now);
@@ -474,6 +538,25 @@ void drawAction(uint32_t now) {
     }
 }
 
+void drawSleepingDream(uint32_t now) {
+    const uint32_t elapsed = now - dreamViewAt;
+    if (elapsed >= DREAM_TRANSITION_MS) { drawDream(now, false); return; }
+    drawPet(*def().sleep, now, petX, 7, now);
+    const Canvas sleeping = cv;
+    cv.clear(); drawDream(now, false);
+    const Canvas world = cv;
+    cv = sleeping;
+    const uint8_t stage = elapsed * 4 / DREAM_TRANSITION_MS;
+    setFree(0, 0, dreamBright);
+    if (stage) { setFree(1, 0, dreamBright); setFree(0, 1, dreamDim); }
+    bool visible = false;
+    for (int y = 0; y < 8; ++y) for (int x = 0; x < 8; ++x) {
+        if ((x + 2 * y) % 4 < stage) cv.px[y][x] = world.px[y][x];
+        const Rgb c = cv.get(x, y); visible |= c.r || c.g || c.b;
+    }
+    if (!visible) cv = world;
+}
+
 void drawLife(uint32_t now) {
     const PetDef &d = def();
     const PetState &s = sim.s();
@@ -481,7 +564,7 @@ void drawLife(uint32_t now) {
 
     if (s.asleep) {
         if (dreamView) {
-            drawDream(now, false);
+            drawSleepingDream(now);
             return;
         }
         drawPet(*d.sleep, now, petX, 7, now);
@@ -490,17 +573,13 @@ void drawLife(uint32_t now) {
         nightFrame = true; // luz apagada: Display manda tudo no brilho mínimo
         return;
     }
-    if (dreamView) {
-        const uint32_t idle = now - lastInputAt;
-        const bool bird = ((idle - IDLE_DREAM_AFTER_MS) / IDLE_DREAM_CYCLE_MS) % 2 == 1;
-        drawDream(now, bird);
-        return;
-    }
     if (act != Act::None) {
         drawAction(now);
         if (act != Act::Clean) drawPoop(now);
         return;
     }
+
+    if (dreamView && def().side) faceRight = 8 - (int)((now / 150) % 12) >= petX;
 
     if (s.sick) {
         drawPet(*d.sad, now, petX, 7, now);
@@ -513,7 +592,14 @@ void drawLife(uint32_t now) {
     } else {
         switch (beh) {
             case Beh::Walk: drawPet(*d.walk, t, petX, 7, now); break;
-            case Beh::Sniff: drawPet(*d.eat, t, petX, 7, now); break;
+            case Beh::Sniff:
+                drawPet(*d.eat, t, petX, 7, now);
+                if ((t / 450) % 2 == 0) setFree(petX + (petFlip() ? -2 : 2), 1, {130, 175, 100});
+                break;
+            case Beh::Look:
+                if (!dreamView) faceRight = ((t / 900) + sim.dna().bits) % 2;
+                drawPet(*d.idle, t, petX, 7, now);
+                break;
             case Beh::Hop: drawPet(*d.happy, t, petX, 7 - (int)((t / 250) % 2), now); break;
             case Beh::Nap:
                 drawPet(*d.sleep, t, petX, 7, now);
@@ -521,7 +607,7 @@ void drawLife(uint32_t now) {
                 break;
             case Beh::Chase:
                 drawPet(*d.walk, t, petX, 7, now);
-                if ((now / 150) % 3) cv.set(bugX, bugY, C_WHITE);
+                if ((now / 150) % 3) setFree(bugX, bugY, C_WHITE);
                 break;
             default: {
                 if (now >= blinkAt && now < blinkAt + 150) {
@@ -532,6 +618,11 @@ void drawLife(uint32_t now) {
                 }
             }
         }
+    }
+    if (dreamView) {
+        const uint32_t idle = now - lastInputAt;
+        const bool bird = ((idle - IDLE_DREAM_AFTER_MS) / IDLE_DREAM_CYCLE_MS) % 2 == 1;
+        drawDream(now, bird, true); // máscara somente visual; o autômato permanece completo
     }
     drawPoop(now);
     drawNeed(now);

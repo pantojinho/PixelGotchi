@@ -31,6 +31,19 @@ void Automaton::seed(uint32_t seedValue, bool calm) {
                 }
                 break;
         }
+        // O mesmo padrão pode visitar outras posições e orientações.
+        uint8_t transformed[8]{};
+        const uint8_t turns = (seedValue >> 2) & 3;
+        for (uint8_t y = 0; y < 8; ++y) for (uint8_t x = 0; x < 8; ++x) {
+            if (!alive(x, y)) continue;
+            uint8_t nx = x, ny = y;
+            for (uint8_t i = 0; i < turns; ++i) {
+                const uint8_t oldX = nx; nx = 7 - ny; ny = oldX;
+            }
+            put(transformed, (nx + ((seedValue >> 4) & 7)) % 8,
+                (ny + ((seedValue >> 7) & 7)) % 8);
+        }
+        memcpy(rows_, transformed, sizeof(rows_));
         return;
     }
 
@@ -43,6 +56,7 @@ void Automaton::seed(uint32_t seedValue, bool calm) {
             if (rng % 100 < 18) put(rows_, x, y);
         }
     }
+    if (!population()) put(rows_, 3, 3);
 }
 
 void Automaton::step() {
@@ -74,6 +88,12 @@ uint8_t Automaton::population() const {
     for (uint8_t row : rows_)
         for (uint8_t x = 0; x < 8; ++x) count += (row >> x) & 1u;
     return count;
+}
+
+uint64_t Automaton::signature() const {
+    uint64_t bits = 0;
+    for (uint8_t y = 0; y < 8; ++y) bits |= (uint64_t)rows_[y] << (8 * y);
+    return bits;
 }
 
 } // namespace Dream

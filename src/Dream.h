@@ -10,6 +10,7 @@ public:
     void step();
     bool alive(uint8_t x, uint8_t y) const;
     uint8_t population() const;
+    uint64_t signature() const;
     uint32_t generation() const { return generation_; }
 
 private:

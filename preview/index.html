@@ -175,6 +175,45 @@ function drawBuf(ctx, buf, cell) {
 }
 
 // ------------------------------------------------------------ cenas (maquete do Game.cpp)
+function setFree(buf, x, y, color) {
+  if (x >= 0 && x < 8 && y >= 0 && y < 8 && !buf[y*8+x]) buf[y*8+x] = color;
+}
+function tinyHeart(buf, color=[255,111,168]) {
+  for (let y=0;y<3;y++) for (let x=1;x<5;x++) {
+    if (!buf[y*8+x] && !buf[y*8+x+2] && !buf[(y+1)*8+x+1]) {
+      buf[y*8+x]=color; buf[y*8+x+2]=color; buf[(y+1)*8+x+1]=color;
+      return;
+    }
+  }
+  setFree(buf,0,0,color);
+}
+function drawCrumbs(buf, pet, ref, cx, t, flip=false) {
+  if (t >= 1400) return;
+  const {s} = frameRef(ref), top=8-s.h;
+  let x=cx+(flip ? -Math.floor(s.w/2)-1 : s.w-Math.floor(s.w/2)), y=top+2;
+  if (x<0||x>=8) { x=cx; y=top-1; }
+  const color=hexToRgb(Object.values(frameRef(pet.food).pal)[0]);
+  setFree(buf,x,t<600 ? Math.floor(t*Math.max(0,y)/600) : y,color);
+  if(t<900) setFree(buf,x-(flip ? -1:1),y-1,color);
+}
+function careFrame(pet, kind, t) {
+  const b=newBuf(), id=pet.id;
+  const w=spriteW(animFrame(id+'_idle',0)), cx=Math.floor((8-w)/2)+Math.floor(w/2);
+  let pose='happy', bottom=7;
+  if(kind==='comendo') pose=t<600?'idle':t<2500?'eat':'happy';
+  if(kind==='brincando') { pose=t<650?'idle':'happy'; if(t>=650&&t<2550) bottom-=Math.floor(t/350)%2; }
+  if(kind==='remedio') pose=t<800?'idle':'happy';
+  const ref=animFrame(id+'_'+pose,t);
+  blitA(b,ref,cx,bottom);
+  if(kind==='comendo') { drawCrumbs(b,pet,ref,cx,t); if(t>=2500) tinyHeart(b); }
+  if(kind==='carinho'&&Math.floor(t/300)%2===0) tinyHeart(b);
+  if(kind==='remedio') tinyHeart(b,[62,214,76]);
+  if(kind==='brincando') {
+    if(t<650) setFree(b,1+Math.floor(t/130)%5,0,[255,155,45]);
+    if(t>=2550) tinyHeart(b);
+  }
+  return b;
+}
 function scenes(pet) {
   const id = pet.id, food = pet.food;
   const facesRight = pet.side;
@@ -194,15 +233,7 @@ function scenes(pet) {
       blitA(b, ref, cx, 7, facesRight ? !dirRight : false);
       return b;
     },
-    'comendo': t => {
-      const b = newBuf();
-      const { s } = frameRef(food);
-      const p = t % 3000;
-      if (p < 600) blit(b, food, Math.floor((N - s.w) / 2), Math.floor((N - s.h) / 2));
-      else if (p < 2500) blitA(b, animFrame(id + '_eat', p), 3, 7);
-      else blit(b, 'fx_heart', 2, 2);
-      return b;
-    },
+    'comendo': t => careFrame(pet,'comendo',t%3000),
     'com fome': t => {
       const b = newBuf();
       const pw = spriteW(animFrame(id + '_hungry', 0));
@@ -228,19 +259,8 @@ function scenes(pet) {
       blitA(b, animFrame(id + '_happy', t), 3, 7 - hop);
       return b;
     },
-    'carinho': t => {
-      const b = newBuf();
-      if (t % 1600 < 450) blit(b, 'fx_heart', 2, 2);
-      else blitA(b, animFrame(id + '_happy', t), 3, 7);
-      return b;
-    },
-    'brincando': t => {
-      const b = newBuf(), p = t % 3000;
-      if (p < 650) blit(b, 'fx_ball', 1 + Math.floor(p / 130) % 5, 2);
-      else if (p < 2550) blitA(b, animFrame(id + '_happy', p), 3, 7 - Math.floor(p / 350) % 2);
-      else blit(b, 'fx_heart', 2, 2);
-      return b;
-    },
+    'carinho': t => careFrame(pet,'carinho',t%1600),
+    'brincando': t => careFrame(pet,'brincando',t%3000),
     'triste': t => { const b = newBuf(); blitA(b, animFrame(id + '_sad', t), 3, 7); return b; },
     'doente': t => {
       const b = newBuf();
