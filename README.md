@@ -4,6 +4,29 @@ Bichinho virtual na **Waveshare ESP32-S3-Matrix**, com matriz RGB de
 **8×8 LEDs**, botão **BOOT** e acelerômetro **QMI8658**. Funciona sozinho,
 sem Wi-Fi, celular ou botões adicionais.
 
+**Comece aqui:** [instalação manual](#instalação-manual-via-usb) ·
+[prompt para uma IA instalar](#prompt-para-instalação-assistida-por-ia) ·
+[plano e resultados dos testes](docs/TESTES.md) ·
+[próxima sprint: editor e USB](docs/PROXIMA-SPRINT.md).
+
+## Como ficou
+
+Capturas do **preview web**, com os mesmos sprites usados no firmware.
+São uma demonstração do visual e dos controles; não são fotos dos LEDs físicos.
+
+| Capivara | Gato |
+|---|---|
+| ![Capivara de perfil no preview, com controles de BOOT e movimento](docs/images/system-capybara.jpg) | ![Gato sentado no preview, com orelhas rosa, peito claro e cauda](docs/images/system-cat.jpg) |
+
+<details>
+<summary>Ver um exemplo da galeria de animações</summary>
+
+![Estados do axolote na galeria: comer, dormir, feliz, triste e com fome](docs/images/system-gallery.jpg)
+
+A galeria permite conferir as poses de cada espécie antes de gravar a placa.
+
+</details>
+
 ## Pets e visual
 
 Capivara, gato, sapo, pintinho, coelho e axolote. Cada espécie tem
@@ -116,6 +139,28 @@ Bem cuidado, vive indefinidamente. Esses cuidados já existiam no projeto.
 
 [Documentação da placa](https://docs.waveshare.com/ESP32-S3-Matrix).
 
+![Frente e verso da Waveshare ESP32-S3-Matrix, com matriz, USB-C, BOOT e RESET](docs/images/hardware-components.png)
+
+O alvo é a **Waveshare ESP32-S3-Matrix**, de **25 × 25 mm**, com 64 LEDs RGB,
+USB-C, BOOT, RESET e QMI8658 integrados. Para jogar e instalar pelo USB,
+**não é necessário soldar fios nem adicionar outro botão**. Se comprou no
+AliExpress, confira o nome e as duas faces da placa acima: ter apenas um
+ESP32 e uma matriz 8×8 não garante a mesma pinagem.
+
+<details>
+<summary>Dimensões e pinagem externa</summary>
+
+![Dimensões da placa ESP32-S3-Matrix em milímetros](docs/images/hardware-dimensions.png)
+
+![Pinagem dos conectores externos da ESP32-S3-Matrix](docs/images/hardware-pinout.png)
+
+Os GPIOs da tabela abaixo são conexões **internas** usadas pelo firmware;
+não representam fios que você precisa ligar nos conectores da imagem.
+As três imagens do hardware foram fornecidas pelo autor do projeto.
+Veja também a [referência oficial da Waveshare](https://docs.waveshare.com/ESP32-S3-Matrix).
+
+</details>
+
 | Componente | Pinos |
 |---|---|
 | 64 LEDs WS2812B | GPIO14 |
@@ -135,24 +180,200 @@ tempo dos gestos também ficam nesse arquivo. O IMU tenta os endereços
 0x6B e 0x6A. A primeira amostra não é contada como movimento e o gesto
 de virar usa histerese para evitar oscilar entre dormir/acordar.
 
-## Compilar e gravar
+## Instalação manual via USB
 
-Use VS Code com PlatformIO, ou:
+Você precisa da placa acima, de um **cabo USB-C com dados**, acesso à internet
+para baixar as ferramentas e um computador Windows, macOS ou Linux.
+A gravação substitui o programa de demonstração que veio na placa.
+
+### 1. Baixe o projeto e as ferramentas
+
+Instale [Git](https://git-scm.com/downloads) e [Python 3.12](https://www.python.org/downloads/).
+No Windows, habilite o Python no PATH durante a instalação. Abra o terminal
+na pasta onde deseja guardar o projeto e execute:
 
 ```sh
-python -m pip install platformio
-python -m platformio run
-python -m platformio run --target upload
-python -m platformio device monitor
+git clone https://github.com/pantojinho/PixelGotchi.git
+cd PixelGotchi
 ```
 
-A geração da arte é automática antes da compilação. A configuração usa
-flash de **4 MB** e USB CDC para o monitor serial a 115200 baud.
+Alternativa sem Git: no GitHub, clique **Code → Download ZIP**, extraia tudo
+e abra o terminal na pasta que contém `platformio.ini`.
 
-**Verificado nesta revisão:** compilação para `esp32-s3-matrix`, testes
-C++ dos controles com hardware simulado e interações no preview.
-Os gestos, a orientação e a aparência nos LEDs ainda precisam de teste
-na placa física.
+Instale o PlatformIO em um ambiente Python **ao lado** do repositório.
+Assim as dependências não entram nos arquivos do projeto.
+
+**Windows — PowerShell:**
+
+```powershell
+py -3.12 -m venv ..\pixelgotchi-env
+..\pixelgotchi-env\Scripts\python.exe -m pip install platformio==6.2.0
+```
+
+**macOS / Linux:**
+
+```sh
+python3 -m venv ../pixelgotchi-env
+../pixelgotchi-env/bin/python -m pip install platformio==6.2.0
+```
+
+Nos próximos exemplos, use o caminho do Python do seu ambiente. Não precisa
+ativá-lo. A instalação pode levar alguns minutos na primeira execução.
+Referência: [instalação do PlatformIO Core](https://docs.platformio.org/en/stable/core/installation/methods/installer-script.html).
+
+### 2. Conecte e identifique a porta
+
+Ligue o USB-C da placa ao computador. Feche monitores seriais que estejam
+usando a placa. Liste os dispositivos:
+
+```powershell
+# Windows
+..\pixelgotchi-env\Scripts\python.exe -m platformio device list
+```
+
+```sh
+# macOS / Linux
+../pixelgotchi-env/bin/python -m platformio device list
+```
+
+Anote a porta que aparece ao conectar e desaparece ao desconectar a placa.
+Exemplos: `COM5` no Windows, `/dev/cu.usbmodem...` no macOS ou
+`/dev/ttyACM0` no Linux. **São exemplos: use a sua porta.** Se houver várias
+placas, identifique esta antes de gravar.
+Referências: [listar dispositivos](https://docs.platformio.org/en/stable/core/userguide/device/cmd_list.html)
+e [porta de upload](https://docs.platformio.org/en/stable/projectconf/sections/env/options/upload/upload_port.html).
+
+### 3. Compile e grave
+
+**Windows — substitua `COM5` pela sua porta:**
+
+```powershell
+..\pixelgotchi-env\Scripts\python.exe -m platformio run -e esp32-s3-matrix
+..\pixelgotchi-env\Scripts\python.exe -m platformio run -e esp32-s3-matrix -t upload --upload-port COM5
+```
+
+**macOS / Linux — substitua `/dev/ttyACM0` pela sua porta:**
+
+```sh
+../pixelgotchi-env/bin/python -m platformio run -e esp32-s3-matrix
+../pixelgotchi-env/bin/python -m platformio run -e esp32-s3-matrix -t upload --upload-port /dev/ttyACM0
+```
+
+Espere **`[SUCCESS]`** na compilação e na gravação. O PlatformIO baixa o
+compilador e as bibliotecas e gera a arte automaticamente. Use o
+`platformio.ini` do projeto: o ambiente já configura **flash de 4 MB**,
+FastLED 3.6.0 e USB CDC. O nome genérico `esp32-s3-devkitc-1` dentro desse
+arquivo é intencional; as adaptações da Matrix estão no próprio projeto.
+
+Se a gravação não conectar, coloque a placa no modo de download:
+
+1. Segure **BOOT**.
+2. Pressione e solte **RESET**, mantendo BOOT pressionado.
+3. Solte **BOOT**.
+4. Liste as portas novamente — o nome pode mudar — e repita o upload.
+5. Ao terminar, pressione **RESET** com BOOT solto para iniciar o jogo.
+
+Esse é o modo de gravação do ESP32-S3 descrito pela
+[Espressif](https://docs.espressif.com/projects/esptool/en/latest/esp32s3/advanced-topics/boot-mode-selection.html).
+Durante o jogo, use BOOT depois da inicialização.
+
+### 4. Confira que iniciou
+
+Abra o monitor e, se necessário, toque RESET para ver a inicialização:
+
+```powershell
+# Windows — sua porta pode mudar depois do upload
+..\pixelgotchi-env\Scripts\python.exe -m platformio device monitor --port COM5 --baud 115200
+```
+
+```sh
+# macOS / Linux
+../pixelgotchi-env/bin/python -m platformio device monitor --port /dev/ttyACM0 --baud 115200
+```
+
+Saída esperada: `[PixelGochi] iniciando...`, `[Imu] QMI8658 ok` e
+`[Game] fase=...`. Use `Ctrl+C` para fechar o monitor antes de outro upload.
+Na matriz, escolha o pet com cliques; segure BOOT por 0,6 s e solte para
+começar o ovo. Movimentos suaves acumulam os dez minutos de incubação.
+
+| Problema | O que conferir |
+|---|---|
+| Nenhuma porta aparece | Troque por um cabo com dados e outra porta USB; tente BOOT + RESET e liste de novo |
+| Porta ocupada | Feche o monitor serial, outras IDEs e aplicativos que usam essa porta |
+| Upload não conecta | Confira a porta atual e use o modo de download acima |
+| Linux retorna permissão negada | Ajuste a permissão/grupo da porta conforme sua distribuição; reconecte após a mudança |
+| Monitor vazio | Use 115200, confira a porta após o reset e deixe BOOT solto |
+| IMU não respondeu | Confirme o modelo exato da placa; o BOOT funciona, mas os gestos exigem o sensor |
+| Imagem ou inclinação invertida | Veja `DISPLAY_ROTATION`, `DISPLAY_MIRROR_X` e `TILT_SIGN` na seção de hardware |
+
+Essa placa usa USB nativo do ESP32-S3; não presuma que precisa de um driver
+CH340 de outra placa. Para problemas de reconhecimento, consulte a
+[documentação da sua Matrix](https://docs.waveshare.com/ESP32-S3-Matrix/Arduino).
+
+**Alternativa gráfica:** abra a pasta do projeto no
+[VS Code](https://code.visualstudio.com/) com a extensão
+[PlatformIO IDE](https://platformio.org/install/ide?install=vscode).
+Em **Project Tasks → esp32-s3-matrix**, execute **Build** e **Upload**;
+use o monitor em 115200. Com mais de uma porta disponível, prefira os
+comandos acima para escolher explicitamente a placa.
+
+### Atualizar uma instalação existente
+
+Com uma cópia obtida por Git, confira suas alterações antes de atualizar:
+
+```sh
+git status
+git pull --ff-only
+```
+
+Se há alterações locais, guarde-as antes do pull. Depois repita a compilação
+e o upload com a porta atual. Na cópia ZIP, baixe e extraia a nova versão
+separadamente. O upload normal não manda apagar toda a flash. A retenção
+do pet depende da compatibilidade do formato salvo e das partições entre
+versões; não é garantia de migração para qualquer firmware futuro.
+
+**Verificado no software:** build, testes C++ e preview; veja as evidências
+em [TESTES.md](docs/TESTES.md). Gravação USB, gestos e aparência real ainda
+precisam da execução dos testes na placa física.
+
+## Prompt para instalação assistida por IA
+
+Copie este texto para um **agente local com acesso ao terminal e ao USB**
+(por exemplo, um agente de programação no seu computador). Uma conversa
+sem acesso ao computador não consegue gravar a placa.
+
+```text
+Instale o PixelGotchi da https://github.com/pantojinho/PixelGotchi
+na minha Waveshare ESP32-S3-Matrix conectada por USB. Autorizo baixar
+as ferramentas, compilar e gravar o firmware nessa placa.
+
+1. Leia o README e o platformio.ini da revisão atual. Confira o modelo
+   ESP32-S3-Matrix, com matriz RGB 8x8, BOOT e QMI8658. Preserve arquivos
+   locais existentes; clone em uma pasta própria se necessário.
+2. Identifique meu sistema operacional, Git, Python e PlatformIO.
+   Use um ambiente Python fora do repositório e PlatformIO 6.2.0,
+   como no guia. Instale apenas as dependências necessárias.
+3. Liste as portas USB/seriais e identifique a minha placa. Se houver
+   ambiguidade, peça que eu desconecte/reconecte a placa para confirmar.
+   Não escolha uma porta apenas por ser a primeira da lista.
+4. Compile o ambiente esp32-s3-matrix. A geração de arte é automática.
+   Mantenha a flash de 4 MB, FastLED 3.6.0, USB CDC e limites de brilho
+   e corrente do projeto. Não altere a arte ou as regras do jogo.
+5. Faça upload usando explicitamente a porta identificada. Se precisar
+   de modo de download, oriente BOOT segurado + toque RESET + soltar
+   BOOT, liste a porta de novo e prossiga. Após gravar, RESET com BOOT
+   solto inicia o jogo. Não execute erase_flash.
+6. Abra o monitor em 115200 e confira os logs de início e do QMI8658.
+   Informe o resultado real, a revisão instalada e a porta usada.
+   Se o USB não estiver acessível, explique o bloqueio e forneça os
+   comandos exatos para eu concluir; não declare sucesso sem upload.
+7. Explique a seleção do pet, incubação com movimento, clique para
+   alimentar, segurar e soltar para o menu e gestos de brincar/dormir.
+   Diferencie o que verificou no software do que eu devo conferir nos LEDs.
+```
+
+O prompt orienta a instalação que existe hoje. O editor de pets e o
+instalador pelo navegador são propostas da próxima sprint, descritas abaixo.
 
 ## Testes sem placa
 
@@ -170,6 +391,9 @@ Cobrem debounce, clique/segurar/reset, orientação inicial, histerese,
 sono por gesto e manual, navegação, intervalo entre brincadeiras,
 ovo parado e poses sem cortes ou sobreposição durante a refeição.
 O GitHub Actions também compila o firmware e verifica a arte gerada.
+
+O [documento de testes](docs/TESTES.md) registra resultados, procedimentos
+para a placa e os critérios de teste do futuro editor com envio por USB.
 
 ## Editar a arte
 
@@ -196,6 +420,18 @@ test/          testes C++ e mocks de hardware
 MIT — [LICENSE](LICENSE).
 
 ## Próximos passos
+
+**Próxima sprint proposta — ainda não implementada:** editor/simulador
+de arte 8×8 para criar um pet, escolher cores, montar animações e enviá-lo
+por USB. Também está previsto um fluxo guiado de instalação/atualização
+da placa pelo navegador, com alternativa local.
+
+Veja o [plano de conexão, formato de arte e entregas](docs/PROXIMA-SPRINT.md)
+e os [testes previstos](docs/TESTES.md#próxima-sprint-testes-planejados).
+Hoje a arte precisa ser gerada e compilada no firmware; não existe envio
+de um pet personalizado por USB nem instalação web com um clique.
+
+Outras ideias de evolução, sem compromisso com essa sprint:
 
 - Configuração pelo celular via rede criada pela placa: nome, escolha de
   pet e hora da internet para um ciclo dia/noite durante a vida offline.
