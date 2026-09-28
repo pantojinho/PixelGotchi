@@ -4,6 +4,7 @@
 #include "../src/Input.cpp"
 #include "../src/Imu.cpp"
 #include "../src/Storage.h"
+#include "../src/Dream.h"
 #include <assert.h>
 #include <FastLED.h>
 
@@ -32,7 +33,66 @@ void alive(uint8_t species = 0) {
     sim.choose(species, 0x12345678); sim.hatch();
     act = Act::None; gestureSleep = false; playedOnce = false;
     petX = centerCx(idleW()); beh = Beh::Stand; behUntil = testMs + 5000;
+    lastInputAt = testMs; observedMotionAt = Imu::lastMotionMs();
+    sleepWasActive = false; dreamSeeded = false; dreamView = false;
     tiltValue = 0; tiltArmed = true; go(Scene::Life);
+}
+
+void testDreamAutomaton() {
+    Dream::Automaton life;
+    life.seed(0, true); // blinker: period 2
+    assert(life.population() == 3);
+    life.step(); assert(life.population() == 3 && life.alive(3, 2) && life.alive(3, 3) && life.alive(3, 4));
+    life.step(); assert(life.population() == 3 && life.alive(2, 3) && life.alive(3, 3) && life.alive(4, 3));
+    life.seed(2, true); // bloco imóvel
+    for (int i = 0; i < 8; ++i) life.step();
+    assert(life.population() == 4 && life.alive(3, 3) && life.alive(4, 4));
+    life.seed(3, true); // glider clássico, com as bordas conectadas
+    assert(life.population() == 5);
+    for (int i = 0; i < 4; ++i) life.step();
+    assert(life.population() == 5 && life.alive(3, 5) && life.alive(5, 5));
+    for (int i = 0; i < 12; ++i) life.step();
+    assert(life.population() == 5 && life.alive(0, 0) && life.alive(0, 7) &&
+           life.alive(6, 0) && life.alive(7, 0) && life.alive(7, 6)); // cruzou a borda
+    life.seed(0x12345678, false);
+    Dream::Automaton repeat; repeat.seed(0x12345678, false);
+    assert(life.population() == repeat.population());
+    for (uint8_t y = 0; y < 8; ++y)
+        for (uint8_t x = 0; x < 8; ++x) assert(life.alive(x, y) == repeat.alive(x, y));
+}
+
+void testDreamTimingAndMotion() {
+    alive();
+    updateDreamView(testMs + IDLE_DREAM_AFTER_MS, false);
+    assert(dreamView && !sim.s().asleep);
+    updateDreamView(testMs + IDLE_DREAM_AFTER_MS + IDLE_DREAM_SHOW_MS, false);
+    assert(!dreamView);
+    updateDreamView(testMs + IDLE_DREAM_AFTER_MS + IDLE_DREAM_CYCLE_MS, false);
+    assert(dreamView);
+
+    alive();
+    assert(sim.lightsOff() == Result::Ok);
+    updateDreamView(testMs, false);
+    assert(!dreamView);
+    updateDreamView(testMs + SLEEP_DREAM_AFTER_MS, false);
+    assert(dreamView && sim.s().asleep);
+    updateDreamView(testMs + SLEEP_DREAM_AFTER_MS + 1, true);
+    assert(!dreamView && sim.s().asleep); // movimento mostra o pet sem acordá-lo
+    updateDreamView(testMs + SLEEP_DREAM_AFTER_MS + SLEEP_PET_REVEAL_MS + 2, false);
+    assert(dreamView && sim.s().asleep); // volta ao sonho quando para de mexer
+    assert(sim.wakeUp() == Result::Ok);
+    updateDreamView(testMs + SLEEP_DREAM_AFTER_MS + SLEEP_PET_REVEAL_MS + 3, false);
+    assert(!dreamView && !sleepWasActive);
+
+    alive();
+    while (sim.s().energy >= NEED_LOW) assert(sim.play() == Result::Ok);
+    const uint32_t autoSleepAt = testMs + AUTO_SLEEP_IDLE_MS + 2;
+    lastInputAt = testMs;
+    sceneLife(autoSleepAt, Ev::None);
+    assert(sim.s().asleep); // cochilo disparado pela regra de energia baixa
+    updateDreamView(autoSleepAt, false);
+    updateDreamView(autoSleepAt + SLEEP_DREAM_AFTER_MS, false);
+    assert(dreamView && sim.s().asleep); // cochilo automático entra no mesmo sonho
 }
 void dispatch(Ev e) { Events::push(e); Game::update(); }
 void sample(float x, float y, float z, uint32_t ms = 20) {
@@ -98,6 +158,8 @@ void testLedContrast() {
 }
 
 int main() {
+    testDreamAutomaton();
+    testDreamTimingAndMotion();
     Display::begin(); testLedContrast();
     Input::begin(); Imu::begin();
     // Contato instável nunca vira clique.
@@ -207,5 +269,5 @@ int main() {
         cv.clear(); drawPet(*d.eat, testMs - actAt, petX, 7, testMs);
         assert(memcmp(eating.px, cv.px, sizeof(cv.px)) == 0);
     }
-    puts("PASS: LED gamma/brightness/contrast, BOOT, debounce, reset, IMU, sleep/wake, menu, play cooldown, egg and sprite composition");
+    puts("PASS: Conway dreams/glider, LED contrast, BOOT, IMU, sleep/wake, menu, egg and sprite composition");
 }

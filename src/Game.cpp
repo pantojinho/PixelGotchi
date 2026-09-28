@@ -6,6 +6,7 @@
 #include "Imu.h"
 #include "Input.h"
 #include "PetSim.h"
+#include "Dream.h"
 #include "art/ArtData.h"
 #include <esp_random.h>
 #include <string.h>
@@ -91,6 +92,14 @@ bool playedOnce = false;
 bool gestureSleep = false;
 bool nightFrame = false; // quadro atual é de "luz apagada" (brilho mínimo)
 uint32_t lastInputAt = 0; // último clique/gesto (cansado + muito tempo sem isso = dorme)
+uint32_t observedMotionAt = 0;
+
+// Sonhos procedurais: interlúdios no idle e mundo completo durante o sono.
+Dream::Automaton dreamGrid;
+bool sleepWasActive = false, dreamSeeded = false, dreamView = false;
+uint32_t sleepStartedAt = 0, sleepPetUntil = 0, lastDreamStep = 0, dreamSeedValue = 1;
+bool dreamIsCalm = true;
+Rgb dreamBright{90, 210, 245}, dreamDim{28, 82, 135};
 
 // ---- menu / status
 const Sprite *const MENU_ICONS[] = {&SPR_icon_food, &SPR_icon_play, &SPR_icon_clean,
@@ -318,6 +327,89 @@ void drawRising(const Sprite &s, int x, uint32_t t, uint16_t period, int from = 
     cv.blit(s, x, y);
 }
 
+void seedDream(uint32_t now) {
+    const PetState &s = sim.s();
+    Dna dna = sim.dna();
+    dreamSeedValue = dna.bits ^ ((uint32_t)s.hunger << 24) ^ ((uint32_t)s.energy << 16) ^
+                     ((uint32_t)s.happy << 8) ^ s.ageMin ^ ((uint32_t)s.poop << 4);
+    dreamIsCalm = !s.sick && !s.wild && s.poop == 0 && s.hunger >= 50 &&
+                  s.happy >= 50 && s.energy >= 50;
+    dreamGrid.seed(dreamSeedValue, dreamIsCalm);
+    dreamBright = dreamIsCalm ? Rgb{90, 210, 245} : Rgb{255, 112, 96};
+    dreamDim = dreamIsCalm ? Rgb{28, 82, 135} : Rgb{118, 35, 85};
+    dreamSeeded = true;
+    lastDreamStep = now;
+}
+
+void advanceDream(uint32_t now) {
+    if (!dreamSeeded) seedDream(now);
+    if (now - lastDreamStep < DREAM_STEP_MS) return;
+    lastDreamStep = now;
+    dreamGrid.step();
+    // Um sonho turbulento se desfaz; outra semente derivada do DNA começa
+    // um novo ciclo sem precisar de aleatoriedade nem de memória extra.
+    if (!dreamIsCalm && dreamGrid.population() == 0) {
+        dreamSeedValue = dreamSeedValue * 1664525u + 1013904223u;
+        dreamGrid.seed(dreamSeedValue, false);
+    }
+}
+
+bool untilActive(uint32_t now, uint32_t until) { return (int32_t)(until - now) > 0; }
+
+void updateDreamView(uint32_t now, bool activity) {
+    dreamView = false;
+    if (sim.s().asleep) {
+        if (!sleepWasActive) {
+            sleepWasActive = true;
+            sleepStartedAt = now;
+            sleepPetUntil = now + SLEEP_DREAM_AFTER_MS;
+            seedDream(now);
+        }
+        if (activity) sleepPetUntil = now + SLEEP_PET_REVEAL_MS;
+        const bool initialPet = now - sleepStartedAt < SLEEP_DREAM_AFTER_MS;
+        dreamView = !initialPet && !untilActive(now, sleepPetUntil);
+        if (dreamView) advanceDream(now);
+        return;
+    }
+
+    if (sleepWasActive) {
+        sleepWasActive = false;
+        dreamSeeded = false;
+    }
+    if (scene != Scene::Life || act != Act::None || activity ||
+        sim.s().energy < NEED_LOW || sim.needsAttention()) {
+        if (activity || scene != Scene::Life) dreamSeeded = false;
+        return;
+    }
+    const uint32_t idle = now - lastInputAt;
+    if (idle < IDLE_DREAM_AFTER_MS) {
+        dreamSeeded = false;
+        return;
+    }
+    if (!dreamSeeded) seedDream(now);
+    const uint32_t phase = (idle - IDLE_DREAM_AFTER_MS) % IDLE_DREAM_CYCLE_MS;
+    dreamView = phase < IDLE_DREAM_SHOW_MS;
+    if (dreamView) advanceDream(now);
+}
+
+void drawDream(uint32_t now, bool bird) {
+    for (uint8_t y = 0; y < 8; ++y) {
+        for (uint8_t x = 0; x < 8; ++x) {
+            if (dreamGrid.alive(x, y))
+                cv.set(x, y, ((x + y) & 1) ? dreamBright : dreamDim);
+        }
+    }
+    if (bird) {
+        // Um passarinho de três pixels cruza o mundo em algumas visitas idle.
+        int x = 8 - (int)((now / 150) % 12);
+        int y = 1 + (int)((now / 700) % 3);
+        const Rgb color{205, 228, 255};
+        cv.set(x, y + 1, color);
+        cv.set(x + 1, y, color);
+        cv.set(x + 2, y + 1, color);
+    }
+}
+
 void drawAction(uint32_t now) {
     const PetDef &d = def();
     uint32_t t = now - actAt;
@@ -388,10 +480,20 @@ void drawLife(uint32_t now) {
     uint32_t t = now - behAt;
 
     if (s.asleep) {
+        if (dreamView) {
+            drawDream(now, false);
+            return;
+        }
         drawPet(*d.sleep, now, petX, 7, now);
         drawPoop(now);
         drawRising(SPR_fx_z, 0, now, 2400, 0);
         nightFrame = true; // luz apagada: Display manda tudo no brilho mínimo
+        return;
+    }
+    if (dreamView) {
+        const uint32_t idle = now - lastInputAt;
+        const bool bird = ((idle - IDLE_DREAM_AFTER_MS) / IDLE_DREAM_CYCLE_MS) % 2 == 1;
+        drawDream(now, bird);
         return;
     }
     if (act != Act::None) {
@@ -847,6 +949,11 @@ namespace Game {
 
 void begin() {
     sim.begin();
+    lastInputAt = millis();
+    observedMotionAt = Imu::lastMotionMs();
+    sleepWasActive = false;
+    dreamSeeded = false;
+    dreamView = false;
     lastEggMs = millis();
     enterFromSaved();
     const PetState &s = sim.s();
@@ -862,7 +969,14 @@ void update() {
     sim.update();
 
     Ev e = Events::pop();
-    if (e != Ev::None) lastInputAt = now;
+    bool activity = e != Ev::None;
+    const uint32_t motionAt = Imu::lastMotionMs();
+    if (motionAt != observedMotionAt) {
+        observedMotionAt = motionAt;
+        activity = true;
+    }
+    if (activity) lastInputAt = now;
+    updateDreamView(now, activity);
     // O gesto de desvirar também funciona enquanto um menu está aberto.
     if (e == Ev::FaceUp && gestureSleep) {
         if (sim.s().asleep) sim.wakeUp();

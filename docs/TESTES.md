@@ -103,6 +103,43 @@ com relógio, GPIO, sensor, NVS e saída LED substituídos por mocks.
 Esses testes são casos selecionados, não uma prova de todas as combinações
 de regras, tempo, DNA e falhas de hardware.
 
+## Sonhos e Conway
+
+O firmware mantém o pet visível por 8 s ao entrar no sono e, em seguida,
+usa toda a matriz para a evolução de Conway enquanto ele dorme. Isso vale
+para sono pelo menu, por gesto e para o cochilo automático quando a energia
+está baixa. Movimento do acelerômetro durante o sono revela o pet por mais
+8 s sem acordá-lo; BOOT continua acordando. Com energia suficiente, 2 min de
+ociosidade iniciam visitas de 7 s ao mundo a cada 45 s. Algumas visitas
+incluem um passarinho. Os estados de cuidado impedem a visita ociosa, e o
+autômato não altera os atributos do pet. Uma geração roda a cada 500 ms; as
+bordas da grade se conectam, permitindo que o glider reapareça do outro lado.
+
+| Verificação | Resultado / limite |
+|---|---|
+| Regras de Conway | Teste nativo: blinker alterna, bloco permanece e glider mantém cinco células após quatro gerações |
+| Sementes turbulentas | Repetir DNA gera o mesmo padrão inicial |
+| Temporização de sonhos | Teste do Game real: visitas ociosas, sonho contínuo no sono e retorno ao pet por movimento |
+| Cochilo automático | Teste C++ reduz energia, dispara a regra real após 30 s de ociosidade e confirma o sonho longo |
+| Build ESP32-S3 | Passou: RAM 20.704 bytes; flash de aplicação 365.045 bytes |
+| Preview no navegador | Página e controles carregaram em localhost, sem erros de console; a matriz física não foi simulada |
+| Preview | Tempos reduzidos para 12 s ocioso, ciclos de 20 s e 8 s de sono; não são os tempos do firmware |
+| Matriz física e IMU | Pendente: confirmar conforto visual, deslocamento do glider e retorno após mover a placa |
+
+### Roteiro na placa
+
+1. Grave o firmware e mantenha o pet acordado, com energia suficiente. Aguarde
+   2 min sem tocar ou mover a placa; confirme uma visita curta e depois o
+   retorno ao pet. Espere outro ciclo para observar um passarinho.
+2. Inicie o sono pelo menu. O pet aparece por cerca de 8 s; a matriz inteira
+   então exibe o padrão. Mova a placa e confirme que o pet volta sem acordar.
+   Deixe-a parada por 8 s para ver o sonho voltar; clique BOOT para acordar.
+3. Reduza a energia e deixe o pet cansado sem entrada por 30 s. Confirme que
+   o cochilo automático também passa do pet para o sonho e que o movimento
+   apenas revela o pet. A recuperação até energia cheia deve acordá-lo.
+4. Observe o brilho a uma distância confortável. A tela de sonho usa o mesmo
+   perfil reduzido de LEDs; ajuste em placa somente se a luz real pedir.
+
 ## Roteiro manual do preview
 
 Execute `python tools/preview.py` e abra a maquete interativa. Registre a

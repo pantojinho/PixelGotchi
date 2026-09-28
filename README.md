@@ -58,6 +58,27 @@ além de uma paleta de ovo e uma variante selvagem.
   nem fizer um gesto por 30 s, dorme sozinho; dormindo recupera 1 de
   energia por minuto e acorda sozinho quando enche.
 
+### Sonhos e Conway
+
+Depois de 2 minutos sem BOOT nem movimento, com energia suficiente e sem
+necessidade urgente, o pet visita por 7 s um mundo procedural a cada 45 s.
+Algumas visitas incluem um passarinho atravessando a tela. Ao dormir — pelo
+menu, pelo gesto ou pelo cochilo automático de energia baixa — ele fica
+visível por 8 s e depois a matriz inteira vira um sonho de Conway. Mexer ou
+chacoalhar a placa mostra o pet dormindo por mais 8 s; isso não o acorda.
+O BOOT acorda o pet normalmente, e ele também acorda quando recupera toda a
+energia. Assim o cochilo automático usa o mesmo sonho longo.
+
+Os sonhos evoluem uma geração a cada meio segundo. DNA e estado do pet
+escolhem entre sementes estáveis (incluindo o glider, que cruza as bordas
+conectadas da grade) ou padrões mais turbulentos; tons frios indicam um sonho
+tranquilo e tons quentes um sonho inquieto. Isso só muda a exibição: não
+altera fome, energia nem as regras de alimentação. O formato de grade 8×8,
+as regras e o glider seguem a referência do
+[Jogo da Vida em matriz de LEDs](https://www.makerguides.com/game-of-life-dot-matrix-max7219/).
+Os tempos do preview são encurtados para a demonstração; o firmware usa os
+tempos acima. Veja o [roteiro dos sonhos](docs/TESTES.md#sonhos-e-conway).
+
 Os desenhos são originais, feitos diretamente na grade de pixels.
 Referências de forma: [perfil de capivara (WWF)](https://www.wwf.or.jp/staffblog/news/5510.html)
 e [silhueta de gato sentado](https://freesvg.org/black-cat-vector-image).
