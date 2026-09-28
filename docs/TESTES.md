@@ -247,6 +247,18 @@ Temperatura/consumo medidos, se disponíveis:
 Correções de orientação ou sensibilidade utilizadas:
 ```
 
+## Release v0.1.0 — 28/09/2026
+
+Publicada pelo workflow `release.yml` (Run workflow com a versão `v0.1.0`, no
+commit `df543c0`): [página da release](https://github.com/pantojinho/PixelGotchi/releases/tag/v0.1.0).
+
+| Verificação | Resultado / limite |
+|---|---|
+| Pacote | Zip baixado da release: os 18 arquivos conferem com `SHA256SUMS.txt` |
+| Anexos avulsos | `firmware.bin` publicado separado é idêntico ao do zip e contém o protocolo do editor |
+| Empacotamento local | `tools/package_release.py v0.1.0` gerou imagem única de 0x6b3a0 bytes e os offsets do build |
+| Gravação dos arquivos da release na placa | Pendente: "do zero" com a imagem única e "atualizar" com `firmware.bin` em 0x10000 |
+
 ## Editor e envio de bichinhos pela USB
 
 Resultado registrado em 28/09/2026, em software. Veja o [guia do editor](EDITOR.md).
