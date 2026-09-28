@@ -262,7 +262,7 @@
       change(() => {
         const id = tpl.value;
         project = id ? P.fromArt(A, id) : P.blankProject();
-        project.name = id ? (L('Meu ', 'My ') + (PET_LABEL[id] || id)).slice(0, P.LIMITS.name) : L('Meu pet', 'My pet');
+        project.name = id ? (PET_LABEL[id] || id).slice(0, P.LIMITS.name) : L('Meu pet', 'My pet');
         anim = 'idle'; step = 0; color = 1;
       });
     };
@@ -484,6 +484,7 @@
           'Done! It is saved on the board. To use it now, check "Replace" and send again, or restart the game (hold BOOT for 8 s) and pick the 7th species.'), 'good');
       }
       board.hello.has = true; board.hello.name = project.name;
+      if (adopt) board.hello.active = true; // o pet da placa agora é este
     } catch (e) {
       const code = String(e.message).startsWith('PG ERR ') ? e.message.slice(7) : '';
       const why = code ? (BOARD_ERR[code] || code) : L('a placa parou de responder', 'the board stopped answering');
