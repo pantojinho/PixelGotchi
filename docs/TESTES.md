@@ -2,6 +2,25 @@
 
 [README](../README.md) · [Plano da próxima sprint](PROXIMA-SPRINT.md)
 
+## Instalador web — roteiro de aceitação na placa
+
+O instalador pode ser aberto em [install.html](../preview/install.html).
+A imagem combinada para ESP32-S3 é gerada do build por
+`python tools/build_web_installer.py` e publicada no Pages pelo workflow
+`.github/workflows/pages.yml`. O botão usa Web Serial; precisa de Chrome ou
+Edge em HTTPS (localhost serve para teste local). A imagem de instalação do
+zero cobre a NVS e reinicia o pet salvo. O teste local da página e a compilação
+não substituem ensaio com placa real.
+
+| Verificação | Resultado | Observação |
+|---|---|---|
+| Geração da imagem e manifesto | Passou localmente | `python tools/build_web_installer.py`; imagem ESP32-S3 de 429.248 bytes, offset 0 e revisão `efaff67` |
+| Carregamento e estado da página | Passou localmente | Preview em localhost abriu em Chrome; estado de USB disponível e botão visíveis. Sem placa conectada, a seleção da porta não foi exercitada |
+| Gravação em Matrix física | Pendente | Usar placa de teste; confirmar que o aviso de apagamento aparece e esperar conclusão |
+| Inicialização após gravação | Pendente | Reiniciar, conferir pets/LEDs, BOOT, IMU e logs USB |
+| Falha e recuperação | Pendente | Desconectar/cancelar antes de gravar; testar BOOT + RESET e caminho manual |
+| Atualização preservando o pet | Pendente | O instalador de imagem completa não promete preservar estado; validar fluxo parcial separado |
+
 Este documento reúne as evidências do software atual, o roteiro para testar
 a placa e os critérios do futuro editor de pets. **Passar no preview ou no
 build não comprova gravação USB, funcionamento do sensor ou aparência física.**

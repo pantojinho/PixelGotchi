@@ -1,0 +1,16 @@
+{
+  "name": "PixelGotchi — Waveshare ESP32-S3-Matrix",
+  "version": "efaff67",
+  "new_install_prompt_erase": false,
+  "builds": [
+    {
+      "chipFamily": "ESP32-S3",
+      "parts": [
+        {
+          "path": "firmware/PixelGotchi-esp32s3-4mb.bin",
+          "offset": 0
+        }
+      ]
+    }
+  ]
+}

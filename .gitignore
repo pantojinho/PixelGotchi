@@ -5,6 +5,7 @@
 .vscode/ipch
 *.o
 *.bin
+preview/firmware/
 .DS_Store
 Thumbs.db
 __pycache__/

@@ -2,17 +2,20 @@
 
 [README](../README.md) · [Testes e critérios de aceite](TESTES.md#próxima-sprint-testes-planejados)
 
-**Proposta de produto e arquitetura. Não implementada nesta revisão.**
+**Proposta de produto e arquitetura para o editor de pets.**
 O objetivo é permitir que qualquer pessoa desenhe o próprio bichinho,
 escolha suas cores e animações, experimente o resultado e envie para a
-Waveshare ESP32-S3-Matrix pelo USB. Também queremos guiar a instalação e
-as atualizações do firmware, sem exigir que a pessoa programe.
+Waveshare ESP32-S3-Matrix pelo USB. O instalador do firmware pelo navegador
+já foi implementado; o ensaio com a placa física e a atualização que preserva
+o pet continuam pendentes.
 
 ## O que existe hoje
 
 - Galeria e maquete de controles no navegador, com a arte compartilhada.
 - Sprites e paletas em `art/*.art`, convertidos por `tools/gen_art.py` em C++.
 - Compilação e upload por PlatformIO, documentados no README.
+- Instalador web para gravar o firmware atual, publicado pelo GitHub Actions;
+  confira o roteiro da placa em [TESTES.md](TESTES.md).
 - USB CDC para logs; **não há protocolo de recebimento de pets personalizados**.
 - Estado do jogo salvo na NVS. Novos formatos e migrações precisarão de projeto.
 
@@ -52,7 +55,7 @@ compatíveis com o gerador e as referências de animação do firmware.
 **Limite desta etapa:** ainda precisa de compilação local para cada arte;
 não oferece envio direto de um projeto do navegador para a placa.
 
-### Etapa B — firmware genérico, instalador web e pacotes via USB
+### Etapa B — firmware genérico e pacotes de pets via USB
 
 Para o fluxo completo, o firmware precisa renderizar um pacote de arte
 carregado em tempo de execução, sem recompilar a cada pet. O instalador web
@@ -77,11 +80,12 @@ o resultado e orienta BOOT/RESET quando necessário. A API não permite
 prometer escolha silenciosa de qualquer dispositivo conectado.
 Referência: [Web Serial no Chrome](https://developer.chrome.com/docs/capabilities/serial).
 
-Para instalar releases, avaliar [ESP Web Tools](https://esphome.github.io/esp-web-tools/)
-ou [esptool-js da Espressif](https://espressif.github.io/esptool-js/).
-ESP Web Tools oferece instalação pelo navegador a partir de um manifesto
-de firmware. A adoção depende de um ensaio na Matrix real; não há integração
-dessas ferramentas no projeto hoje.
+O firmware atual já é publicado para instalação com
+[ESP Web Tools](https://esphome.github.io/esp-web-tools/) pelo
+[instalador USB](https://pantojinho.github.io/PixelGotchi/install.html).
+O manifesto e a imagem combinada
+são gerados do build para ESP32-S3. Ainda falta validar a gravação e a
+recuperação na Matrix física; o teste web não comprova o funcionamento da placa.
 
 O fluxo proposto após escolher a porta:
 
@@ -102,10 +106,10 @@ Wi-Fi não é necessário para essa proposta.
 
 ### Publicação das versões
 
-A CI deverá gerar os artefatos de release e seu manifesto para **ESP32-S3,
-4 MB**, incluindo os arquivos/offsets exigidos pela configuração real de
-bootloader, partições e aplicação — ou uma imagem combinada validada.
-Os endereços devem vir do build; não copiar offsets genéricos de outra placa.
+A CI do instalador compila e publica uma imagem combinada e seu manifesto para
+**ESP32-S3, 4 MB**; os endereços vêm da metadata do PlatformIO. Pacotes de
+release para atualização manual e migração do estado continuam sujeitos a
+validação da placa.
 
 Registrar versão, revisão, checksums e compatibilidade do protocolo/pacote.
 Definir a política de atualização e migração antes de trocar o layout de

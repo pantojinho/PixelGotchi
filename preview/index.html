@@ -14,6 +14,7 @@
   .controls { display:flex; flex-wrap:wrap; gap:16px; align-items:center; background:var(--panel); padding:10px 14px; border-radius:10px; position:sticky; top:8px; z-index:2; }
   .controls label { display:flex; gap:8px; align-items:center; }
   .controls a { color:var(--accent); }
+  .controls .install-link { display:inline-block; padding:7px 11px; border-radius:8px; background:var(--accent); color:#18120c; font-weight:700; text-decoration:none; }
   .grid { display:flex; flex-wrap:wrap; gap:12px; }
   .cell { background:var(--panel); border-radius:10px; padding:8px; text-align:center; }
   .cell canvas { display:block; margin:0 auto 6px; cursor:zoom-in; }
@@ -38,6 +39,7 @@
 <div class="controls">
   <label>Modo <select id="mode"><option value="led">LED (simulado)</option><option value="flat">Cores de design</option></select></label>
   <label>Brilho <input id="bright" type="range" min="1" max="30" value="5"><span id="brightV">5</span></label>
+  <span><a class="install-link" href="install.html">Instalar na placa via USB</a></span>
   <span>Ver: <a href="?">tudo</a> · <a href="?view=scenes">só cenas</a> · <a href="?view=sprites">todos os frames</a></span>
 </div>
 <section id="demo" aria-label="Experimentar os controles">

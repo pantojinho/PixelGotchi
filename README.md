@@ -4,7 +4,8 @@ Bichinho virtual na **Waveshare ESP32-S3-Matrix**, com matriz RGB de
 **8×8 LEDs**, botão **BOOT** e acelerômetro **QMI8658**. Funciona sozinho,
 sem Wi-Fi, celular ou botões adicionais.
 
-**Comece aqui:** [instalação manual](#instalação-manual-via-usb) ·
+**Comprei a placa:** [instalar direto pelo navegador](https://pantojinho.github.io/PixelGotchi/install.html) ·
+[instalação manual](#instalação-manual-via-usb) ·
 [prompt para uma IA instalar](#prompt-para-instalação-assistida-por-ia) ·
 [plano e resultados dos testes](docs/TESTES.md) ·
 [próxima sprint: editor e USB](docs/PROXIMA-SPRINT.md).
@@ -246,6 +247,27 @@ Ender-3 V3 KE, ligação elétrica e montagem).
 
 ![Case explodida](hardware/case/images/exploded.png)
 
+## Instalar pelo navegador
+
+Abra o [instalador USB do PixelGotchi](https://pantojinho.github.io/PixelGotchi/install.html) em **Chrome ou
+Edge no computador**, conecte a Waveshare ESP32-S3-Matrix com um cabo USB-C
+de dados e clique no botão para escolher a porta. A página precisa de HTTPS
+(ou `localhost`). A imagem completa apaga e regrava os dados da placa,
+inclusive o pet salvo. O instalador é compilado do firmware desta revisão e
+publicado junto com o preview pelo GitHub Actions.
+
+Na primeira publicação, o dono do repositório precisa habilitar **Settings →
+Pages → Source: GitHub Actions**. Depois disso, cada atualização em `master`
+compila o firmware e publica o instalador automaticamente. Em seguida, execute
+uma vez **Actions → Publish web preview and USB installer → Run workflow**.
+Enquanto Pages não estiver ativado, o workflow encerra sem publicar.
+
+Se a porta não aparecer, feche monitores seriais, confirme o cabo de dados e
+tente BOOT pressionado + toque em RESET; solte BOOT e escolha a porta novamente.
+Para instalar manualmente ou atualizar com controle dos arquivos e offsets,
+siga as instruções abaixo. O envio de arte personalizada para a placa ainda
+não está implementado; esta página instala o jogo PixelGotchi.
+
 ## Instalação manual via USB
 
 Você precisa da placa acima, de um **cabo USB-C com dados**, acesso à internet
@@ -438,8 +460,10 @@ as ferramentas, compilar e gravar o firmware nessa placa.
    Diferencie o que verificou no software do que eu devo conferir nos LEDs.
 ```
 
-O prompt orienta a instalação que existe hoje. O editor de pets e o
-instalador pelo navegador são propostas da próxima sprint, descritas abaixo.
+O prompt orienta a instalação manual com agente local. Para a instalação
+guiada pelo navegador, use o [instalador USB](https://pantojinho.github.io/PixelGotchi/install.html). O editor
+de pets e o envio de artes personalizadas continuam propostos para a próxima
+sprint, descritos abaixo.
 
 ## Testes sem placa
 
@@ -490,13 +514,14 @@ MIT — [LICENSE](LICENSE).
 
 **Próxima sprint proposta — ainda não implementada:** editor/simulador
 de arte 8×8 para criar um pet, escolher cores, montar animações e enviá-lo
-por USB. Também está previsto um fluxo guiado de instalação/atualização
-da placa pelo navegador, com alternativa local.
+por USB. O [instalador do firmware pelo navegador](https://pantojinho.github.io/PixelGotchi/install.html) já
+está disponível; ainda falta ensaiar a gravação na Matrix física e automatizar
+atualizações que preservem os dados salvos.
 
 Veja o [plano de conexão, formato de arte e entregas](docs/PROXIMA-SPRINT.md)
 e os [testes previstos](docs/TESTES.md#próxima-sprint-testes-planejados).
 Hoje a arte precisa ser gerada e compilada no firmware; não existe envio
-de um pet personalizado por USB nem instalação web com um clique.
+de um pet personalizado por USB.
 
 Pendências da case e da primeira release estão no fim do
 [plano da sprint](docs/PROXIMA-SPRINT.md#pendências-case-3d-e-primeira-release).
