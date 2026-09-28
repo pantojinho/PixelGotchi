@@ -189,6 +189,10 @@ o que falta depende da peça física:
 | Conferir o rasgo do USB com os cabos que você usa | Capas de borracha grandes podem precisar de `usb_open_w`/`usb_open_h` maiores |
 | Medir o passo dos LEDs antes de imprimir a versão difusor | Grade assume ~2,7 mm; medir centro do 1º ao 8º LED de uma linha e dividir por 7 (`led_pitch`) |
 | Ajustar `plate_fit` à sua impressora | Tampa justa/solta varia entre impressoras |
-| Variante em formato de ovo (estilo Tamagotchi) e com bateria | Ideia futura; a atual é compacta e só USB |
+| Versão com bateria: comprar peças e montar | Desenhada (`pixelgochi_case_bateria.scad`) para a HC 801723 160 mAh, TP4056 com proteção, SS12D00 e 1N5819; ligação no README da case. Falta: medir a bateria (comprimento total com a plaquinha), **trocar o R3 do TP4056 por 10 kΩ**, ligar, testar fora da case e imprimir |
+| Autonomia na bateria | Estimada em ~1,5 h (LEDs consomem mesmo apagados). Medir de verdade; testar `setCpuFrequencyMhz(80)` e sono leve entre quadros no firmware |
+| Nível de bateria no jogo | A placa não mede a bateria. Dá pra ligar um divisor 100k/100k da bateria num GPIO com ADC (IO1–IO7 no conector) e mostrar no status / avisar bateria fraca |
+| LED de carga visível | O LED do TP4056 fica escondido; avaliar um furinho ou guia de luz no compartimento |
+| Variante em formato de ovo (estilo Tamagotchi) | Ideia futura |
 | **Primeira release no GitHub** (após aprovação) | Pacote pronto: `python tools/package_release.py v0.1.0` gera `dist/PixelGochi-v0.1.0.zip` (imagem única + binários com offsets do build, STLs, `SHA256SUMS.txt`, notas de [docs/releases/v0.1.0.md](releases/v0.1.0.md)). Falta: aprovação, criar a tag `v0.1.0` e publicar a release com o zip anexado (o `gh` não está instalado; dá pela página de Releases do GitHub) |
 | Ensaiar os dois jeitos de gravar do pacote na placa real | "Do zero" com a imagem única (apaga o pet) e "atualizar" gravando só `firmware.bin` em 0x10000 (deve manter o pet) |

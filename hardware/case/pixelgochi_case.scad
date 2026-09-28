@@ -15,17 +15,7 @@ PART = "assembly";
 STYLE = "open";      // "open" (janela aberta) ou "diffuser" (face fina + grade; PLA branco)
 KEYCHAIN = true;     // argolinha de chaveiro no canto
 
-/* [Placa] — Waveshare ESP32-S3-Matrix */
-board = 25.0;        // placa quadrada
-board_r = 1.0;       // raio dos cantos
-pcb_t = 1.6;         // espessura da placa
-led_h = 1.0;         // altura dos LEDs acima da placa
-led_pitch = 2.7;     // passo da matriz (medido: ~2,7). Só afeta a grade do estilo "diffuser".
-usb_x = 0;           // deslocamento do USB-C a partir do centro (x)
-usb_h = 3.26;        // altura do receptáculo USB-C acima do verso da placa
-btn_dx = 7.9;        // botões: |x| a partir do centro (4,6 mm das laterais)
-btn_y = 8.9;         // botões: y a partir do centro (3,6 mm da borda do USB)
-sw_h = 2.0;          // altura estimada botão+êmbolo acima do verso da placa (pino tolera 1,5–2,5)
+include <placa.scad>
 
 /* [Case] */
 fit = 0.25;          // folga placa<->parede (por lado)
@@ -178,17 +168,6 @@ module pin() {
 flange_top = (pin_flange - pin_tip) / 2 + 0.2 + (pin_flange - pin_d) / 2;
 assert(sw_top + flange_top < plate_in, "aba do pino encosta na tampa: aumente 'cavity'");
 assert(sw_top + 0.5 + flange_top < plate_in, "pouca folga pra botões mais altos: aumente 'cavity'");
-
-// Placa simplificada pra conferir encaixe (não imprimir).
-module board_model() {
-    color("#222") rsq(board, board_r, pcb_t, pcb_front);
-    color("#eee") for (i = [0:7], j = [0:7])
-        translate([(i - 3.5) * led_pitch - 1, (j - 3.5) * led_pitch - 1, pcb_front - led_h]) cube([2, 2, led_h]);
-    color("silver") translate([usb_x - 4.47, board / 2 - 7.35 + 0.8, pcb_back]) cube([8.94, 7.35, usb_h]);
-    color("silver") for (s = [-1, 1]) translate([s * btn_dx - 1.35, btn_y - 1.55, pcb_back]) cube([2.7, 3.1, sw_h - 0.4]);
-    color("#333") for (s = [-1, 1]) translate([s * btn_dx, btn_y, pcb_back]) cylinder(d = 1.0, h = sw_h);
-    color("#111") translate([-3.5, -3.5, pcb_back]) rotate([0, 0, 45]) cube([7, 7, 0.9]);
-}
 
 module pins_in_place() {
     for (s = [-1, 1]) translate([s * btn_dx, btn_y, sw_top]) pin();

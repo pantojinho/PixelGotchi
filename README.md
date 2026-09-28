@@ -218,8 +218,10 @@ gesto de virar usa histerese para evitar oscilar entre dormir/acordar.
 Case de **28,7 × 28,7 × 8,6 mm** com acesso ao USB-C, aos botões BOOT e RESET
 de trás (por pinos que nunca ficam apertando sozinhos) e argolinha de
 chaveiro; versão com janela aberta ou com difusor e grade 8×8. Sem suporte.
+Há também uma **versão com bateria** (28,7 × 47,7 × 18,8 mm, LiPo 160 mAh,
+carregador TP4056 e chave liga/desliga, carregando pelo mesmo USB-C).
 Veja [hardware/case](hardware/case/README.md) (STLs, configuração para a
-Ender-3 V3 KE e montagem).
+Ender-3 V3 KE, ligação elétrica e montagem).
 
 ![Case explodida](hardware/case/images/exploded.png)
 
