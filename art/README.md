@@ -29,7 +29,7 @@ cada frame em milissegundos e os nomes dos sprites em sequência.
 : base` herda os índices para troca de paleta em tempo de execução.
 
 Um pet precisa das animações `idle`, `blink`, `walk`, `eat`, `sleep`,
-`happy`, `sad`, `hungry` e `egg`, prefixadas pelo seu ID. A declaração
+`happy`, `sad`, `hungry`, `tired` e `egg`, prefixadas pelo seu ID. A declaração
 `pet` define nome, comida, paleta selvagem e se é de perfil (`side=1`).
 Mantenha a ordem de espécies existentes: o estado salvo usa esse índice.
 

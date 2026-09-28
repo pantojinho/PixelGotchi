@@ -208,7 +208,7 @@ em descanso, sono e comida. O modo LED é aproximação, não medição de luz.
 ## Roteiro da placa — execução pendente
 
 Material: Waveshare ESP32-S3-Matrix, cabo USB-C com dados, computador e a
-revisão anotada. Siga a [instalação manual](../README.md#instalação-manual-via-usb).
+revisão anotada. Siga a [instalação manual](INSTALAR.md#instalação-manual-via-usb).
 Mantenha os limites de brilho/corrente e a versão FastLED do projeto.
 
 | ID | Procedimento | Critério de aprovação | Estado |

@@ -3,13 +3,15 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>PixelGochi — Preview da Arte</title>
+<title>PixelGotchi — Simulador</title>
 <style>
   :root { --bg:#0e0f12; --panel:#17191e; --text:#e8e8ea; --muted:#8a8f99; --accent:#ffb347; }
   * { box-sizing: border-box; }
   body { margin:0; background:var(--bg); color:var(--text); font:14px/1.4 system-ui, sans-serif; padding:16px; }
   h1 { font-size:20px; margin:0 0 4px; }
   h2 { font-size:15px; margin:28px 0 10px; color:var(--accent); text-transform:uppercase; letter-spacing:.06em; }
+  .site-nav { font-size:14px; color:var(--muted); margin:0 0 10px; }
+  .site-nav a { color:var(--accent); }
   .sub { color:var(--muted); margin:0 0 14px; max-width:900px; }
   .controls { display:flex; flex-wrap:wrap; gap:16px; align-items:center; background:var(--panel); padding:10px 14px; border-radius:10px; position:sticky; top:8px; z-index:2; }
   .controls label { display:flex; gap:8px; align-items:center; }
@@ -34,7 +36,8 @@
 </style>
 </head>
 <body>
-<h1>PixelGochi — Preview da Arte</h1>
+<nav class="site-nav" aria-label="Páginas"><a href="guia.html">Comece aqui</a> · <b>Simulador</b> · <a href="install.html">Instalar na placa</a> · <a href="https://github.com/pantojinho/PixelGotchi">GitHub</a></nav>
+<h1>PixelGotchi — Simulador</h1>
 <p class="sub">Simulação da matriz 8×8 WS2812B. Os sprites vêm de <code>art/*.art</code> via <code>tools/gen_art.py</code> — os mesmos dados que vão pro firmware. As <b>cenas</b> são uma maquete de como o jogo compõe bicho + comida + efeitos. Clique numa matriz pra ampliar.</p>
 <div class="controls">
   <label>Modo <select id="mode"><option value="led">LED (simulado)</option><option value="flat">Cores de design</option></select></label>

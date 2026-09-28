@@ -52,8 +52,12 @@ do projeto, gerar, compilar e gravar com PlatformIO. Um agente local pode
 guiar o processo. O mapeamento das poses e os nomes exportados devem ser
 compatíveis com o gerador e as referências de animação do firmware.
 
-**Limite desta etapa:** ainda precisa de compilação local para cada arte;
-não oferece envio direto de um projeto do navegador para a placa.
+**Limite desta etapa:** cada arte ainda precisa ser compilada, no computador
+ou na nuvem; não oferece envio direto de um projeto do navegador para a placa.
+Já existe um caminho sem compilador local: um fork com GitHub Pages compila o
+firmware no Actions e publica o próprio instalador
+([Desenvolvimento](DESENVOLVIMENTO.md#publicar-a-sua-cópia-fork-com-site-próprio)).
+O editor pode aproveitá-lo exportando o `.art` para o fork.
 
 ### Etapa B — firmware genérico e pacotes de pets via USB
 
@@ -214,3 +218,10 @@ o que falta depende da peça física:
 | Letrinhas no ar | Bicho "fala" soltando letras que sobem ("OI", "?", "FOME", "♥"), com jeito próprio por personalidade |
 | Reações extras ao sensor | Sacudir forte = tontura; toque na placa = olha pra você e pula |
 | Minijogo | Comida caindo do topo; inclinar pra ele pegar |
+
+## Outras ideias, sem compromisso com a sprint
+
+- Configuração pelo celular via rede criada pela placa: nome, escolha de
+  pet e hora da internet para um ciclo dia/noite durante a vida offline.
+- Evolução ovo → bebê → adulto com caminhos conforme os cuidados.
+- Importação de PNGs do LibreSprite/Aseprite para `art/`.

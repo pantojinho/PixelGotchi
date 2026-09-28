@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-"""Abre o simulador da arte no navegador e atualiza sozinho ao salvar art/*.art.
+"""Abre o PixelGotchi no navegador (página "Comece aqui", simulador e instalador)
+e atualiza sozinho ao salvar art/*.art.
 
     python tools/preview.py            (porta 8765)
     python tools/preview.py 9000       (outra porta)
@@ -55,8 +56,10 @@ def main():
     handler = functools.partial(QuietHandler, directory=PREVIEW_DIR)
     server = http.server.ThreadingHTTPServer(("127.0.0.1", port), handler)
     url = f"http://localhost:{port}/"
-    print(f"[preview] {url}  (salve um arquivo em art/ e a página atualiza; Ctrl+C pra sair)")
-    webbrowser.open(url)
+    print(f"[preview] {url}guia.html  (comece aqui)")
+    print(f"[preview] {url}  (simulador; salve um arquivo em art/ e a página atualiza)")
+    print("[preview] Ctrl+C pra sair")
+    webbrowser.open(url + "guia.html")
     try:
         server.serve_forever()
     except KeyboardInterrupt:

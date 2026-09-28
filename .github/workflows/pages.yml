@@ -24,6 +24,8 @@ jobs:
       - run: python -m pip install platformio==6.2.0
       - name: Build current ESP32-S3 firmware and installer image
         run: |
+          # Gera a arte antes de copiar: o simulador publicado usa o mesmo art.js do firmware.
+          python tools/gen_art.py
           mkdir -p dist/pages
           cp -R preview/. dist/pages/
           python tools/build_web_installer.py --output dist/pages
