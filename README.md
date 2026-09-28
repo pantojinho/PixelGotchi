@@ -19,6 +19,13 @@ São uma demonstração do visual e dos controles; não são fotos dos LEDs fís
 | ![Capivara de perfil no preview, com controles de BOOT e movimento](docs/images/system-capybara.jpg) | ![Gato sentado no preview, com orelhas rosa, peito claro e cauda](docs/images/system-cat.jpg) |
 
 <details>
+<summary>Ver as poses atualizadas da capivara</summary>
+
+![Frames da capivara com focinho largo e ponta reta: descanso, piscar, caminhada, mastigação, sono e expressões](docs/images/system-capybara-frames.jpg)
+
+</details>
+
+<details>
 <summary>Ver um exemplo da galeria de animações</summary>
 
 ![Estados do axolote na galeria: comer, dormir, feliz, triste e com fome](docs/images/system-gallery.jpg)

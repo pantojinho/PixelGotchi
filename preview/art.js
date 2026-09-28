@@ -5,9 +5,9 @@ window.ART = {
    "W": "#FFFFFF"
   },
   "capy": {
-   "B": "#BD743A",
-   "L": "#F2BC78",
-   "D": "#895024",
+   "B": "#B77B45",
+   "L": "#DDA35C",
+   "D": "#704225",
    "O": "#FF8A00",
    "G": "#54B82E",
    "T": "#4FA8FF"
@@ -678,11 +678,11 @@ window.ART = {
   "capy_idle0": {
    "pal": "capy",
    "rows": [
-    "...L...",
-    "..BLLL.",
-    ".BBL.LL",
-    "BBBLLLD",
-    "BBBBLLL",
+    "..DL...",
+    "..L.LLD",
+    ".BBLLLD",
+    "BBBBB..",
+    "BBBBB..",
     ".D..D.."
    ],
    "w": 7,
@@ -691,11 +691,11 @@ window.ART = {
   "capy_ear": {
    "pal": "capy",
    "rows": [
-    "...B...",
-    "..BLLL.",
-    ".BBL.LL",
-    "BBBLLLD",
-    "BBBBLLL",
+    "..BL...",
+    "..L.LLD",
+    ".BBLLLD",
+    "BBBBB..",
+    "BBBBB..",
     ".D..D.."
    ],
    "w": 7,
@@ -704,11 +704,11 @@ window.ART = {
   "capy_blink": {
    "pal": "capy",
    "rows": [
-    "...L...",
-    "..BLLL.",
-    ".BBLDLL",
-    "BBBLLLD",
-    "BBBBLLL",
+    "..DL...",
+    "..LDLLD",
+    ".BBLLLD",
+    "BBBBB..",
+    "BBBBB..",
     ".D..D.."
    ],
    "w": 7,
@@ -717,11 +717,11 @@ window.ART = {
   "capy_walk1": {
    "pal": "capy",
    "rows": [
-    "...L...",
-    "..BLLL.",
-    ".BBL.LL",
-    "BBBLLLD",
-    "BBBBLLL",
+    "..DL...",
+    "..L.LLD",
+    ".BBLLLD",
+    "BBBBB..",
+    "BBBBB..",
     "D....D."
    ],
    "w": 7,
@@ -730,11 +730,11 @@ window.ART = {
   "capy_eat1": {
    "pal": "capy",
    "rows": [
-    ".......",
-    "...L...",
-    ".BBLLLL",
-    "BBBL.LD",
-    "BBBBLL.",
+    "..DL...",
+    "..LDLLD",
+    ".BBLL.D",
+    "BBBBB..",
+    "BBBBB..",
     ".D..D.."
    ],
    "w": 7,
@@ -743,10 +743,10 @@ window.ART = {
   "capy_sleep0": {
    "pal": "capy",
    "rows": [
-    "...L...",
-    ".BBLDLL",
-    "BBBBLLD",
-    "DDDDLL."
+    "..DL...",
+    ".BLDLLD",
+    "BBBLLLD",
+    "DDDDD.."
    ],
    "w": 7,
    "h": 4
@@ -754,10 +754,10 @@ window.ART = {
   "capy_sleep1": {
    "pal": "capy",
    "rows": [
-    "...B...",
-    ".BBLDLL",
-    "BBBBLLD",
-    "DDDDLL."
+    "..BL...",
+    ".BLDLLD",
+    "BBBLLLD",
+    "DDDDD.."
    ],
    "w": 7,
    "h": 4
@@ -766,11 +766,11 @@ window.ART = {
    "pal": "capy",
    "rows": [
     "....G..",
-    "...LO..",
-    "..BLLL.",
-    ".BBLDLL",
-    "BBBLLLD",
-    "BBBBLLL",
+    "..DLO..",
+    "..LDLLD",
+    ".BBLLLD",
+    "BBBBB..",
+    "BBBBB..",
     ".D..D.."
    ],
    "w": 7,
@@ -779,11 +779,11 @@ window.ART = {
   "capy_sad": {
    "pal": "capy",
    "rows": [
-    "...L...",
-    "..BLLL.",
-    ".BBL.LL",
-    "BBBLTLD",
-    "BBBBLLL",
+    "..DL...",
+    "..L.LLD",
+    ".BBTLLD",
+    "BBBBB..",
+    "BBBBB..",
     ".D..D.."
    ],
    "w": 7,
@@ -792,11 +792,11 @@ window.ART = {
   "capy_hungry0": {
    "pal": "capy",
    "rows": [
-    "...L...",
-    "..BLLL.",
-    ".BBL.LL",
-    "BBBLLL.",
-    "BBBBLT.",
+    "..DL...",
+    "..L.LLD",
+    ".BBLL.D",
+    "BBBBBT.",
+    "BBBBB..",
     ".D..D.."
    ],
    "w": 7,
@@ -805,11 +805,11 @@ window.ART = {
   "capy_walk2": {
    "pal": "capy",
    "rows": [
-    "...L...",
-    "..BLLL.",
-    ".BBL.LL",
-    "BBBLLLD",
-    "BBBBLLL",
+    "..DL...",
+    "..L.LLD",
+    ".BBLLLD",
+    "BBBBB..",
+    "BBBBB..",
     "..D.D.."
    ],
    "w": 7,
@@ -819,11 +819,11 @@ window.ART = {
    "pal": "capy",
    "rows": [
     "....G..",
-    "...LO..",
-    "..BLLL.",
-    ".BBLDLL",
-    "BBBLLLD",
-    "BBBBLLL",
+    "..DLO..",
+    "..LDLLD",
+    ".BBLLLD",
+    "BBBBB..",
+    "BBBBB..",
     "D....D."
    ],
    "w": 7,

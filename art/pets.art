@@ -15,120 +15,121 @@
 #   dormindo= olhos fechados, corpo mais baixo (os Zzz vêm do código)
 
 # ------------------------------------------------------------ CAPIVARA
-# De lado, olhando pra direita. Cabeça mais clara que o corpo pra separar
-# as massas; orelhinha em cima; no "feliz" ganha a tangerina na cabeça.
+# De lado, olhando pra direita. Focinho comprido, retangular e com nariz
+# na ponta; o recorte abaixo da mandíbula separa a cabeça do corpo.
+# Orelha pequena atrás do olho; no "feliz" ganha a tangerina na cabeça.
 palette capy
-  B #BD743A
-  L #F2BC78
-  D #895024
+  B #B77B45
+  L #DDA35C
+  D #704225
   O #FF8A00
   G #54B82E
   T #4FA8FF
 end
 
 sprite capy_idle0 capy
-...L...
-..BLLL.
-.BBL.LL
-BBBLLLD
-BBBBLLL
+..DL...
+..L.LLD
+.BBLLLD
+BBBBB..
+BBBBB..
 .D..D..
 end
 
 sprite capy_ear capy
-...B...
-..BLLL.
-.BBL.LL
-BBBLLLD
-BBBBLLL
+..BL...
+..L.LLD
+.BBLLLD
+BBBBB..
+BBBBB..
 .D..D..
 end
 
 sprite capy_blink capy
-...L...
-..BLLL.
-.BBLDLL
-BBBLLLD
-BBBBLLL
+..DL...
+..LDLLD
+.BBLLLD
+BBBBB..
+BBBBB..
 .D..D..
 end
 
 sprite capy_walk1 capy
-...L...
-..BLLL.
-.BBL.LL
-BBBLLLD
-BBBBLLL
+..DL...
+..L.LLD
+.BBLLLD
+BBBBB..
+BBBBB..
 D....D.
 end
 
 sprite capy_eat1 capy
-.......
-...L...
-.BBLLLL
-BBBL.LD
-BBBBLL.
+..DL...
+..LDLLD
+.BBLL.D
+BBBBB..
+BBBBB..
 .D..D..
 end
 
 sprite capy_sleep0 capy
-...L...
-.BBLDLL
-BBBBLLD
-DDDDLL.
+..DL...
+.BLDLLD
+BBBLLLD
+DDDDD..
 end
 
 sprite capy_sleep1 capy
-...B...
-.BBLDLL
-BBBBLLD
-DDDDLL.
+..BL...
+.BLDLLD
+BBBLLLD
+DDDDD..
 end
 
 sprite capy_happy capy
 ....G..
-...LO..
-..BLLL.
-.BBLDLL
-BBBLLLD
-BBBBLLL
+..DLO..
+..LDLLD
+.BBLLLD
+BBBBB..
+BBBBB..
 .D..D..
 end
 
 sprite capy_sad capy
-...L...
-..BLLL.
-.BBL.LL
-BBBLTLD
-BBBBLLL
+..DL...
+..L.LLD
+.BBTLLD
+BBBBB..
+BBBBB..
 .D..D..
 end
 
 sprite capy_hungry0 capy
-...L...
-..BLLL.
-.BBL.LL
-BBBLLL.
-BBBBLT.
+..DL...
+..L.LLD
+.BBLL.D
+BBBBBT.
+BBBBB..
 .D..D..
 end
 
 sprite capy_walk2 capy
-...L...
-..BLLL.
-.BBL.LL
-BBBLLLD
-BBBBLLL
+..DL...
+..L.LLD
+.BBLLLD
+BBBBB..
+BBBBB..
 ..D.D..
 end
 
 sprite capy_happy1 capy
 ....G..
-...LO..
-..BLLL.
-.BBLDLL
-BBBLLLD
-BBBBLLL
+..DLO..
+..LDLLD
+.BBLLLD
+BBBBB..
+BBBBB..
 D....D.
 end
 
