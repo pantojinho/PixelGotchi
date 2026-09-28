@@ -160,7 +160,7 @@ are mostly English. Both languages are welcome in issues and pull requests.
 
 ## Release package
 
-`python tools/package_release.py v0.1.0` builds `dist/PixelGochi-v0.1.0.zip`
+`python tools/package_release.py v0.1.0` builds `dist/PixelGotchi-v0.1.0.zip`
 with a single merged image, binaries with offsets, the case STLs and
 `SHA256SUMS.txt`. Pushing a `v*` tag makes GitHub Actions build and publish
 the release (see [Releases](https://github.com/pantojinho/PixelGotchi/releases)).

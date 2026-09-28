@@ -156,6 +156,6 @@ test/            testes C++, JS e Python, mocks de hardware e fixtures
 
 ## Pacote de release
 
-`python tools/package_release.py v0.1.0` gera `dist/PixelGochi-v0.1.0.zip`
+`python tools/package_release.py v0.1.0` gera `dist/PixelGotchi-v0.1.0.zip`
 com imagem única, binários com offsets, STLs da case e `SHA256SUMS.txt`.
 Veja as pendências em [PROXIMA-SPRINT.md](PROXIMA-SPRINT.md#pendências-case-3d-e-primeira-release).

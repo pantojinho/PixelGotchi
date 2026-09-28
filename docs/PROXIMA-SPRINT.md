@@ -206,7 +206,7 @@ o que falta depende da peça física:
 | Nível de bateria no jogo | A placa não mede a bateria. Dá pra ligar um divisor 100k/100k da bateria num GPIO com ADC (IO1–IO7 no conector) e mostrar no status / avisar bateria fraca |
 | LED de carga visível | O LED do TP4056 fica escondido; avaliar um furinho ou guia de luz no compartimento |
 | Variante em formato de ovo (estilo Tamagotchi) | Ideia futura |
-| **Primeira release no GitHub** (após aprovação) | Pacote pronto: `python tools/package_release.py v0.1.0` gera `dist/PixelGochi-v0.1.0.zip` (imagem única + binários com offsets do build, STLs, `SHA256SUMS.txt`, notas de [docs/releases/v0.1.0.md](releases/v0.1.0.md)). Falta: aprovação, criar a tag `v0.1.0` e publicar a release com o zip anexado (o `gh` não está instalado; dá pela página de Releases do GitHub) |
+| **Primeira release no GitHub** | Feita: v0.1.0. Uma tag `v*` dispara `.github/workflows/release.yml`, que roda `tools/package_release.py` e publica o zip (imagem única + binários com offsets, STLs, `SHA256SUMS.txt`) com as notas de `docs/releases/<tag>.md` |
 | Ensaiar os dois jeitos de gravar do pacote na placa real | "Do zero" com a imagem única (apaga o pet) e "atualizar" gravando só `firmware.bin` em 0x10000 (deve manter o pet) |
 
 ## Pendências: vida, menu e individualidade

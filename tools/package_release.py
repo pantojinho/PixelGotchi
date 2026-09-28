@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
-"""Monta o pacote de uma release em dist/PixelGochi-<versão>/ (não publica nada).
+"""Monta o pacote de uma release em dist/PixelGotchi-<versão>/ (não publica nada).
 
     python tools/package_release.py v0.1.0
 
 Compila o firmware, junta bootloader + partições + app numa imagem única
 (gravável em 0x0), copia os binários separados, os STLs da case, gera
 SHA256SUMS.txt e um zip. Os offsets vêm do próprio build (PlatformIO), não
-de valores fixos. Publicar a release é um passo manual, depois da aprovação.
+de valores fixos. Publicar: enviar uma tag v* (.github/workflows/release.yml).
 """
 import hashlib
 import json
@@ -47,7 +47,7 @@ def sha256(path):
 
 def main():
     version = sys.argv[1] if len(sys.argv) > 1 else "dev"
-    out = os.path.join(ROOT, "dist", f"PixelGochi-{version}")
+    out = os.path.join(ROOT, "dist", f"PixelGotchi-{version}")
     shutil.rmtree(out, ignore_errors=True)
     os.makedirs(os.path.join(out, "firmware"))
     os.makedirs(os.path.join(out, "case"))
@@ -63,23 +63,26 @@ def main():
         dst = os.path.join(out, "firmware", os.path.basename(path))
         shutil.copy2(path, dst)
         parts += [offset, dst]
-    merged = os.path.join(out, "firmware", f"PixelGochi-{version}-esp32s3-4MB-merged.bin")
+    merged = os.path.join(out, "firmware", f"PixelGotchi-{version}-esp32s3-4MB-merged.bin")
     subprocess.run(esptool_cmd() + ["--chip", "esp32s3", "merge_bin", "-o", merged,
                                     "--flash_mode", "dio", "--flash_size", "4MB", *parts], check=True)
 
     with open(os.path.join(out, "firmware", "offsets.txt"), "w", encoding="utf-8") as f:
-        f.write("INSTALAÇÃO DO ZERO (apaga o pet salvo — a imagem cobre a área da NVS):\n"
+        f.write("INSTALAÇÃO DO ZERO (apaga o pet salvo e o bichinho do editor — a imagem cobre a NVS)\n"
+                "FRESH INSTALL (erases the saved pet and the editor pet — the image covers NVS):\n"
                 f"  esptool.py --chip esp32s3 write_flash 0x0 {os.path.basename(merged)}\n\n"
-                "ATUALIZAR MANTENDO O PET (grava só o programa):\n"
+                "ATUALIZAR MANTENDO O PET (grava só o programa)\n"
+                "UPDATE KEEPING THE PET (writes only the program):\n"
                 f"  esptool.py --chip esp32s3 write_flash {images[-1][0]} firmware.bin\n\n"
-                "Arquivos separados e onde vão:\n")
+                "Arquivos separados e onde vão / Separate files and their offsets:\n")
         for offset, path in images:
             f.write(f"  {offset}  {os.path.basename(path)}\n")
 
     case_src = os.path.join(ROOT, "hardware", "case")
     for name in os.listdir(os.path.join(case_src, "stl")):
         shutil.copy2(os.path.join(case_src, "stl", name), os.path.join(out, "case", name))
-    shutil.copy2(os.path.join(case_src, "README.md"), os.path.join(out, "case", "README.md"))
+    for doc in ("README.md", "README.en.md"):
+        shutil.copy2(os.path.join(case_src, doc), os.path.join(out, "case", doc))
 
     notes = os.path.join(ROOT, "docs", "releases", f"{version}.md")
     if os.path.exists(notes):
