@@ -47,7 +47,7 @@ além de uma paleta de ovo e uma variante selvagem.
 - **Capivara:** de perfil, corpo arredondado, orelha pequena, focinho
   comprido e largo, nariz separado e pernas curtas. Quando feliz,
   equilibra uma tangerina na cabeça.
-- Comida, corações e avisos aparecem **entre poses**, preservando a
+- Durante os cuidados, comida e corações usam **pixels livres ao redor do pet**, preservando a
   silhueta e o rosto mesmo com apenas 64 pixels. Dormir usa uma pose
   mais baixa e reduz o brilho.
 - A capivara descansa e fareja mais; o gato observa e persegue mais.
@@ -61,7 +61,8 @@ além de uma paleta de ovo e uma variante selvagem.
 ### Sonhos e Conway
 
 Depois de 2 minutos sem BOOT nem movimento, com energia suficiente e sem
-necessidade urgente, o pet visita por 7 s um mundo procedural a cada 45 s.
+necessidade urgente, um ambiente procedural aparece ao redor do pet por 7 s
+a cada 45 s, preservando sua silhueta.
 Algumas visitas incluem um passarinho atravessando a tela. Ao dormir — pelo
 menu, pelo gesto ou pelo cochilo automático de energia baixa — ele fica
 visível por 8 s e depois a matriz inteira vira um sonho de Conway. Mexer ou
@@ -69,7 +70,9 @@ chacoalhar a placa mostra o pet dormindo por mais 8 s; isso não o acorda.
 O BOOT acorda o pet normalmente, e ele também acorda quando recupera toda a
 energia. Assim o cochilo automático usa o mesmo sonho longo.
 
-Os sonhos evoluem uma geração a cada meio segundo. DNA e estado do pet
+Uma transição de 1,2 s leva da pose dormindo ao mundo inteiro, sem apagão.
+Os capítulos renovam em até 30 s; padrões imóveis renovam após 20 s e padrões
+vazios são substituídos imediatamente. Os sonhos evoluem uma geração a cada meio segundo. DNA e estado do pet
 escolhem entre sementes estáveis (incluindo o glider, que cruza as bordas
 conectadas da grade) ou padrões mais turbulentos; tons frios indicam um sonho
 tranquilo e tons quentes um sonho inquieto. Isso só muda a exibição: não
@@ -78,8 +81,8 @@ as regras e o glider seguem a referência do
 [Jogo da Vida em matriz de LEDs](https://www.makerguides.com/game-of-life-dot-matrix-max7219/).
 Os tempos do preview são encurtados para a demonstração; o firmware usa os
 tempos acima. Veja o [roteiro dos sonhos](docs/TESTES.md#sonhos-e-conway).
-As próximas melhorias de continuidade, alimentação e sonhos estão no
-[plano de animações e Conway](docs/ANIMACOES-E-CONWAY.md).
+O [plano de animações e Conway](docs/ANIMACOES-E-CONWAY.md) registra a
+implementação e os critérios para conferir na placa.
 
 Os desenhos são originais, feitos diretamente na grade de pixels.
 Referências de forma: [perfil de capivara (WWF)](https://www.wwf.or.jp/staffblog/news/5510.html)
@@ -235,7 +238,7 @@ puras; o azul é atenuado (`blue_gain`); e cores escuras nunca ficam abaixo de
 menor degrau visível.
 
 O perfil fica em [`art/led-profile.json`](art/led-profile.json) e gera a mesma
-tabela para firmware e preview. Para reduzir mais, experimente `"brightness": 12`,
+tabela para firmware e preview. Para reduzir mais, experimente `"brightness": 4`,
 gere a arte e regrave a placa; não aumente o brilho para compensar contraste.
 Esse ajuste não apaga o pet salvo. O resultado óptico ainda precisa de
 conferência na sua unidade; a curva não é uma calibração medida do hardware.
@@ -274,16 +277,33 @@ Ender-3 V3 KE, ligação elétrica e montagem).
 
 Abra o [instalador USB do PixelGotchi](https://pantojinho.github.io/PixelGotchi/install.html) em **Chrome ou
 Edge no computador**, conecte a Waveshare ESP32-S3-Matrix com um cabo USB-C
-de dados e clique no botão para escolher a porta. A página precisa de HTTPS
+de dados. Confirme o aviso de apagamento, clique no botão para escolher a
+porta e selecione **Install** na janela seguinte. Acompanhe o progresso e a
+conclusão nessa janela. A página precisa de HTTPS
 (ou `localhost`). A imagem completa apaga e regrava os dados da placa,
 inclusive o pet salvo. O instalador é compilado do firmware desta revisão e
-publicado junto com o preview pelo GitHub Actions.
+publicado junto com o preview pelo GitHub Actions. Antes de liberar o botão,
+a página confere versão, tamanho e SHA-256 do pacote; a gravação usa esses
+mesmos bytes. Se o arquivo estiver ausente ou inconsistente, oferece uma
+nova tentativa e mantém a instalação bloqueada.
 
 Na primeira publicação, o dono do repositório precisa habilitar **Settings →
 Pages → Source: GitHub Actions**. Depois disso, cada atualização em `master`
 compila o firmware e publica o instalador automaticamente. Em seguida, execute
 uma vez **Actions → Publish web preview and USB installer → Run workflow**.
-Enquanto Pages não estiver ativado, o workflow encerra sem publicar.
+Se Pages estiver desativado, o workflow informa falha de configuração após
+gerar o artefato. Não sinaliza publicação bem-sucedida sem site disponível.
+
+Para testar o instalador local com o firmware atual:
+
+```powershell
+python tools/build_web_installer.py
+python tools/preview.py
+```
+
+Abra [o instalador local](http://localhost:8765/install.html). O primeiro
+comando precisa de PlatformIO instalado e gera binário, manifesto e informações
+do firmware. Os binários são gerados pelo build e não entram no Git.
 
 Se a porta não aparecer, feche monitores seriais, confirme o cabo de dados e
 tente BOOT pressionado + toque em RESET; solte BOOT e escolha a porta novamente.
@@ -405,7 +425,7 @@ Abra o monitor e, se necessário, toque RESET para ver a inicialização:
 Saída esperada: `[PixelGochi] iniciando...`, `[Imu] QMI8658 ok` e
 `[Game] fase=...`. Use `Ctrl+C` para fechar o monitor antes de outro upload.
 Na matriz, escolha o pet com cliques; segure BOOT por 0,6 s e solte para
-começar o ovo. Movimentos suaves acumulam os dez minutos de incubação.
+começar o ovo. Movimentos suaves acumulam os cinco minutos de incubação.
 
 | Problema | O que conferir |
 |---|---|
@@ -493,6 +513,9 @@ sprint, descritos abaixo.
 ```sh
 python tools/gen_art.py
 python tools/test_controls.py
+node test/test_preview.cjs
+node --experimental-vm-modules test/test_installer.cjs
+python -m unittest discover -s test -p test_web_installer.py
 ```
 
 O segundo comando exige `g++` ou `clang++` no PATH (ou `CXX` apontando

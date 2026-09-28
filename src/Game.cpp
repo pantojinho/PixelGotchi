@@ -285,13 +285,15 @@ void updateBehavior(uint32_t now) {
 }
 
 // ============================================================ desenho da vida
+void setFree(int x, int y, Rgb color);
+void blitFree(const Sprite &sprite, int x, int y);
 void drawPoop(uint32_t now, int sweepX = -1) {
     static const int8_t slots[POOP_MAX] = {5, 0, 3};
     for (uint8_t i = 0; i < sim.s().poop && i < POOP_MAX; i++) {
         int x = slots[i];
         if (sweepX >= 0 && x <= sweepX) continue;
-        cv.blit(SPR_fx_poop, x, MATRIX_H - SPR_fx_poop.h);
-        if ((now / 400 + i) % 3 == 0) cv.set(x + 1, MATRIX_H - SPR_fx_poop.h - 2, {70, 90, 60}); // "cheirinho"
+        blitFree(SPR_fx_poop, x, MATRIX_H - SPR_fx_poop.h);
+        if ((now / 400 + i) % 3 == 0) setFree(x + 1, MATRIX_H - SPR_fx_poop.h - 2, {70, 90, 60}); // "cheirinho"
     }
 }
 
@@ -462,9 +464,10 @@ void updateDreamView(uint32_t now, bool activity) {
 void drawDream(uint32_t now, bool bird, bool freeOnly = false) {
     for (uint8_t y = 0; y < 8; ++y) {
         for (uint8_t x = 0; x < 8; ++x) {
-            if (dreamGrid.alive(x, y))
+            if (dreamGrid.alive(x, y)) {
                 if (freeOnly) setFree(x, y, ((x + y) & 1) ? dreamBright : dreamDim);
                 else cv.set(x, y, ((x + y) & 1) ? dreamBright : dreamDim);
+            }
         }
     }
     if (bird) {

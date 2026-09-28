@@ -2,9 +2,25 @@
 
 [README](../README.md) · [Testes](TESTES.md) · [Editor de pets e USB](PROXIMA-SPRINT.md)
 
-**Status: roteiro para implementação pelo Cláudio, em etapas.**
-Diagnóstico baseado na revisão `ad80145`. Este documento registra as ideias
-e os critérios de aceite; as correções descritas continuam pendentes.
+**Status: implementado e revisado no software; validação na matriz física pendente.**
+Diagnóstico original baseado na revisão `ad80145`; a implementação começou
+em `e4b0f66`. O roteiro abaixo preserva as ideias e critérios de aceite.
+
+## O que foi implementado
+
+| Etapa | Resultado atual |
+|---|---|
+| 1 — quadro vazio | O desenho normal acontece antes e entre as janelas procedurais; regressão verifica todos os seis pets e o fim da refeição |
+| 2 — cuidados | Pet presente do começo ao fim de comida, brincadeira, carinho e remédio; migalhas e coração pequeno usam pixels livres. Limpeza e sujeira também preservam a pose |
+| 3 — intenções | Farejada ganha um detalhe visual; olhar alterna direção; a maquete demonstra pausas, farejada da capivara e atenção do gato. Pesos de personalidade existentes continuam no firmware |
+| 4 — ambiente | Conway roda na grade completa, mas é desenhado só fora da silhueta enquanto acordado; a máscara não modifica a simulação |
+| 5 — capítulos | Transição de 1,2 s; capítulos de até 30 s, com renovação antecipada quando vazios ou estáticos por 20 s; sementes e paletas variam de forma reproduzível |
+| 6 — cochilo | Todos os sonos usam os capítulos; movimento mostra o pet dormindo por 8 s, depois retoma; BOOT acorda |
+
+Testes usam os renderizadores reais: C++ com hardware substituído e JavaScript
+com DOM/relógio simulados. Três minutos de sonho foram percorridos sem quadro
+vazio. A comida procedural continua como experimento futuro. Migalhas indicam
+consumo, mas não há perseguição física do alimento nem ganho por célula.
 
 ## Problema observado e diagnóstico
 
@@ -103,9 +119,9 @@ gliders atravessando, pequenas pulsações e grupos nascendo e se desfazendo.
 Detectar um padrão vazio ou parado e preparar o capítulo seguinte. Um
 oscilador pode continuar por algum tempo antes da próxima mudança.
 
-O código atual reinicia padrões turbulentos apenas quando ficam vazios.
-Um padrão que se estabiliza pode permanecer imóvel durante o restante do
-sono; essa situação precisa de tratamento.
+Na implementação anterior, um padrão estabilizado podia permanecer imóvel
+durante o restante do sono. O contador de gerações iguais agora antecipa a
+troca de capítulo após 20 s; todos os padrões também renovam em até 30 s.
 
 Variar posição, orientação e semente com o DNA e um contador de capítulos
 para ter variedade reproduzível. Cada capítulo usa uma paleta pequena,
@@ -139,7 +155,7 @@ visualmente. O ganho fixo por refeição mantém o equilíbrio do jogo mesmo
 quando a evolução das células é imprevisível. Experimentar esse efeito
 depois de validar a alimentação contínua e os capítulos dos sonhos.
 
-## Orientação de execução para o Cláudio
+## Orientação para próximas revisões
 
 Implementar uma etapa por vez, começando pelo defeito do preview. Em cada
 etapa, conferir a sequência visual completa no navegador e a composição

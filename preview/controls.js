@@ -311,7 +311,7 @@
       }
     } else if (screen === 'life' && action && pose[action]) buf = pose[action](now - actionAt);
     else if (screen === 'life' && action === 'recusa') blitA(b, animFrame(pet.id + '_sad', t), cx, 7);
-    else if (screen === 'life' && action === 'limpar') { blitA(b, animFrame(pet.id + '_idle', t), cx, 7); blit(b, animFrame('fx_sparkle_anim', t), Math.floor((now-actionAt)/140)-2, 5); }
+    else if (screen === 'life' && action === 'limpar') { blitA(b, animFrame(pet.id + '_idle', t), cx, 7); blitFree(b, animFrame('fx_sparkle_anim', t), Math.floor((now-actionAt)/140)-2, 5); }
     else if (screen === 'life' && action === 'remedio') buf=careFrame(pet,'remedio',now-actionAt);
     else if (screen === 'life' && state.sick) buf = pose.doente(t);
     else if (screen === 'life' && state.hunger < 25) buf = pose['com fome'](t);
@@ -335,7 +335,7 @@
         drawDream(buf,now,bird,true);
       }
     }
-    if (screen === 'life' && !fullDream && state.poop && action !== 'limpar') blit(buf, 'fx_poop', 5, 6);
+    if (screen === 'life' && !fullDream && state.poop && action !== 'limpar') blitFree(buf, 'fx_poop', 5, 6);
     // Pedido de ajuda: ícone do menu que resolve a cada 4 s; senão, pontinho na cor dele.
     const need = screen === 'life' && !action && !fullDream ? urgentNeed() : -1;
     if (need >= 0 && now % 4000 < 900) {

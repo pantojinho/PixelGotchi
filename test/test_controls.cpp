@@ -264,10 +264,45 @@ int main() {
                 }
             }
         }
-        startAct(Act::Eat, 3000); testMs += 1000;
-        cv.clear(); drawAction(testMs); Canvas eating = cv;
-        cv.clear(); drawPet(*d.eat, testMs - actAt, petX, 7, testMs);
-        assert(memcmp(eating.px, cv.px, sizeof(cv.px)) == 0);
+    }
+    // Cada fase da refeição mantém todos os pixels da pose; efeitos só no espaço livre.
+    for (uint8_t species = 0; species < PET_COUNT; ++species) {
+        alive(species);
+        const PetDef &d = def();
+        startAct(Act::Eat, 3000);
+        const uint32_t times[] = {0u, 300u, 600u, 1000u, 2499u, 2500u, 2999u};
+        for (uint32_t t : times) {
+            cv.clear(); drawAction(actAt + t); Canvas eating = cv;
+            const Anim &pose = t < 600 ? *d.idle : t < 2500 ? *d.eat : *d.happy;
+            cv.clear(); drawPet(pose, t, petX, 7, actAt + t);
+            int petPixels = 0;
+            for (int y = 0; y < 8; ++y) for (int x = 0; x < 8; ++x) {
+                const Rgb p = cv.get(x, y), actual = eating.get(x, y);
+                if (!(p.r || p.g || p.b)) continue;
+                ++petPixels;
+                assert(p.r == actual.r && p.g == actual.g && p.b == actual.b);
+            }
+            assert(petPixels > 0);
+        }
+    }
+    alive(); sim.lightsOff(); updateDreamView(testMs, false);
+    const uint32_t dreamAt = testMs + SLEEP_DREAM_AFTER_MS;
+    for (uint32_t t = 0; t <= 180000; t += 100) {
+        updateDreamView(dreamAt + t, false);
+        cv.clear(); drawLife(dreamAt + t);
+        bool visible = false;
+        for (auto &row : cv.px) for (Rgb p : row) visible |= p.r || p.g || p.b;
+        assert(visible && sim.s().asleep);
+    }
+    assert(dreamChapter >= 6); // sono longo renova o mundo, sem tela vazia
+    alive(); seedDream(testMs);
+    cv.clear(); drawPet(*def().idle, 0, petX, 7, testMs); Canvas pet = cv;
+    const uint64_t grid = dreamGrid.signature();
+    drawDream(testMs, true, true);
+    assert(grid == dreamGrid.signature()); // a máscara não altera Conway
+    for (int y = 0; y < 8; ++y) for (int x = 0; x < 8; ++x) {
+        const Rgb p = pet.get(x, y), actual = cv.get(x, y);
+        if (p.r || p.g || p.b) assert(p.r == actual.r && p.g == actual.g && p.b == actual.b);
     }
     puts("PASS: Conway dreams/glider, LED contrast, BOOT, IMU, sleep/wake, menu, egg and sprite composition");
 }
