@@ -1,34 +1,47 @@
 name: Release
-# Enviar uma tag v* (ex.: git tag v0.1.0 && git push origin v0.1.0) compila o
-# firmware, monta o pacote (tools/package_release.py) e publica a release com
-# as notas de docs/releases/<tag>.md.
+# Duas formas de publicar uma versão:
+#  - enviar uma tag v* (git tag v0.1.0 && git push origin v0.1.0);
+#  - Actions → Release → Run workflow, informando a versão (a tag é criada
+#    no commit do branch escolhido).
+# Compila o firmware, monta o pacote (tools/package_release.py) e publica a
+# release com as notas de docs/releases/<versão>.md.
 on:
   push:
     tags: ['v*']
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Versão, ex.: v0.1.0 (precisa existir docs/releases/<versão>.md)'
+        required: true
 permissions:
   contents: write
+env:
+  VERSION: ${{ github.event.inputs.version || github.ref_name }}
 jobs:
   release:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Check version and notes
+        run: |
+          if ! [[ "$VERSION" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then echo "Versão inválida: $VERSION" >&2; exit 1; fi
+          notes="docs/releases/${VERSION}.md"
+          if [ ! -f "$notes" ]; then echo "Faltam as notas: $notes" >&2; exit 1; fi
+          echo "NOTES=$notes" >> "$GITHUB_ENV"
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
       - run: python -m pip install platformio==6.2.0
       - name: Build firmware and package
-        run: python tools/package_release.py "${GITHUB_REF_NAME}"
-      - name: Release notes
-        run: |
-          notes="docs/releases/${GITHUB_REF_NAME}.md"
-          if [ ! -f "$notes" ]; then echo "Faltam as notas: $notes" >&2; exit 1; fi
-          echo "NOTES=$notes" >> "$GITHUB_ENV"
+        run: python tools/package_release.py "$VERSION"
       - uses: softprops/action-gh-release@v2
         with:
-          name: PixelGotchi ${{ github.ref_name }}
+          tag_name: ${{ env.VERSION }}
+          target_commitish: ${{ github.sha }}
+          name: PixelGotchi ${{ env.VERSION }}
           body_path: ${{ env.NOTES }}
           files: |
-            dist/PixelGotchi-${{ github.ref_name }}.zip
-            dist/PixelGotchi-${{ github.ref_name }}/firmware/PixelGotchi-${{ github.ref_name }}-esp32s3-4MB-merged.bin
-            dist/PixelGotchi-${{ github.ref_name }}/firmware/firmware.bin
-            dist/PixelGotchi-${{ github.ref_name }}/SHA256SUMS.txt
+            dist/PixelGotchi-${{ env.VERSION }}.zip
+            dist/PixelGotchi-${{ env.VERSION }}/firmware/PixelGotchi-${{ env.VERSION }}-esp32s3-4MB-merged.bin
+            dist/PixelGotchi-${{ env.VERSION }}/firmware/firmware.bin
+            dist/PixelGotchi-${{ env.VERSION }}/SHA256SUMS.txt

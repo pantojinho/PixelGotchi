@@ -158,4 +158,7 @@ test/            testes C++, JS e Python, mocks de hardware e fixtures
 
 `python tools/package_release.py v0.1.0` gera `dist/PixelGotchi-v0.1.0.zip`
 com imagem única, binários com offsets, STLs da case e `SHA256SUMS.txt`.
+Para publicar: **Actions → Release → Run workflow** com a versão (ou enviar uma
+tag `v*`); o workflow compila, empacota e cria a release com as notas de
+`docs/releases/<versão>.md`.
 Veja as pendências em [PROXIMA-SPRINT.md](PROXIMA-SPRINT.md#pendências-case-3d-e-primeira-release).
