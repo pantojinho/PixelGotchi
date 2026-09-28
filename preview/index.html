@@ -295,6 +295,18 @@ document.getElementById('mode').onchange = e => mode = e.target.value;
 document.getElementById('bright').oninput = e => { bright = +e.target.value; document.getElementById('brightV').textContent = bright; };
 build();
 requestAnimationFrame(tick);
+
+// Aberto via tools/preview.py (http): recarrega quando a arte for regerada.
+if (location.protocol.startsWith('http')) {
+  let prev = null;
+  setInterval(async () => {
+    try {
+      const txt = await (await fetch('art.js', { cache: 'no-store' })).text();
+      if (prev !== null && txt !== prev) location.reload();
+      prev = txt;
+    } catch (_) {}
+  }, 1000);
+}
 </script>
 </body>
 </html>

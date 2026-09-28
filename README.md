@@ -1,115 +1,144 @@
 # PixelGochi
 
-Um bichinho virtual (tipo Tamagotchi) rodando standalone na **Waveshare
-ESP32-S3-Matrix**: nasce de um ovo que você precisa "chocar" chacoalhando
-a placa por uns minutos, depois vive na matriz 8x8 em pixel art. Sem
-Wi-Fi, sem botões extras — só o giroscópio/acelerômetro embutido e o
-botão BOOT.
+Um bichinho virtual (tipo Tamagotchi) em pixel art numa matriz 8x8 de
+LEDs, rodando na **Waveshare ESP32-S3-Matrix**. Você escolhe o bicho,
+choca o ovo mexendo na placa, e cuida dele com o botão BOOT e gestos
+(chacoalhar, inclinar, virar de cara pra baixo).
+
+## Editar a arte e ver no simulador
+
+Toda a arte fica em texto, em `art/*.art`, e é a mesma fonte usada pelo
+firmware e pelo simulador do navegador — o que você vê no simulador é o
+que vai pra matriz.
+
+```bash
+python tools/preview.py
+```
+
+Abre o simulador em `http://localhost:8765` e fica observando a pasta
+`art/`: salvou um `.art`, a página atualiza sozinha. `Ctrl+C` pra parar.
+
+Atalhos de URL do simulador:
+
+| URL | Mostra |
+|---|---|
+| `?view=scenes` | só as cenas (comendo, com fome, dormindo, feliz, triste, doente, selvagem, RIP) |
+| `?view=sprites&only=cat` | todos os frames de um bicho, parados |
+| `?only=axo&cell=30` | um bicho só, com células maiores |
+| `?mode=flat` | cores "de design", sem simular o LED |
+
+O controle de **brilho** no topo simula o `MAX_BRIGHTNESS` do firmware
+(padrão 30): cores escuras perdem tom na matriz real, então confira nele.
+
+### Formato do `.art`
+
+```
+palette capy            # paleta: um caractere por cor
+  B #B25A22
+  D #6E300C
+end
+
+palette capy_wild : capy   # variante: mesmas letras, cores trocadas
+  B #6E4424
+end
+
+sprite capy_idle0 capy  # '.' = LED apagado
+...D..
+.BBLLL
+end
+
+anim capy_idle 450 capy_idle0 capy_idle0 capy_ear   # ms por frame + frames
+pet capy "Capivara" food=food_melon wild=capy_wild side=1
+```
+
+Cada bicho precisa das animações `_idle _blink _walk _eat _sleep
+_happy _sad _hungry _egg`. O gerador (`tools/gen_art.py`) valida tudo e
+avisa o que faltar; ele roda sozinho a cada build do PlatformIO.
+
+Dicas de pixel art pra LED: preto é LED apagado (não use contorno
+escuro), olhos funcionam melhor como "buraco", use 2–4 cores saturadas
+por bicho e deixe o bicho com ~5–6 px de largura pra sobrar espaço pra
+comida e efeitos.
+
+## Como se joga
+
+| Tela | Ação |
+|---|---|
+| Escolha do bicho | clique ou inclinar = próximo · segurar = escolher |
+| Ovo | mexer/chacoalhar pra chocar (10 min de movimento; parado pausa) · clique = barra de progresso |
+| Vida | clique = menu (clique = próximo, segurar = confirmar): comer, brincar, limpar, remédio, luz, status · segurar = status/idade · chacoalhar = carinho · virar de cara pra baixo = apagar a luz · inclinar = ele anda pro lado mais baixo |
+| RIP | segurar = ovo novo |
+| Qualquer tela | segurar 8 s = recomeçar do zero (barra vermelha aos 3 s) |
+
+Regras (ajustáveis em `src/Config.h`):
+- fome, alegria e energia caem com o tempo; cocô sem limpar e fome zerada
+  deixam doente; bem cuidado, vive pra sempre;
+- descuido acumula em estágios; passou do limite, vira **selvagem**
+  (arisco, se vira sozinho, cores de terra); 5 dias selvagem = **RIP**;
+- cada ovo nasce com um **DNA** (MAC da placa + instante do clique) que
+  muda metabolismo, carência, jeito de agir sozinho e um leve tom de cor;
+- com a placa desligada o tempo fica pausado (não há relógio com bateria);
+- `TIME_SCALE` acelera o relógio do jogo pra testar.
+
+## Compilar e gravar
+
+Com [PlatformIO](https://platformio.org/) (extensão do VS Code, ou
+`pip install platformio`):
+
+```bash
+pio run -t upload
+```
 
 ## Hardware
 
 [Waveshare ESP32-S3-Matrix](https://docs.waveshare.com/ESP32-S3-Matrix)
-(chip **ESP32-S3FH4R2**): matriz 8x8 de 64 LEDs WS2812B, IMU QMI8658
-(acelerômetro + giroscópio), botões BOOT/RESET, USB-C.
+(ESP32-S3FH4R2: 4 MB de flash, 2 MB de PSRAM), matriz de 64 WS2812B,
+IMU QMI8658, botões BOOT/RESET, USB-C nativo.
 
-| Componente        | Pino(s)                    |
-|-------------------|-----------------------------|
-| Matriz LED WS2812B | GPIO14 (dado)              |
-| IMU QMI8658 (I2C) | SDA=GPIO11, SCL=GPIO12, INT=GPIO13 (não usado no v1) |
-| Botão BOOT        | GPIO0                       |
+| Componente | Pino |
+|---|---|
+| Matriz WS2812B | GPIO14 (fiação progressiva: linha×8 + coluna) |
+| IMU QMI8658 (I2C, endereço 0x6B) | SDA=GPIO11, SCL=GPIO12 |
+| Botão BOOT | GPIO0 |
 
-Esses pinos não constam no pinout público da Waveshare (só aparecem os
-GPIOs expostos nos headers laterais); vieram confirmados de um projeto
-de terceiros feito especificamente para esta placa
-([shantanugoel/pomodoro_cube](https://github.com/shantanugoel/pomodoro_cube)).
+Os pinos internos não constam no pinout público; vieram de
+[shantanugoel/pomodoro_cube](https://github.com/shantanugoel/pomodoro_cube),
+feito pra essa placa.
 
-⚠️ **A Waveshare avisa**: não deixe o brilho da matriz muito alto — ela
-esquenta rápido e pode danificar a placa. O firmware já limita o
-brilho em `MAX_BRIGHTNESS` (`src/Config.h`); não aumente sem cuidado.
+⚠️ **Brilho:** a Waveshare avisa que brilho alto esquenta e pode
+danificar a placa — já aconteceu aqui com uma versão do FastLED que caiu
+num driver por software e mandou tudo branco no máximo. Por isso o
+FastLED está fixo na 3.6.0, e há teto de brilho, limite de corrente e
+taxa de quadros limitada em `src/Config.h`. Não suba esses valores sem
+cuidado.
 
-## Como funciona (v1)
-
-1. **Ovo** — ao ligar pela primeira vez, começa como ovo. Chacoalhe a
-   placa: o ovo só "esquenta" enquanto há movimento recente (parar por
-   mais de 15s pausa o progresso, não zera). São necessários **10
-   minutos acumulados de movimento** pra eclodir. A casca vai rachando
-   em 4 estágios conforme o progresso.
-2. **Eclosão** — ao nascer, sorteia uma espécie (cor/formato) entre as
-   cadastradas em `SPECIES_TABLE` (`src/Pet.h`).
-3. **Vida** — fome, felicidade e energia decaem 1 ponto por minuto.
-   A carinha muda sozinha: faminto, triste, sonolento (olhos fechados),
-   feliz.
-4. **Interações**:
-   - **Chacoalhar** a placa → brincar (felicidade↑, energia↓ um pouco)
-   - **Virar de cabeça pra baixo** e segurar ~1s → dormir (energia
-     regenera mais rápido); voltar à posição normal acorda
-   - **Clique curto no BOOT** → alimentar (fome↑)
-   - **Clique longo no BOOT** (~1,2s) → alternar dormir/acordar na mão,
-     caso o gesto de virar não funcione bem na sua unidade
-
-Não há mecânica de "morte" no v1 — se descuidar, o bichinho só fica
-triste/faminto até você voltar a cuidar dele.
-
-## Compilar e gravar
-
-Recomendado: **VS Code + extensão PlatformIO**.
-
-1. Abra a pasta `PixelGochi` no VS Code com a extensão PlatformIO
-   instalada.
-2. Conecte a placa via USB-C.
-3. PlatformIO → Build, depois Upload (ou o atalho da barra inferior).
-4. Abra o Monitor Serial (115200 baud) pra ver os logs.
-
-Alternativa: Arduino IDE, selecionando a placa "ESP32S3 Dev Module" e
-instalando manualmente as libs listadas em `platformio.ini` (`Adafruit
-NeoPixel`, `Adafruit GFX Library`, `Adafruit NeoMatrix`, `SensorLib`).
-
-Não tenho como compilar/testar isso sem a placa física em mãos — o
-código foi escrito com base na documentação oficial da Waveshare e em
-projetos de terceiros para o mesmo hardware, mas é bem possível que a
-primeira compilação precise de pequenos ajustes (versão de lib,
-assinatura de função). Me manda o erro que eu ajusto.
-
-## Primeira execução: calibração
-
-Duas coisas dependem da unidade física e não dá pra confirmar sem
-testar:
-
-1. **Ordem de varredura da matriz** — segure o botão **BOOT** durante
-   o boot (não durante um reset pra gravação!) pra rodar um teste que
-   acende os 4 cantos em sequência (vermelho, verde, azul, branco),
-   1s cada. Se a posição/ordem não bater com o desenho físico da
-   matriz, ajuste as flags do `Adafruit_NeoMatrix` em `Display.cpp`
-   (comentário no topo do arquivo explica).
-2. **Endereço/eixo do IMU** — o firmware já tenta os dois endereços
-   I2C possíveis do QMI8658 automaticamente. Se o "chacoalhar" ou o
-   "virar" não estiverem respondendo bem, descomente `#define
-   DEBUG_IMU` em `src/Config.h`, olhe os valores no serial monitor e
-   ajuste os limiares (`SHAKE_THRESHOLD_MPS2`, `FLIP_Z_THRESHOLD_MPS2`)
-   ou troque o eixo usado no flip, se o IMU estiver montado em outra
-   orientação.
-
-## Estrutura do código
+## Estrutura
 
 ```
+art/            pixel art em texto (fonte única da verdade)
+preview/        simulador no navegador (art.js é gerado)
+tools/          gen_art.py (gerador), preview.py (simulador com auto-atualização)
 src/
-  Config.h     pinos, limiares, constantes ajustáveis
-  PixelArt.h   sprites 8x8 (ovo + criatura) como grades de paleta
-  Pet.h/.cpp   estado e regras do bichinho (a única parte que muda o estado)
-  Display.h/.cpp  desenha na matriz via Adafruit_NeoMatrix
-  Imu.h/.cpp   leitura do QMI8658, detecção de gestos
-  Input.h/.cpp botão BOOT (clique curto/longo)
-  Storage.h/.cpp  salva/carrega estado na NVS (sobrevive a reset/queda de energia)
-  main.cpp     liga tudo
+  Config.h      pinos, segurança dos LEDs, regras do jogo
+  Game.cpp      cenas, menu, vida autônoma, desenho
+  PetSim.cpp    regras: stats, cocô, doença, sono, descuido, selvagem, RIP
+  Dna.h         traços de personalidade a partir do DNA
+  Canvas.cpp    framebuffer 8x8, sprites, texto
+  Display.cpp   FastLED + orientação da matriz
+  Imu.cpp       gestos (mexer, chacoalhar, inclinar, virar)
+  Input.cpp     botão BOOT (curto, longo, reset)
+  Storage.cpp   salva o estado na flash (NVS)
+  art/          dados gerados a partir de art/*.art (não editar)
 ```
 
-## Roadmap (ideias pra v2+)
+## Roadmap
 
-- App web (o ESP32 vira AP + servidor) pra ver status/interagir pelo
-  celular
-- Mais espécies com formas diferentes (hoje só variam de cor)
-- Mini-jogos simples usando os gestos
-- Mecânica de "doente"/revive opcional
+- **Fase 2:** configuração pelo celular (a placa cria uma rede Wi-Fi):
+  nome do bicho, escolha, Wi-Fi de casa pra pegar a hora da internet →
+  vida offline e ciclo dia/noite de verdade.
+- **Fase 3:** evolução Ovo → Bebê → Adulto com ramos (dócil, atlético,
+  selvagem) conforme o tipo de interação.
+- Importar PNGs desenhados no LibreSprite/Aseprite pro `art/`.
 
 ## Licença
 
