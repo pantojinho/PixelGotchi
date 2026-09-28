@@ -21,6 +21,15 @@
   .pet-name { font-size:17px; color:var(--text); margin:22px 0 8px; font-weight:600; }
   .row-label { font-size:12px; color:var(--muted); margin:10px 0 6px; text-transform:uppercase; letter-spacing:.05em; }
   #zoom { position:fixed; inset:0; background:rgba(0,0,0,.88); display:none; align-items:center; justify-content:center; flex-direction:column; gap:10px; z-index:10; }
+  button, select { font:inherit; padding:8px 12px; border-radius:8px; border:1px solid #454951; background:#23262e; color:var(--text); }
+  button { cursor:pointer; touch-action:none; }
+  button:focus-visible, select:focus-visible { outline:2px solid var(--accent); outline-offset:3px; }
+  #demo { background:var(--panel); padding:18px; border-radius:12px; margin-top:20px; display:flex; flex-wrap:wrap; gap:24px; align-items:center; }
+  #demo canvas { width:240px; height:240px; }
+  .demo-controls { max-width:560px; }
+  .demo-buttons { display:flex; flex-wrap:wrap; gap:8px; margin:12px 0; }
+  #boot { background:#ffb347; color:#18120c; font-weight:700; padding:14px 28px; user-select:none; }
+  #demo-message { min-height:2.8em; color:var(--accent); }
 </style>
 </head>
 <body>
@@ -31,6 +40,20 @@
   <label>Brilho <input id="bright" type="range" min="5" max="255" value="30"><span id="brightV">30</span></label>
   <span>Ver: <a href="?">tudo</a> · <a href="?view=scenes">só cenas</a> · <a href="?view=sprites">todos os frames</a></span>
 </div>
+<section id="demo" aria-label="Experimentar os controles">
+  <canvas id="demo-matrix" width="240" height="240" aria-label="Matriz do bichinho"></canvas>
+  <div class="demo-controls">
+    <h2 style="margin:0 0 10px">Experimente BOOT + gestos</h2>
+    <label>Bichinho <select id="demo-pet"></select></label>
+    <p>Clique no BOOT para alimentar. Segure 0,6 s e solte para abrir o menu; clique ou incline para trocar o ícone; segure e solte para confirmar.</p>
+    <div class="demo-buttons"><button id="boot">BOOT</button><button id="tilt-left">← Inclinar</button><button id="tilt-right">Inclinar →</button></div>
+    <div class="demo-buttons"><button id="shake">Chacoalhar</button><button id="face-down">Virar para dormir</button><button id="face-up">Desvirar</button></div>
+    <label>Experimentar necessidade <select id="demo-need"><option value="normal">Tudo bem</option><option value="hunger">Fome</option><option value="happy">Tristeza</option><option value="energy">Cansaço</option><option value="poop">Sujeira</option><option value="sick">Doença</option></select></label>
+    <p id="demo-message" role="status" aria-live="polite"></p>
+    <p id="demo-stats"></p>
+    <p class="sub">Maquete interativa dos cuidados, sem simular o relógio, DNA ou persistência do firmware. Na placa, o menu mostra apenas o ícone e os pontos. Espaço = BOOT; setas = inclinar. Reset: segure por 8 s (barra vermelha a partir de 3 s).</p>
+  </div>
+</section>
 <div id="root"></div>
 <div id="zoom"><canvas id="zc" width="480" height="480"></canvas><div class="n" id="zn"></div></div>
 <script src="art.js"></script>
@@ -152,23 +175,21 @@ function scenes(pet) {
     },
     'comendo': t => {
       const b = newBuf();
-      const fw = spriteW(food), fx = N - fw;
-      const pw = spriteW(animFrame(id + '_eat', 0));
-      blitA(b, animFrame(id + '_eat', t), Math.floor(pw / 2) + Math.max(0, fx - pw), 7);
-      const bites = Math.floor(t / 700) % (fw + 2);
       const { s } = frameRef(food);
-      blit(b, food, fx, N - s.h);
-      for (let i = 0; i < Math.min(bites, fw); i++) for (let y = 0; y < N; y++) if (y >= N - s.h) b[y * N + fx + i] = null;
+      const p = t % 3000;
+      if (p < 600) blit(b, food, Math.floor((N - s.w) / 2), Math.floor((N - s.h) / 2));
+      else if (p < 2500) blitA(b, animFrame(id + '_eat', p), 3, 7);
+      else blit(b, 'fx_heart', 2, 2);
       return b;
     },
     'com fome': t => {
       const b = newBuf();
       const pw = spriteW(animFrame(id + '_hungry', 0));
       blitA(b, animFrame(id + '_hungry', t), Math.floor(pw / 2), 7);
-      if (Math.floor(t / 400) % 5 !== 0) {
+      if (t % 3600 < 700) {
+        b.fill(null);
         const { s } = frameRef(food);
-        blit(b, food, N - s.w, 0);
-        b[s.h * N + (N - s.w - 1)] = [150, 150, 170];
+        blit(b, food, Math.floor((N - s.w) / 2), Math.floor((N - s.h) / 2));
       }
       return b;
     },
@@ -176,22 +197,33 @@ function scenes(pet) {
       const b = newBuf();
       blitA(b, animFrame(id + '_sleep', t), 3, 7);
       const p = (t % 2400) / 2400;
-      blit(b, 'fx_z', 5, Math.round(3 - p * 4));
-      return dimBuf(b, 0.45);
+      blit(b, 'fx_z', 0, -Math.floor(p * 4));
+      return dimBuf(b, 110 / 255);
     },
     'feliz': t => {
       const b = newBuf();
-      const hop = Math.floor(t / 300) % 2;
+      const hop = Math.floor(t / 350) % 2;
       blitA(b, animFrame(id + '_happy', t), 3, 7 - hop);
-      const p = (t % 1600) / 1600;
-      blit(b, 'fx_heart', 5, Math.round(2 - p * 4));
+      return b;
+    },
+    'carinho': t => {
+      const b = newBuf();
+      if (t % 1600 < 450) blit(b, 'fx_heart', 2, 2);
+      else blitA(b, animFrame(id + '_happy', t), 3, 7);
+      return b;
+    },
+    'brincando': t => {
+      const b = newBuf(), p = t % 3000;
+      if (p < 650) blit(b, 'fx_ball', 1 + Math.floor(p / 130) % 5, 2);
+      else if (p < 2550) blitA(b, animFrame(id + '_happy', p), 3, 7 - Math.floor(p / 350) % 2);
+      else blit(b, 'fx_heart', 2, 2);
       return b;
     },
     'triste': t => { const b = newBuf(); blitA(b, animFrame(id + '_sad', t), 3, 7); return b; },
     'doente': t => {
       const b = newBuf();
       blitA(b, animFrame(id + '_sad', t), 3, 7, false, 'sick');
-      if (Math.floor(t / 500) % 2) blit(b, 'fx_sick', 5, 0);
+      if (t % 3600 < 700) { b.fill(null); blit(b, 'fx_sick', 2, 2); }
       return b;
     },
     'selvagem': t => {
@@ -199,7 +231,8 @@ function scenes(pet) {
       // arisco: fica espiando, vira de lado de repente
       const k = Math.floor(t / 900) % 6;
       const ref = k === 3 ? animFrame(id + '_blink', t) : animFrame(id + '_idle', t);
-      blitA(b, ref, k < 3 ? 2 : 5, 7, facesRight ? k >= 3 : false, null, pet.wild);
+      const w = spriteW(ref), minX = Math.floor(w / 2), maxX = N - 1 - (w - 1 - Math.floor(w / 2));
+      blitA(b, ref, k < 3 ? minX : maxX, 7, facesRight ? k >= 3 : false, null, pet.wild);
       return b;
     },
   };
@@ -222,16 +255,22 @@ function deathScene(pet) {
 
 // ------------------------------------------------------------ montagem
 const players = [];
+const canvasPlayers = new WeakMap();
+const visibility = new IntersectionObserver(entries => {
+  for (const entry of entries) canvasPlayers.get(entry.target).visible = entry.isIntersecting;
+});
 function addCell(parent, label, fn) {
   const cell = document.createElement('div'); cell.className = 'cell';
   const cv = document.createElement('canvas'); cv.width = cv.height = CELL * N;
   const n = document.createElement('div'); n.className = 'n'; n.textContent = label;
   cell.append(cv, n); parent.append(cell);
   const p = { ctx: cv.getContext('2d'), fn, label };
+  canvasPlayers.set(cv, p);
+  visibility.observe(cv);
   cv.onclick = () => { zoomP = p; document.getElementById('zn').textContent = label; document.getElementById('zoom').style.display = 'flex'; };
   players.push(p);
 }
-const animFn = (frames, ms) => t => { const b = newBuf(); blitA(b, frames[Math.floor(t / ms) % frames.length], 3 + (N % 2), 7); return b; };
+const animFn = (frames, ms) => t => { const b = newBuf(), ref = frames[Math.floor(t / ms) % frames.length], w = spriteW(ref); blitA(b, ref, Math.floor((N - w) / 2) + Math.floor(w / 2), 7); return b; };
 const spriteFn = ref => t => { const b = newBuf(); const { s } = frameRef(ref); blit(b, ref, Math.floor((N - s.w) / 2), N - s.h); return b; };
 
 let zoomP = null;
@@ -285,8 +324,11 @@ function build() {
   if (loose.length) { const g = grid(section('Sprites soltos (ícones, efeitos)')); loose.forEach(s => addCell(g, s, spriteFn(s))); }
 }
 
+let lastPaint = -Infinity;
 function tick(t) {
-  for (const p of players) drawBuf(p.ctx, p.fn(t), CELL);
+  if (t - lastPaint < 40) { requestAnimationFrame(tick); return; }
+  lastPaint = t;
+  for (const p of players) if (p.visible !== false) drawBuf(p.ctx, p.fn(t), p.cellSize || CELL);
   if (zoomP) drawBuf(document.getElementById('zc').getContext('2d'), zoomP.fn(t), 60);
   requestAnimationFrame(tick);
 }
@@ -296,5 +338,6 @@ document.getElementById('bright').oninput = e => { bright = +e.target.value; doc
 build();
 requestAnimationFrame(tick);
 </script>
+<script src="controls.js"></script>
 </body>
 </html>

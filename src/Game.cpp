@@ -8,6 +8,7 @@
 #include "PetSim.h"
 #include "art/ArtData.h"
 #include <esp_random.h>
+#include <string.h>
 
 using namespace Art;
 
@@ -22,7 +23,6 @@ uint32_t rndRange(uint32_t a, uint32_t b) { return a + rnd(b - a + 1); }
 
 const Rgb C_WHITE{255, 255, 255};
 const Rgb C_DIM{40, 40, 52};
-const Rgb C_BUBBLE{150, 150, 175};
 const Rgb C_RESET{255, 40, 40};
 
 const Sprite &frame(const Anim &a, uint32_t t) { return frameAt(a, t); }
@@ -77,15 +77,41 @@ uint32_t bugStep = 0;
 enum class Act : uint8_t { None, Eat, Play, Clean, Medicine, Pet, Refuse, Flee, Forage, Wild, Grumpy };
 Act act = Act::None;
 uint32_t actAt = 0, actDur = 0;
-uint32_t lastPetAt = 0;
+uint32_t lastPlayAt = 0;
+bool playedOnce = false;
+bool gestureSleep = false;
 
 // ---- menu / status
 const Sprite *const MENU_ICONS[] = {&SPR_icon_food, &SPR_icon_play, &SPR_icon_clean,
-                                    &SPR_icon_medicine, &SPR_icon_sleep, &SPR_icon_status};
+                                    &SPR_icon_medicine, &SPR_icon_sleep, &SPR_icon_pet,
+                                    &SPR_icon_status, &SPR_icon_back};
 constexpr uint8_t MENU_COUNT = sizeof(MENU_ICONS) / sizeof(MENU_ICONS[0]);
 uint8_t menuIdx = 0;
 uint32_t menuAt = 0;
 uint8_t statusPage = 0;
+
+// Uma inclinação = um passo. Voltar ao centro rearma seleção e menu.
+bool tiltStep(uint8_t &index, uint8_t count) {
+    float tilt = Imu::tilt();
+    if (tiltArmed && (tilt > TILT_STEP || tilt < -TILT_STEP)) {
+        index = (index + (tilt > 0 ? 1 : count - 1)) % count;
+        tiltArmed = false;
+        return true;
+    }
+    if (tilt < TILT_REARM && tilt > -TILT_REARM) tiltArmed = true;
+    return false;
+}
+
+uint8_t suggestedCare() {
+    const PetState &s = sim.s();
+    if (s.asleep) return 4;
+    if (s.sick) return 3;
+    if (s.poop) return 2;
+    if (s.hunger < NEED_LOW) return 0;
+    if (s.energy < NEED_LOW) return 4;
+    if (s.happy < NEED_LOW) return 1;
+    return 5; // carinho quando está tudo bem
+}
 
 // ============================================================ bicho: limites e aparência
 int idleW() { return frame(*def().idle, 0).w; }
@@ -135,6 +161,17 @@ void pickBehavior(uint32_t now) {
     w[(int)Beh::Hop] = s.happy > 60 ? 3 + d.activity() / 32 : 0;
     w[(int)Beh::Nap] = s.energy < 40 ? 20 : 3;
     w[(int)Beh::Chase] = s.energy > 40 ? 3 + d.activity() / 32 : 0;
+    // Capivara tranquila; gato curioso e caçador. O DNA ainda varia cada pet.
+    if (strcmp(def().id, "capy") == 0) {
+        w[(int)Beh::Stand] += 20;
+        w[(int)Beh::Sniff] += 16;
+        w[(int)Beh::Nap] += 8;
+        w[(int)Beh::Chase] = 0;
+        w[(int)Beh::Hop] /= 2;
+    } else if (strcmp(def().id, "cat") == 0) {
+        w[(int)Beh::Look] += 12;
+        w[(int)Beh::Chase] += s.energy > 40 ? 14 : 0;
+    }
     if (beh == Beh::Walk) w[(int)Beh::Stand] *= 2;
     if (beh == Beh::Stand) w[(int)Beh::Walk] = w[(int)Beh::Walk] * 3 / 2;
     if (beh != Beh::Stand && beh != Beh::Walk) w[(int)beh] = 0; // não repete o "especial"
@@ -235,15 +272,15 @@ void drawPoop(uint32_t now, int sweepX = -1) {
 }
 
 void drawHungerBubble(uint32_t now) {
-    if ((now / 400) % 5 == 0) return; // pisca de leve
+    // A comida aparece entre poses: nunca por cima do rosto em 64 LEDs.
+    if ((now % 3600) >= 700) return;
+    cv.clear();
     const Sprite &f = *def().food;
-    int fx = MATRIX_W - f.w;
-    cv.blit(f, fx, 0);
-    cv.set(fx - 1, f.h, C_BUBBLE);
+    cv.blit(f, (MATRIX_W - f.w) / 2, (MATRIX_H - f.h) / 2);
 }
 
 void drawAlert(uint32_t now) {
-    if (sim.needsAttention() && (now / 500) % 2) cv.blit(SPR_fx_alert, 0, 0);
+    if (sim.needsAttention() && (now / 700) % 2) cv.set(7, 0, {255, 180, 30});
 }
 
 void drawRising(const Sprite &s, int x, uint32_t t, uint16_t period, int from = 2) {
@@ -257,32 +294,22 @@ void drawAction(uint32_t now) {
     switch (act) {
         case Act::Eat: {
             const Sprite &f = *d.food;
-            uint16_t biteMs = 450;
-            uint32_t eatMs = f.w * biteMs + 300;
-            petX = minCx();
+            petX = centerCx(idleW());
             faceRight = true;
-            if (t < eatMs) {
+            if (t < 600) {
+                cv.blit(f, (MATRIX_W - f.w) / 2, (MATRIX_H - f.h) / 2);
+            } else if (t < actDur - 500) {
                 drawPet(*d.eat, t, petX, 7, now);
-                int fx = MATRIX_W - f.w, fy = MATRIX_H - f.h;
-                cv.blit(f, fx, fy);
-                int bitten = t / biteMs;
-                for (int c = 0; c < bitten && c < f.w; c++)
-                    for (int y = fy; y < MATRIX_H; y++) cv.set(fx + c, y, {0, 0, 0});
             } else {
-                drawPet(*d.happy, t, petX, 7, now);
-                drawRising(SPR_fx_heart, MATRIX_W - 3, t - eatMs, 800);
+                cv.blit(SPR_fx_heart, 2, 2);
             }
             break;
         }
         case Act::Play: {
             petX = centerCx(idleW());
-            drawPet(*d.happy, t, petX, 7 - (int)((t / 250) % 2), now);
-            int bx = 1 + (int)((t / 160) % 12);
-            bx = bx > 6 ? 12 - bx : bx;
-            int ph = (t / 90) % 8;
-            int by = ph < 4 ? ph : 7 - ph;
-            cv.blit(SPR_fx_ball, bx, by - 1);
-            if (t > actDur - 800) drawRising(SPR_fx_heart, 5, t, 800);
+            if (t < 650) cv.blit(SPR_fx_ball, 1 + (t / 130) % 5, 2);
+            else if (t < actDur - 450) drawPet(*d.happy, t, petX, 7 - (int)((t / 350) % 2), now);
+            else cv.blit(SPR_fx_heart, 2, 2);
             break;
         }
         case Act::Clean: {
@@ -293,19 +320,16 @@ void drawAction(uint32_t now) {
             break;
         }
         case Act::Medicine: {
-            drawPet(*d.sad, t, petX, 7, now);
             if (t < 800) {
-                int px = 6 - (int)(t * (6 - petX) / 800);
-                int py = (int)(t * 4 / 800);
-                cv.blit(SPR_fx_pill, px, py);
+                cv.blit(SPR_fx_pill, 2, 3);
             } else {
-                cv.blit(frame(ANIM_fx_sparkle_anim, t), petX - 1, 2);
+                drawPet(*d.happy, t, petX, 7, now);
             }
             break;
         }
         case Act::Pet:
-            drawPet(*d.happy, t, petX, 7 - (int)((t / 250) % 2), now);
-            drawRising(SPR_fx_heart, petX + 1, t, 750);
+            if (t < 450) cv.blit(SPR_fx_heart, 2, 2);
+            else drawPet(*d.happy, t, petX, 7, now);
             break;
         case Act::Refuse:
             drawPet(*d.sad, t, petX + (((t / 120) % 2) ? 1 : -1), 7, now);
@@ -336,7 +360,7 @@ void drawLife(uint32_t now) {
     if (s.asleep) {
         drawPet(*d.sleep, now, petX, 7, now);
         drawPoop(now);
-        drawRising(SPR_fx_z, clampX(petX) + 2, now, 2400, 3);
+        drawRising(SPR_fx_z, 0, now, 2400, 0);
         cv.scale(NIGHT_DIM);
         return;
     }
@@ -348,7 +372,10 @@ void drawLife(uint32_t now) {
 
     if (s.sick) {
         drawPet(*d.sad, now, petX, 7, now);
-        if ((now / 500) % 2) cv.blit(SPR_fx_sick, MATRIX_W - 3, 0);
+        if ((now % 3600) < 700) {
+            cv.clear();
+            cv.blit(SPR_fx_sick, 2, 2);
+        }
     } else if (s.hunger < NEED_LOW) {
         drawPet(*d.hungry, now, petX, 7, now);
         drawHungerBubble(now);
@@ -361,7 +388,7 @@ void drawLife(uint32_t now) {
             case Beh::Hop: drawPet(*d.happy, t, petX, 7 - (int)((t / 250) % 2), now); break;
             case Beh::Nap:
                 drawPet(*d.sleep, t, petX, 7, now);
-                drawRising(SPR_fx_z, clampX(petX) + 2, t, 2400, 3);
+                drawRising(SPR_fx_z, 0, t, 2400, 0);
                 break;
             case Beh::Chase:
                 drawPet(*d.walk, t, petX, 7, now);
@@ -383,13 +410,7 @@ void drawLife(uint32_t now) {
 
 // ============================================================ cenas: lógica + desenho
 void sceneSelect(uint32_t now, Ev e) {
-    float tilt = Imu::tilt();
-    if (tiltArmed && (tilt > TILT_STEP || tilt < -TILT_STEP)) {
-        selIdx = (selIdx + (tilt > 0 ? 1 : PET_COUNT - 1)) % PET_COUNT;
-        tiltArmed = false;
-    } else if (tilt < TILT_REARM && tilt > -TILT_REARM) {
-        tiltArmed = true;
-    }
+    if (e == Ev::None && !Input::heldMs()) tiltStep(selIdx, PET_COUNT);
     if (e == Ev::Short) selIdx = (selIdx + 1) % PET_COUNT;
     if (e == Ev::Long) {
         // "Semente" do DNA: MAC da placa + instante do clique + RNG de hardware.
@@ -412,7 +433,7 @@ void sceneSelect(uint32_t now, Ev e) {
 void sceneEgg(uint32_t now, Ev e) {
     uint32_t dt = now - lastEggMs;
     lastEggMs = now;
-    bool moving = now - Imu::lastMotionMs() < INCUBATION_IDLE_GRACE_MS;
+    bool moving = Imu::lastMotionMs() != 0 && now - Imu::lastMotionMs() < INCUBATION_IDLE_GRACE_MS;
     if (moving) sim.addIncubation(dt);
     if (e == Ev::Short || e == Ev::Long) progressUntil = now + 2000;
 
@@ -472,11 +493,12 @@ void sceneHatch(uint32_t now) {
 
 void doMenu(uint8_t item, uint32_t now) {
     go(Scene::Life);
+    act = Act::None;
     Result r = Result::Refused;
     switch (item) {
         case 0:
             r = sim.feed();
-            if (r == Result::Ok) startAct(Act::Eat, def().food->w * 450 + 300 + 900);
+            if (r == Result::Ok) startAct(Act::Eat, 3000);
             break;
         case 1:
             r = sim.play();
@@ -491,6 +513,7 @@ void doMenu(uint8_t item, uint32_t now) {
             if (r == Result::Ok) startAct(Act::Medicine, 2000);
             break;
         case 4:
+            gestureSleep = false;
             if (sim.s().asleep) {
                 bool grumpy = sim.s().energy < 50;
                 r = sim.wakeUp();
@@ -500,9 +523,14 @@ void doMenu(uint8_t item, uint32_t now) {
             }
             break;
         case 5:
+            r = sim.pet();
+            if (r == Result::Ok) startAct(Act::Pet, 1600);
+            break;
+        case 6:
             statusPage = 0;
             go(Scene::Status);
             return;
+        case 7: return;
     }
     if (r == Result::Refused && !sim.s().asleep) startAct(Act::Refuse, 900);
     (void)now;
@@ -519,50 +547,63 @@ void sceneLife(uint32_t now, Ev e) {
     if (n) Serial.printf("[Game] aviso 0x%02x\n", n);
 
     const PetState &s = sim.s();
+    if (act != Act::None && now - actAt >= actDur) act = Act::None;
+    if (!s.asleep) gestureSleep = false;
     switch (e) {
         case Ev::Short:
+            if (s.asleep) {
+                gestureSleep = false;
+                doMenu(4, now); // um clique acorda, sem alimentar junto
+            } else if (act == Act::None) doMenu(0, now);
+            break;
+        case Ev::Long:
+            menuIdx = suggestedCare();
+            tiltArmed = false;
             menuAt = now;
             go(Scene::Menu);
             return;
-        case Ev::Long:
-            statusPage = 0;
-            go(Scene::Status);
-            return;
         case Ev::Shake:
-            if (s.asleep) {
-                bool grumpy = s.energy < 50;
-                sim.wakeUp();
-                if (grumpy) startAct(Act::Grumpy, 1000);
-            } else if (s.wild) {
+            if (s.asleep || act != Act::None || Input::heldMs()) break;
+            if (s.wild) {
                 startAct(Act::Flee, 1000);
-            } else if (act == Act::None && now - lastPetAt > PET_COOLDOWN_MS) {
-                lastPetAt = now;
-                if (sim.pet() == Result::Ok) startAct(Act::Pet, 1500);
+            } else if (!playedOnce || now - lastPlayAt >= PLAY_COOLDOWN_MS) {
+                lastPlayAt = now;
+                playedOnce = true;
+                doMenu(1, now);
             }
             break;
         case Ev::FaceDown:
-            if (sim.lightsOff() == Result::Refused && !s.asleep) startAct(Act::Refuse, 900);
+            if (!Input::heldMs() && !s.asleep) {
+                gestureSleep = sim.lightsOff() == Result::Ok;
+                act = Act::None;
+            }
+            break;
+        case Ev::FaceUp:
+            if (gestureSleep && s.asleep) sim.wakeUp();
+            gestureSleep = false;
             break;
         default: break;
     }
 
-    if (act != Act::None && now - actAt >= actDur) act = Act::None;
     if (act == Act::None && !s.asleep) updateBehavior(now);
     drawLife(now);
 }
 
 void sceneMenu(uint32_t now, Ev e) {
+    if (e == Ev::None && !Input::heldMs() && tiltStep(menuIdx, MENU_COUNT)) menuAt = now;
     if (e == Ev::Short) {
         menuIdx = (menuIdx + 1) % MENU_COUNT;
         menuAt = now;
     } else if (e == Ev::Long) {
         doMenu(menuIdx, now);
         return;
-    } else if (now - menuAt > MENU_TIMEOUT_MS) {
+    } else if (!Input::heldMs() && now - menuAt > MENU_TIMEOUT_MS) {
         go(Scene::Life);
         return;
     }
-    cv.blit(*MENU_ICONS[menuIdx], 0, 0);
+    const Sprite &icon = *MENU_ICONS[menuIdx];
+    cv.blit(icon, (MATRIX_W - icon.w) / 2, 0);
+    for (uint8_t i = 0; i < MENU_COUNT; i++) cv.set(i, 7, i == menuIdx ? C_WHITE : C_DIM);
 }
 
 void sceneStatus(uint32_t now, Ev e) {
@@ -576,7 +617,7 @@ void sceneStatus(uint32_t now, Ev e) {
         }
         return;
     }
-    if (t > (statusPage == 0 ? STATUS_TIMEOUT_MS : 9000UL)) {
+    if (!Input::heldMs() && t > (statusPage == 0 ? STATUS_TIMEOUT_MS : 9000UL)) {
         go(Scene::Life);
         return;
     }
@@ -618,6 +659,10 @@ void sceneDead(uint32_t now, Ev e) {
 
 void drawResetBar() {
     uint32_t held = Input::heldMs();
+    if (held >= BUTTON_LONG_MS && held < BUTTON_RESET_SHOW_MS) {
+        // Pequena confirmação no canto livre: já pode soltar o BOOT.
+        cv.set(7, 0, {62, 214, 76});
+    }
     if (held < BUTTON_RESET_SHOW_MS) return;
     cv.scale(80);
     int n = (int)((held - BUTTON_RESET_SHOW_MS) * MATRIX_W / (BUTTON_RESET_MS - BUTTON_RESET_SHOW_MS));
@@ -658,9 +703,20 @@ void update() {
     sim.update();
 
     Ev e = Events::pop();
+    // O gesto de desvirar também funciona enquanto um menu está aberto.
+    if (e == Ev::FaceUp && gestureSleep) {
+        if (sim.s().asleep) sim.wakeUp();
+        gestureSleep = false;
+    }
     if (e == Ev::Reset) {
         Serial.println("[Game] reset: recomecando do zero");
         sim.restart();
+        act = Act::None;
+        gestureSleep = false;
+        playedOnce = false;
+        selIdx = 0;
+        tiltArmed = false;
+        progressUntil = 0;
         Events::clear();
         go(Scene::Select);
         return;

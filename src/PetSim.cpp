@@ -196,7 +196,7 @@ Result PetSim::medicine() {
 }
 
 Result PetSim::lightsOff() {
-    if (st.phase != Phase::Alive || st.asleep || st.energy >= 90) return Result::Refused;
+    if (st.phase != Phase::Alive || st.asleep) return Result::Refused;
     st.asleep = true;
     save(true);
     return Result::Ok;

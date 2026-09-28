@@ -5,7 +5,7 @@
 #   fundo é o que define a forma;
 # - olhos são "buracos" (pixel apagado) ou um pixel claro;
 # - 2 a 4 cores por bicho, bem saturadas;
-# - bichos com ~5-6 px de largura: sobra espaço pra comida, balão e efeitos;
+# - silhuetas de até 7 px; efeitos alternam no tempo para não cobrir a cara;
 # - frames de um mesmo bicho ancoram pelo centro-inferior.
 #
 # Vocabulário de expressões (igual pra todos, pra ficar legível):
@@ -18,213 +18,261 @@
 # De lado, olhando pra direita. Cabeça mais clara que o corpo pra separar
 # as massas; orelhinha em cima; no "feliz" ganha a tangerina na cabeça.
 palette capy
-  B #B25A22
-  L #DE9050
-  D #6E300C
+  B #BD743A
+  L #F2BC78
+  D #895024
   O #FF8A00
   G #54B82E
   T #4FA8FF
 end
 
 sprite capy_idle0 capy
-...D..
-.BBLLL
-BBBL.L
-BBBLLD
-.D..D.
+...L...
+..BLLL.
+.BBL.LL
+BBBLLLD
+BBBBLLL
+.D..D..
 end
 
 sprite capy_ear capy
-....D.
-.BBLLL
-BBBL.L
-BBBLLD
-.D..D.
+...B...
+..BLLL.
+.BBL.LL
+BBBLLLD
+BBBBLLL
+.D..D..
 end
 
 sprite capy_blink capy
-...D..
-.BBLLL
-BBBLDL
-BBBLLD
-.D..D.
+...L...
+..BLLL.
+.BBLDLL
+BBBLLLD
+BBBBLLL
+.D..D..
 end
 
 sprite capy_walk1 capy
-...D..
-.BBLLL
-BBBL.L
-BBBLLD
-D..D..
+...L...
+..BLLL.
+.BBL.LL
+BBBLLLD
+BBBBLLL
+D....D.
 end
 
 sprite capy_eat1 capy
-......
-.BBD..
-BBBLLL
-BBBL.L
-.D..LD
+.......
+...L...
+.BBLLLL
+BBBL.LD
+BBBBLL.
+.D..D..
 end
 
 sprite capy_sleep0 capy
-......
-...D..
-.BBLLL
-BBBLDL
-BBBBLD
+...L...
+.BBLDLL
+BBBBLLD
+DDDDLL.
 end
 
 sprite capy_sleep1 capy
-......
-....D.
-.BBLLL
-BBBLDL
-BBBBLD
+...B...
+.BBLDLL
+BBBBLLD
+DDDDLL.
 end
 
 sprite capy_happy capy
-....G.
-...DO.
-.BBLLL
-BBBLDL
-BBBLLD
-D....D
+....G..
+...LO..
+..BLLL.
+.BBLDLL
+BBBLLLD
+BBBBLLL
+.D..D..
 end
 
 sprite capy_sad capy
-......
-.BBD..
-BBBLLL
-BBBL.L
-BBBLTD
-.D..D.
+...L...
+..BLLL.
+.BBL.LL
+BBBLTLD
+BBBBLLL
+.D..D..
 end
 
 sprite capy_hungry0 capy
-...D..
-.BBLLL
-BBBL.L
-BBBL.D
-.D.DT.
+...L...
+..BLLL.
+.BBL.LL
+BBBLLL.
+BBBBLT.
+.D..D..
+end
+
+sprite capy_walk2 capy
+...L...
+..BLLL.
+.BBL.LL
+BBBLLLD
+BBBBLLL
+..D.D..
+end
+
+sprite capy_happy1 capy
+....G..
+...LO..
+..BLLL.
+.BBLDLL
+BBBLLLD
+BBBBLLL
+D....D.
 end
 
 anim capy_idle   450 capy_idle0 capy_idle0 capy_idle0 capy_ear capy_idle0 capy_idle0 capy_idle0 capy_idle0
 anim capy_blink  150 capy_blink
-anim capy_walk   220 capy_idle0 capy_walk1
+anim capy_walk   240 capy_idle0 capy_walk1 capy_idle0 capy_walk2
 anim capy_eat    260 capy_idle0 capy_eat1
 anim capy_sleep  900 capy_sleep0 capy_sleep1
-anim capy_happy  300 capy_happy capy_idle0
+anim capy_happy  420 capy_happy capy_happy1
 anim capy_sad    800 capy_sad
 anim capy_hungry 450 capy_hungry0 capy_idle0
 
 # ------------------------------------------------------------ GATO
-# De frente, cabeça de "emoji" com orelhas pontudas, olhos verdes e
-# focinho rosa; corpinho e patas embaixo.
+# Sentado de frente: orelhas triangulares com interior rosa, olhos
+# apagados, focinho e peito creme; cauda separada do corpo à direita.
 palette cat
-  B #AEB8CC
-  S #6F7A94
+  B #8DAAE2
+  S #496EB8
   P #FF7FA6
-  E #8CFF4F
+  W #FFF1D9
   T #4FA8FF
   R #FF4060
 end
 
 sprite cat_idle0 cat
-B...B
-BBBBB
-BEBEB
-BBPBB
-.BBB.
-.B.B.
+B...B..
+BPBPB..
+B.B.B..
+BWPWB..
+.BWB..B
+.BWB.BB
+.S.SBB.
 end
 
 sprite cat_ear cat
-B....
-BBBBB
-BEBEB
-BBPBB
-.BBB.
-.B.B.
+B...B..
+BPBPB..
+B.B.B..
+BWPWB..
+.BWB.B.
+.BWB.BB
+.S.SBB.
 end
 
 sprite cat_blink cat
-B...B
-BBBBB
-BSBSB
-BBPBB
-.BBB.
-.B.B.
+B...B..
+BPBPB..
+BSBSB..
+BWPWB..
+.BWB..B
+.BWB.BB
+.S.SBB.
 end
 
 sprite cat_walk1 cat
-B...B
-BBBBB
-BEBEB
-BBPBB
-.BBB.
-B...B
+B...B..
+BPBPB..
+B.B.B..
+BWPWB..
+.BWB.B.
+.BWB.BB
+S..SBB.
 end
 
 sprite cat_eat1 cat
-B...B
-BBBBB
-BEBEB
-BBPBB
-.B.B.
-.B.B.
+B...B..
+BPBPB..
+BSBSB..
+BWPWB..
+.BRB..B
+.BWB.BB
+.S.SBB.
 end
 
 sprite cat_sleep0 cat
-.....
-B...B
-BBBBB
-BSBSB
-BBPBB
-.BBB.
+.B...B.
+.BSBSB.
+BBWPWBB
+SBBBBBS
 end
 
 sprite cat_sleep1 cat
-.....
-B...B
-BBBBB
-BSBSB
-BBPBB
-BBBBB
+.B...B.
+.BSBSB.
+BBWPWBB
+SBBWBBS
 end
 
 sprite cat_happy cat
-B...B
-BBBBB
-BSBSB
-BBPBB
-.BRB.
-B...B
+B...B..
+BPBPB..
+BSBSB..
+BWPWB..
+.BWB.B.
+.BWB.BB
+.S.SBB.
 end
 
 sprite cat_sad cat
-.....
-BBBBB
-BEBEB
-BTPBB
-.BSB.
-.B.B.
+B...B..
+BPBPB..
+B.B.B..
+BTPWB..
+.BWB..B
+.BWB.BB
+.S.SBB.
 end
 
 sprite cat_hungry0 cat
-B...B
-BBBBB
-BEBEB
-BBPBB
-.B.B.
-.BTB.
+B...B..
+BPBPB..
+B.B.B..
+BWPWB..
+.B.B..B
+.BTB.BB
+.S.SBB.
+end
+
+sprite cat_walk2 cat
+B...B..
+BPBPB..
+B.B.B..
+BWPWB..
+.BWB..B
+.BWB.BB
+.S..SB.
+end
+
+sprite cat_happy1 cat
+B...B..
+BPBPB..
+BSBSB..
+BWPWB..
+.BWB..B
+.BWB.BB
+.S.SBB.
 end
 
 anim cat_idle   450 cat_idle0 cat_idle0 cat_idle0 cat_idle0 cat_ear cat_idle0 cat_idle0 cat_idle0
 anim cat_blink  150 cat_blink
-anim cat_walk   220 cat_idle0 cat_walk1
+anim cat_walk    220 cat_idle0 cat_walk1 cat_idle0 cat_walk2
 anim cat_eat    260 cat_idle0 cat_eat1
 anim cat_sleep  900 cat_sleep0 cat_sleep1
-anim cat_happy  300 cat_happy cat_idle0
+anim cat_happy   420 cat_happy cat_happy1
 anim cat_sad    800 cat_sad
 anim cat_hungry 450 cat_hungry0 cat_idle0
 
@@ -732,7 +780,7 @@ anim axo_egg   700 egg0@egg_axo
 
 # ------------------------------------------------------------ SELVAGENS
 # Forma "selvagem" (depois de muito descuido): mesmos desenhos, paleta
-# terrosa/suja. Gato e sapo ganham olho amarelo feroz; o axolote fica
+# terrosa/suja. O sapo ganha olho amarelo feroz; o axolote fica
 # escuro, que é a cor dele na natureza.
 palette capy_wild : capy
   B #6E4424
@@ -743,7 +791,7 @@ palette cat_wild : cat
   B #5C6272
   S #30364A
   P #9A4A60
-  E #FFD21E
+  W #BBA580
 end
 palette frog_wild : frog
   G #6E8E22

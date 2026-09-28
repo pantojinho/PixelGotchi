@@ -4,7 +4,7 @@
 enum class Ev : uint8_t {
     None,
     Short,     // clique curto
-    Long,      // segurou BUTTON_LONG_MS (dispara enquanto ainda segura)
+    Long,      // soltou depois de BUTTON_LONG_MS, antes do reset
     Reset,     // segurou BUTTON_RESET_MS
     Shake,     // chacoalhada
     FaceDown,  // virado de cara pra baixo por FACE_DOWN_HOLD_MS

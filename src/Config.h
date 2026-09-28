@@ -29,7 +29,7 @@ constexpr uint8_t NIGHT_DIM = 110;       // brilho relativo (0-255) com a luz ap
 
 // ============================================================ BOTÃO
 constexpr uint16_t BUTTON_DEBOUNCE_MS = 25;
-constexpr uint16_t BUTTON_LONG_MS = 600;       // clique longo = confirmar
+constexpr uint16_t BUTTON_LONG_MS = 600;       // segurar e soltar = menu/confirmar
 constexpr uint16_t BUTTON_RESET_SHOW_MS = 3000; // a partir daqui mostra a barra de reset
 constexpr uint16_t BUTTON_RESET_MS = 8000;      // segurou até aqui = recomeçar do zero
 
@@ -44,6 +44,7 @@ constexpr float MOTION_THRESHOLD = 1.2f;   // m/s^2 de variação = "está mexen
 constexpr float SHAKE_THRESHOLD = 7.0f;    // m/s^2 de variação brusca = chacoalhada
 constexpr uint16_t SHAKE_COOLDOWN_MS = 350;
 constexpr float FACE_DOWN_Z = -7.0f;       // z abaixo disso = virado de cara pra baixo
+constexpr float FACE_UP_Z = -3.0f;         // histerese: não acordar por ruído perto do limiar
 constexpr uint16_t FACE_DOWN_HOLD_MS = 1500;
 constexpr float TILT_STEP = 0.45f;         // inclinação pra trocar de bicho na seleção
 constexpr float TILT_REARM = 0.20f;
@@ -82,8 +83,8 @@ constexpr uint8_t WILD_DEATH_DAYS = 5;
 constexpr uint8_t FEED_GAIN = 30;
 constexpr uint8_t PLAY_GAIN = 20;
 constexpr uint8_t PLAY_ENERGY_COST = 8;
-constexpr uint8_t PET_GAIN = 5;             // carinho (chacoalhar de leve)
-constexpr uint16_t PET_COOLDOWN_MS = 20000;
+constexpr uint8_t PET_GAIN = 5;             // carinho no menu
+constexpr uint16_t PLAY_COOLDOWN_MS = 5000; // sacudidas repetidas não gastam energia em sequência
 constexpr uint8_t NEED_LOW = 25;            // abaixo disso o bicho reclama
 
 constexpr uint32_t SAVE_EVERY_MS = 5UL * 60UL * 1000UL;

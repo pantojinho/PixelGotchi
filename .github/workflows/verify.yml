@@ -1,0 +1,21 @@
+name: Verify firmware and controls
+on: [push, pull_request]
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install platformio==6.2.0
+      - name: Generate and check shared artwork
+        run: |
+          python tools/gen_art.py
+          git diff --exit-code -- src/art/ArtData.h src/art/ArtData.cpp preview/art.js
+      - name: Test real C++ controls with simulated hardware
+        run: python tools/test_controls.py
+      - name: Build ESP32-S3 firmware
+        run: python -m platformio run

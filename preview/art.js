@@ -5,18 +5,18 @@ window.ART = {
    "W": "#FFFFFF"
   },
   "capy": {
-   "B": "#B25A22",
-   "L": "#DE9050",
-   "D": "#6E300C",
+   "B": "#BD743A",
+   "L": "#F2BC78",
+   "D": "#895024",
    "O": "#FF8A00",
    "G": "#54B82E",
    "T": "#4FA8FF"
   },
   "cat": {
-   "B": "#AEB8CC",
-   "S": "#6F7A94",
+   "B": "#8DAAE2",
+   "S": "#496EB8",
    "P": "#FF7FA6",
-   "E": "#8CFF4F",
+   "W": "#FFF1D9",
    "T": "#4FA8FF",
    "R": "#FF4060"
   },
@@ -104,7 +104,7 @@ window.ART = {
    "B": "#5C6272",
    "S": "#30364A",
    "P": "#9A4A60",
-   "E": "#FFD21E",
+   "W": "#BBA580",
    "T": "#4FA8FF",
    "R": "#FF4060"
   },
@@ -678,254 +678,318 @@ window.ART = {
   "capy_idle0": {
    "pal": "capy",
    "rows": [
-    "...D..",
-    ".BBLLL",
-    "BBBL.L",
-    "BBBLLD",
-    ".D..D."
+    "...L...",
+    "..BLLL.",
+    ".BBL.LL",
+    "BBBLLLD",
+    "BBBBLLL",
+    ".D..D.."
    ],
-   "w": 6,
-   "h": 5
+   "w": 7,
+   "h": 6
   },
   "capy_ear": {
    "pal": "capy",
    "rows": [
-    "....D.",
-    ".BBLLL",
-    "BBBL.L",
-    "BBBLLD",
-    ".D..D."
+    "...B...",
+    "..BLLL.",
+    ".BBL.LL",
+    "BBBLLLD",
+    "BBBBLLL",
+    ".D..D.."
    ],
-   "w": 6,
-   "h": 5
+   "w": 7,
+   "h": 6
   },
   "capy_blink": {
    "pal": "capy",
    "rows": [
-    "...D..",
-    ".BBLLL",
-    "BBBLDL",
-    "BBBLLD",
-    ".D..D."
+    "...L...",
+    "..BLLL.",
+    ".BBLDLL",
+    "BBBLLLD",
+    "BBBBLLL",
+    ".D..D.."
    ],
-   "w": 6,
-   "h": 5
+   "w": 7,
+   "h": 6
   },
   "capy_walk1": {
    "pal": "capy",
    "rows": [
-    "...D..",
-    ".BBLLL",
-    "BBBL.L",
-    "BBBLLD",
-    "D..D.."
+    "...L...",
+    "..BLLL.",
+    ".BBL.LL",
+    "BBBLLLD",
+    "BBBBLLL",
+    "D....D."
    ],
-   "w": 6,
-   "h": 5
+   "w": 7,
+   "h": 6
   },
   "capy_eat1": {
    "pal": "capy",
    "rows": [
-    "......",
-    ".BBD..",
-    "BBBLLL",
-    "BBBL.L",
-    ".D..LD"
+    ".......",
+    "...L...",
+    ".BBLLLL",
+    "BBBL.LD",
+    "BBBBLL.",
+    ".D..D.."
    ],
-   "w": 6,
-   "h": 5
+   "w": 7,
+   "h": 6
   },
   "capy_sleep0": {
    "pal": "capy",
    "rows": [
-    "......",
-    "...D..",
-    ".BBLLL",
-    "BBBLDL",
-    "BBBBLD"
+    "...L...",
+    ".BBLDLL",
+    "BBBBLLD",
+    "DDDDLL."
    ],
-   "w": 6,
-   "h": 5
+   "w": 7,
+   "h": 4
   },
   "capy_sleep1": {
    "pal": "capy",
    "rows": [
-    "......",
-    "....D.",
-    ".BBLLL",
-    "BBBLDL",
-    "BBBBLD"
+    "...B...",
+    ".BBLDLL",
+    "BBBBLLD",
+    "DDDDLL."
    ],
-   "w": 6,
-   "h": 5
+   "w": 7,
+   "h": 4
   },
   "capy_happy": {
    "pal": "capy",
    "rows": [
-    "....G.",
-    "...DO.",
-    ".BBLLL",
-    "BBBLDL",
-    "BBBLLD",
-    "D....D"
+    "....G..",
+    "...LO..",
+    "..BLLL.",
+    ".BBLDLL",
+    "BBBLLLD",
+    "BBBBLLL",
+    ".D..D.."
    ],
-   "w": 6,
-   "h": 6
+   "w": 7,
+   "h": 7
   },
   "capy_sad": {
    "pal": "capy",
    "rows": [
-    "......",
-    ".BBD..",
-    "BBBLLL",
-    "BBBL.L",
-    "BBBLTD",
-    ".D..D."
+    "...L...",
+    "..BLLL.",
+    ".BBL.LL",
+    "BBBLTLD",
+    "BBBBLLL",
+    ".D..D.."
    ],
-   "w": 6,
+   "w": 7,
    "h": 6
   },
   "capy_hungry0": {
    "pal": "capy",
    "rows": [
-    "...D..",
-    ".BBLLL",
-    "BBBL.L",
-    "BBBL.D",
-    ".D.DT."
+    "...L...",
+    "..BLLL.",
+    ".BBL.LL",
+    "BBBLLL.",
+    "BBBBLT.",
+    ".D..D.."
    ],
-   "w": 6,
-   "h": 5
+   "w": 7,
+   "h": 6
+  },
+  "capy_walk2": {
+   "pal": "capy",
+   "rows": [
+    "...L...",
+    "..BLLL.",
+    ".BBL.LL",
+    "BBBLLLD",
+    "BBBBLLL",
+    "..D.D.."
+   ],
+   "w": 7,
+   "h": 6
+  },
+  "capy_happy1": {
+   "pal": "capy",
+   "rows": [
+    "....G..",
+    "...LO..",
+    "..BLLL.",
+    ".BBLDLL",
+    "BBBLLLD",
+    "BBBBLLL",
+    "D....D."
+   ],
+   "w": 7,
+   "h": 7
   },
   "cat_idle0": {
    "pal": "cat",
    "rows": [
-    "B...B",
-    "BBBBB",
-    "BEBEB",
-    "BBPBB",
-    ".BBB.",
-    ".B.B."
+    "B...B..",
+    "BPBPB..",
+    "B.B.B..",
+    "BWPWB..",
+    ".BWB..B",
+    ".BWB.BB",
+    ".S.SBB."
    ],
-   "w": 5,
-   "h": 6
+   "w": 7,
+   "h": 7
   },
   "cat_ear": {
    "pal": "cat",
    "rows": [
-    "B....",
-    "BBBBB",
-    "BEBEB",
-    "BBPBB",
-    ".BBB.",
-    ".B.B."
+    "B...B..",
+    "BPBPB..",
+    "B.B.B..",
+    "BWPWB..",
+    ".BWB.B.",
+    ".BWB.BB",
+    ".S.SBB."
    ],
-   "w": 5,
-   "h": 6
+   "w": 7,
+   "h": 7
   },
   "cat_blink": {
    "pal": "cat",
    "rows": [
-    "B...B",
-    "BBBBB",
-    "BSBSB",
-    "BBPBB",
-    ".BBB.",
-    ".B.B."
+    "B...B..",
+    "BPBPB..",
+    "BSBSB..",
+    "BWPWB..",
+    ".BWB..B",
+    ".BWB.BB",
+    ".S.SBB."
    ],
-   "w": 5,
-   "h": 6
+   "w": 7,
+   "h": 7
   },
   "cat_walk1": {
    "pal": "cat",
    "rows": [
-    "B...B",
-    "BBBBB",
-    "BEBEB",
-    "BBPBB",
-    ".BBB.",
-    "B...B"
+    "B...B..",
+    "BPBPB..",
+    "B.B.B..",
+    "BWPWB..",
+    ".BWB.B.",
+    ".BWB.BB",
+    "S..SBB."
    ],
-   "w": 5,
-   "h": 6
+   "w": 7,
+   "h": 7
   },
   "cat_eat1": {
    "pal": "cat",
    "rows": [
-    "B...B",
-    "BBBBB",
-    "BEBEB",
-    "BBPBB",
-    ".B.B.",
-    ".B.B."
+    "B...B..",
+    "BPBPB..",
+    "BSBSB..",
+    "BWPWB..",
+    ".BRB..B",
+    ".BWB.BB",
+    ".S.SBB."
    ],
-   "w": 5,
-   "h": 6
+   "w": 7,
+   "h": 7
   },
   "cat_sleep0": {
    "pal": "cat",
    "rows": [
-    ".....",
-    "B...B",
-    "BBBBB",
-    "BSBSB",
-    "BBPBB",
-    ".BBB."
+    ".B...B.",
+    ".BSBSB.",
+    "BBWPWBB",
+    "SBBBBBS"
    ],
-   "w": 5,
-   "h": 6
+   "w": 7,
+   "h": 4
   },
   "cat_sleep1": {
    "pal": "cat",
    "rows": [
-    ".....",
-    "B...B",
-    "BBBBB",
-    "BSBSB",
-    "BBPBB",
-    "BBBBB"
+    ".B...B.",
+    ".BSBSB.",
+    "BBWPWBB",
+    "SBBWBBS"
    ],
-   "w": 5,
-   "h": 6
+   "w": 7,
+   "h": 4
   },
   "cat_happy": {
    "pal": "cat",
    "rows": [
-    "B...B",
-    "BBBBB",
-    "BSBSB",
-    "BBPBB",
-    ".BRB.",
-    "B...B"
+    "B...B..",
+    "BPBPB..",
+    "BSBSB..",
+    "BWPWB..",
+    ".BWB.B.",
+    ".BWB.BB",
+    ".S.SBB."
    ],
-   "w": 5,
-   "h": 6
+   "w": 7,
+   "h": 7
   },
   "cat_sad": {
    "pal": "cat",
    "rows": [
-    ".....",
-    "BBBBB",
-    "BEBEB",
-    "BTPBB",
-    ".BSB.",
-    ".B.B."
+    "B...B..",
+    "BPBPB..",
+    "B.B.B..",
+    "BTPWB..",
+    ".BWB..B",
+    ".BWB.BB",
+    ".S.SBB."
    ],
-   "w": 5,
-   "h": 6
+   "w": 7,
+   "h": 7
   },
   "cat_hungry0": {
    "pal": "cat",
    "rows": [
-    "B...B",
-    "BBBBB",
-    "BEBEB",
-    "BBPBB",
-    ".B.B.",
-    ".BTB."
+    "B...B..",
+    "BPBPB..",
+    "B.B.B..",
+    "BWPWB..",
+    ".B.B..B",
+    ".BTB.BB",
+    ".S.SBB."
    ],
-   "w": 5,
-   "h": 6
+   "w": 7,
+   "h": 7
+  },
+  "cat_walk2": {
+   "pal": "cat",
+   "rows": [
+    "B...B..",
+    "BPBPB..",
+    "B.B.B..",
+    "BWPWB..",
+    ".BWB..B",
+    ".BWB.BB",
+    ".S..SB."
+   ],
+   "w": 7,
+   "h": 7
+  },
+  "cat_happy1": {
+   "pal": "cat",
+   "rows": [
+    "B...B..",
+    "BPBPB..",
+    "BSBSB..",
+    "BWPWB..",
+    ".BWB..B",
+    ".BWB.BB",
+    ".S.SBB."
+   ],
+   "w": 7,
+   "h": 7
   },
   "frog_idle0": {
    "pal": "frog",
@@ -1784,6 +1848,34 @@ window.ART = {
    ],
    "w": 8,
    "h": 8
+  },
+  "icon_pet": {
+   "pal": "icons",
+   "rows": [
+    "..P.P...",
+    ".PPPPP..",
+    "..PPP...",
+    "...P....",
+    "........",
+    "........",
+    "........"
+   ],
+   "w": 8,
+   "h": 7
+  },
+  "icon_back": {
+   "pal": "icons",
+   "rows": [
+    "...W....",
+    "..WW....",
+    ".WWWWWW.",
+    "..WW..W.",
+    "...W..W.",
+    "......W.",
+    "........"
+   ],
+   "w": 8,
+   "h": 7
   }
  },
  "anims": {
@@ -1807,10 +1899,12 @@ window.ART = {
    ]
   },
   "capy_walk": {
-   "ms": 220,
+   "ms": 240,
    "frames": [
     "capy_idle0",
-    "capy_walk1"
+    "capy_walk1",
+    "capy_idle0",
+    "capy_walk2"
    ]
   },
   "capy_eat": {
@@ -1828,10 +1922,10 @@ window.ART = {
    ]
   },
   "capy_happy": {
-   "ms": 300,
+   "ms": 420,
    "frames": [
     "capy_happy",
-    "capy_idle0"
+    "capy_happy1"
    ]
   },
   "capy_sad": {
@@ -1870,7 +1964,9 @@ window.ART = {
    "ms": 220,
    "frames": [
     "cat_idle0",
-    "cat_walk1"
+    "cat_walk1",
+    "cat_idle0",
+    "cat_walk2"
    ]
   },
   "cat_eat": {
@@ -1888,10 +1984,10 @@ window.ART = {
    ]
   },
   "cat_happy": {
-   "ms": 300,
+   "ms": 420,
    "frames": [
     "cat_happy",
-    "cat_idle0"
+    "cat_happy1"
    ]
   },
   "cat_sad": {

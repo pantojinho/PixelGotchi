@@ -7,7 +7,6 @@ bool lastRaw = HIGH;
 bool pressed = false;
 uint32_t lastEdgeAt = 0;
 uint32_t pressedAt = 0;
-bool longSent = false;
 bool resetSent = false;
 } // namespace
 
@@ -30,18 +29,16 @@ void update() {
     if (down && !pressed) {
         pressed = true;
         pressedAt = now;
-        longSent = resetSent = false;
+        resetSent = false;
     } else if (!down && pressed) {
         pressed = false;
-        if (!longSent) Events::push(Ev::Short);
+        // Decidir ao SOLTAR: segurar para reset não confirma um cuidado
+        // nem escolhe uma espécie antes dos oito segundos.
+        if (!resetSent) Events::push(now - pressedAt >= BUTTON_LONG_MS ? Ev::Long : Ev::Short);
     }
 
     if (pressed) {
         uint32_t held = now - pressedAt;
-        if (!longSent && held >= BUTTON_LONG_MS) {
-            longSent = true;
-            Events::push(Ev::Long);
-        }
         if (!resetSent && held >= BUTTON_RESET_MS) {
             resetSent = true;
             Events::push(Ev::Reset);

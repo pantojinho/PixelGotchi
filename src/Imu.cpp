@@ -17,6 +17,7 @@ uint32_t shakeAt = 0;
 bool faceDown = false;
 uint32_t faceDownSince = 0;
 bool faceDownSent = false;
+bool firstSample = true;
 } // namespace
 
 namespace Imu {
@@ -45,6 +46,13 @@ void update() {
     ay = a.mps2.y;
     az = a.mps2.z;
 
+    // A orientação inicial não é movimento. Evita sacudida fantasma
+    // e incubação de um ovo parado ao ligar deitado ou de costas.
+    if (firstSample) {
+        sx = ax; sy = ay; sz = az;
+        firstSample = false;
+    }
+
     // Movimento = quanto a leitura atual se afasta da média recente. Pega
     // tanto sacudida quanto girar a placa devagar (muda a direção da
     // gravidade), que é o "ficar mexendo" que o ovo precisa.
@@ -66,7 +74,7 @@ void update() {
     float t = TILT_SIGN * sy / GRAVITY;
     tiltValue = t < -1 ? -1 : (t > 1 ? 1 : t);
 
-    bool down = sz < FACE_DOWN_Z;
+    bool down = faceDown ? sz < FACE_UP_Z : sz < FACE_DOWN_Z;
     if (down && !faceDown) {
         faceDown = true;
         faceDownSince = now;
