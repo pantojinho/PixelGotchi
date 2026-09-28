@@ -1,7 +1,7 @@
 // Português e inglês nas páginas do site, sem build nem bibliotecas.
 // Ordem: ?lang=pt|en na URL, escolha salva, idioma do navegador.
 // HTML: o texto em português fica no elemento e o inglês em data-en
-// (ou data-en-title / data-en-placeholder / data-en-aria-label para atributos).
+// (ou data-en-title / -placeholder / -aria-label / -href para atributos).
 // JS: L('texto em português', 'English text').
 (function () {
   'use strict';
@@ -19,7 +19,7 @@
   function apply(root = document) {
     if (lang !== 'en') return;
     root.querySelectorAll('[data-en]').forEach(el => { el.innerHTML = el.dataset.en; });
-    for (const attr of ['title', 'placeholder', 'aria-label']) {
+    for (const attr of ['title', 'placeholder', 'aria-label', 'href', 'content']) {
       const data = 'data-en-' + attr;
       root.querySelectorAll('[' + data + ']').forEach(el => el.setAttribute(attr, el.getAttribute(data)));
     }

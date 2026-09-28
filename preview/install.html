@@ -5,11 +5,16 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#10130f">
 <title>Instalar o PixelGotchi</title>
+<meta name="title-en" content="Install PixelGotchi">
 <style>
   :root { color-scheme:dark; --bg:#10130f; --panel:#1a201a; --line:#303b30; --text:#f3f5ed; --muted:#b1bbae; --lime:#c6f36b; --orange:#ffb865; }
   * { box-sizing:border-box }
-  body { margin:0; min-height:100vh; padding:24px; display:grid; place-items:center; background:radial-gradient(ellipse at 50% 0,#273421 0,transparent 58%),var(--bg); color:var(--text); font:16px/1.55 system-ui,sans-serif }
-  main { width:min(680px,100%); padding:clamp(24px,6vw,52px); border:1px solid var(--line); border-radius:24px; background:color-mix(in srgb,var(--panel) 94%,transparent); box-shadow:0 24px 80px #0006 }
+  body { margin:0; min-height:100vh; padding:0 20px 32px; background:radial-gradient(ellipse at 50% 0,#273421 0,transparent 58%),var(--bg); color:var(--text); font:16px/1.55 system-ui,sans-serif }
+  .top { display:flex; flex-wrap:wrap; gap:6px 18px; align-items:center; max-width:1240px; margin:0 auto; padding:16px 0; font-size:14px }
+  .top .brand { margin-right:auto }
+  .top a { color:var(--muted); text-decoration:none } .top a:hover, .top a[aria-current] { color:var(--text) }
+  .lang-switch a { color:var(--muted); text-decoration:none } .lang-switch a[aria-current] { color:var(--lime); font-weight:700 }
+  main { margin:12px auto 0; width:min(680px,100%); padding:clamp(24px,6vw,52px); border:1px solid var(--line); border-radius:24px; background:color-mix(in srgb,var(--panel) 94%,transparent); box-shadow:0 24px 80px #0006 }
   .brand { color:var(--lime); font:700 13px ui-monospace,monospace; letter-spacing:.16em; text-transform:uppercase }
   h1 { font-size:clamp(30px,7vw,48px); line-height:1.08; letter-spacing:-.04em; margin:12px 0 }
   .lead { color:var(--muted); margin:0 0 28px; max-width:55ch }
@@ -19,6 +24,8 @@
   li strong { color:var(--text) }
   .install { margin:24px 0 10px }
   esp-web-install-button { display:block; --esp-tools-button-color:var(--lime); --esp-tools-button-text-color:#17200d; --esp-tools-button-border-radius:12px; --esp-tools-button-padding:14px 22px; --esp-tools-button-font-size:17px }
+  /* Os avisos do componente só fazem sentido depois que ele carrega. */
+  esp-web-install-button:not(:defined) span[slot] { display:none }
   .install button { width:100%; padding:14px 18px; border:0; border-radius:12px; background:var(--lime); color:#17200d; font-size:17px; font-weight:800 }
   button:disabled { opacity:.45; cursor:wait }
   .consent { display:flex; gap:10px; align-items:flex-start; margin:16px 0; font-size:14px }
@@ -31,38 +38,48 @@
   #support { min-height:1.5em; color:var(--muted); font-size:14px; margin:8px 0 }
   @media(prefers-reduced-motion:no-preference) { main { animation:rise .35s ease-out } @keyframes rise { from { opacity:0; transform:translateY(8px) } } }
 </style>
+<script src="i18n.js"></script>
 <script type="module" src="install.js"></script>
 </head>
 <body>
+<nav class="top" aria-label="Páginas" data-en-aria-label="Pages">
+  <span class="brand">PixelGotchi</span>
+  <a href="guia.html" data-en="Start here">Comece aqui</a>
+  <a href="index.html" data-en="Simulator">Simulador</a>
+  <a href="editor.html" data-en="Pet editor">Editor</a>
+  <a href="install.html" aria-current="page" data-en="Install on the board">Instalar na placa</a>
+  <a href="https://github.com/pantojinho/PixelGotchi">GitHub</a>
+  <span class="lang-switch"></span>
+</nav>
 <main>
-  <div class="brand">PixelGotchi · instalação USB</div>
-  <h1>Seu bichinho começa aqui.</h1>
-  <p class="lead">Grave o jogo na sua Waveshare ESP32-S3-Matrix direto pelo navegador. Você escolhe a placa USB e acompanha a instalação.</p>
-  <h2>Antes de começar</h2>
+  <div class="brand" data-en="PixelGotchi · USB install">PixelGotchi · instalação USB</div>
+  <h1 data-en="Your pet starts here.">Seu bichinho começa aqui.</h1>
+  <p class="lead" data-en="Flash the game onto your Waveshare ESP32-S3-Matrix right from the browser. You pick the USB board and follow the installation.">Grave o jogo na sua Waveshare ESP32-S3-Matrix direto pelo navegador. Você escolhe a placa USB e acompanha a instalação.</p>
+  <h2 data-en="Before you start">Antes de começar</h2>
   <ol>
-    <li>Use um computador com <strong>Chrome ou Edge</strong> e um cabo USB-C que transfira dados.</li>
-    <li>Conecte a Waveshare ESP32-S3-Matrix diretamente ao computador.</li>
-    <li>Confirme o aviso abaixo, clique em conectar e escolha a porta da placa. Na janela seguinte, selecione <strong>Install</strong> e confirme.</li>
-    <li>Aguarde a confirmação de conclusão antes de desconectar. Se não conectar, siga a dica abaixo.</li>
+    <li data-en="Use a computer with <strong>Chrome or Edge</strong> and a USB-C cable that carries data.">Use um computador com <strong>Chrome ou Edge</strong> e um cabo USB-C que transfira dados.</li>
+    <li data-en="Plug the Waveshare ESP32-S3-Matrix straight into the computer.">Conecte a Waveshare ESP32-S3-Matrix diretamente ao computador.</li>
+    <li data-en="Confirm the notice below, click connect and pick the board port. In the next dialog, select <strong>Install</strong> and confirm.">Confirme o aviso abaixo, clique em conectar e escolha a porta da placa. Na janela seguinte, selecione <strong>Install</strong> e confirme.</li>
+    <li data-en="Wait for the completion message before unplugging. If it does not connect, follow the tip below.">Aguarde a confirmação de conclusão antes de desconectar. Se não conectar, siga a dica abaixo.</li>
   </ol>
   <div class="install">
-    <label class="consent"><input id="consent" type="checkbox">Entendo que esta instalação apaga o pet salvo e inicia um novo jogo.</label>
+    <label class="consent"><input id="consent" type="checkbox"><span data-en="I understand this installation erases the saved pet (and any pet sent from the editor) and starts a new game.">Entendo que esta instalação apaga o pet salvo (e o bichinho enviado pelo editor) e inicia um novo jogo.</span></label>
     <esp-web-install-button>
-      <button id="install" slot="activate" disabled>Conectar e instalar o PixelGotchi</button>
-      <span slot="unsupported">Este navegador não oferece a conexão USB necessária. Tente Chrome ou Edge em um computador.</span>
-      <span slot="not-allowed">O USB exige uma página HTTPS ou localhost. Abra a página segura do instalador.</span>
+      <button id="install" slot="activate" disabled data-en="Connect and install PixelGotchi">Conectar e instalar o PixelGotchi</button>
+      <span slot="unsupported" data-en="This browser does not offer the required USB connection. Try Chrome or Edge on a computer.">Este navegador não oferece a conexão USB necessária. Tente Chrome ou Edge em um computador.</span>
+      <span slot="not-allowed" data-en="USB requires an HTTPS or localhost page. Open the secure installer page.">O USB exige uma página HTTPS ou localhost. Abra a página segura do instalador.</span>
     </esp-web-install-button>
     <p id="support" role="status" aria-live="polite"></p>
     <p id="version" class="note"></p>
-    <button id="retry" type="button" hidden>Tentar carregar novamente</button>
-    <p class="note">Disponível em página HTTPS ou em localhost, nos navegadores compatíveis.</p>
+    <button id="retry" type="button" hidden data-en="Try loading again">Tentar carregar novamente</button>
+    <p class="note" data-en="Available on HTTPS or localhost pages, in compatible browsers.">Disponível em página HTTPS ou em localhost, nos navegadores compatíveis.</p>
   </div>
-  <aside class="warning"><strong>Atenção:</strong> esta imagem completa apaga e regrava os dados da placa, inclusive o pet salvo. Só prossiga se estiver de acordo. Atualização que preserve os dados exige um pacote próprio; não use este instalador para esse fim.</aside>
-  <h2>Não apareceu a placa?</h2>
-  <p class="lead">Confirme que o cabo transmite dados e feche monitores seriais ou IDEs. Se necessário, segure <strong>BOOT</strong>, toque em <strong>RESET</strong>, solte BOOT e tente novamente. Nunca desconecte durante a gravação.</p>
-  <h2>Depois de instalar</h2>
-  <p class="lead">Se a matriz não iniciar, toque em RESET com BOOT solto. Escolha o pet: clique para trocar; segure BOOT por 0,6 s e solte para confirmar. O ovo choca após 5 minutos acumulados de movimento suave.</p>
-  <div class="links"><a href="guia.html">Comece aqui</a><a href="./">Simulador</a><a href="https://github.com/pantojinho/PixelGotchi/blob/master/docs/INSTALAR.md#instalação-manual-via-usb">Instalação manual</a><a href="https://github.com/pantojinho/PixelGotchi">Código e documentação</a></div>
+  <aside class="warning" data-en="<strong>Heads up:</strong> this full image erases and rewrites the board data, including the saved pet and the pet sent from the editor. Only continue if that is fine. Updating while keeping the data needs a separate package; do not use this installer for that."><strong>Atenção:</strong> esta imagem completa apaga e regrava os dados da placa, inclusive o pet salvo e o bichinho enviado pelo editor. Só prossiga se estiver de acordo. Atualização que preserve os dados exige um pacote próprio; não use este instalador para esse fim.</aside>
+  <h2 data-en="Board not showing up?">Não apareceu a placa?</h2>
+  <p class="lead" data-en="Make sure the cable carries data and close serial monitors or IDEs. If needed, hold <strong>BOOT</strong>, tap <strong>RESET</strong>, release BOOT and try again. Never unplug during flashing.">Confirme que o cabo transmite dados e feche monitores seriais ou IDEs. Se necessário, segure <strong>BOOT</strong>, toque em <strong>RESET</strong>, solte BOOT e tente novamente. Nunca desconecte durante a gravação.</p>
+  <h2 data-en="After installing">Depois de instalar</h2>
+  <p class="lead" data-en="If the matrix does not start, tap RESET with BOOT released. Pick the pet: click to change; hold BOOT for 0.6 s and release to confirm. The egg hatches after 5 minutes of gentle movement in total. Want your own pet? Draw it in the <a href=&quot;editor.html&quot;>editor</a> and send it over USB.">Se a matriz não iniciar, toque em RESET com BOOT solto. Escolha o pet: clique para trocar; segure BOOT por 0,6 s e solte para confirmar. O ovo choca após 5 minutos acumulados de movimento suave. Quer um bichinho seu? Desenhe no <a href="editor.html">editor</a> e envie pela USB.</p>
+  <div class="links"><a href="https://github.com/pantojinho/PixelGotchi/blob/master/docs/INSTALAR.md#instalação-manual-via-usb" data-en="Manual installation">Instalação manual</a><a href="https://github.com/pantojinho/PixelGotchi" data-en="Code and documentation">Código e documentação</a></div>
 </main>
 <noscript>Ative JavaScript para usar a instalação USB ou siga a instalação manual.</noscript>
 </body>

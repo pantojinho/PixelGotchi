@@ -3,63 +3,84 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#10130f">
 <title>PixelGotchi — Simulador</title>
+<meta name="title-en" content="PixelGotchi — Simulator">
 <style>
-  :root { --bg:#0e0f12; --panel:#17191e; --text:#e8e8ea; --muted:#8a8f99; --accent:#ffb347; }
-  * { box-sizing: border-box; }
-  body { margin:0; background:var(--bg); color:var(--text); font:14px/1.4 system-ui, sans-serif; padding:16px; }
-  h1 { font-size:20px; margin:0 0 4px; }
-  h2 { font-size:15px; margin:28px 0 10px; color:var(--accent); text-transform:uppercase; letter-spacing:.06em; }
-  .site-nav { font-size:14px; color:var(--muted); margin:0 0 10px; }
-  .site-nav a { color:var(--accent); }
-  .sub { color:var(--muted); margin:0 0 14px; max-width:900px; }
-  .controls { display:flex; flex-wrap:wrap; gap:16px; align-items:center; background:var(--panel); padding:10px 14px; border-radius:10px; position:sticky; top:8px; z-index:2; }
-  .controls label { display:flex; gap:8px; align-items:center; }
-  .controls a { color:var(--accent); }
-  .controls .install-link { display:inline-block; padding:7px 11px; border-radius:8px; background:var(--accent); color:#18120c; font-weight:700; text-decoration:none; }
-  .grid { display:flex; flex-wrap:wrap; gap:12px; }
-  .cell { background:var(--panel); border-radius:10px; padding:8px; text-align:center; }
-  .cell canvas { display:block; margin:0 auto 6px; cursor:zoom-in; }
-  .cell .n { font-family:ui-monospace, monospace; font-size:12px; color:var(--muted); word-break:break-all; }
-  .pet-name { font-size:17px; color:var(--text); margin:22px 0 8px; font-weight:600; }
-  .row-label { font-size:12px; color:var(--muted); margin:10px 0 6px; text-transform:uppercase; letter-spacing:.05em; }
-  #zoom { position:fixed; inset:0; background:rgba(0,0,0,.88); display:none; align-items:center; justify-content:center; flex-direction:column; gap:10px; z-index:10; }
-  button, select { font:inherit; padding:8px 12px; border-radius:8px; border:1px solid #454951; background:#23262e; color:var(--text); }
-  button { cursor:pointer; touch-action:none; }
-  button:focus-visible, select:focus-visible { outline:2px solid var(--accent); outline-offset:3px; }
-  #demo { background:var(--panel); padding:18px; border-radius:12px; margin-top:20px; display:flex; flex-wrap:wrap; gap:24px; align-items:center; }
-  #demo canvas { width:240px; height:240px; }
-  .demo-controls { max-width:560px; }
-  .demo-buttons { display:flex; flex-wrap:wrap; gap:8px; margin:12px 0; }
-  #boot { background:#ffb347; color:#18120c; font-weight:700; padding:14px 28px; user-select:none; }
-  #demo-message { min-height:2.8em; color:var(--accent); }
+  :root { color-scheme:dark; --bg:#10130f; --panel:#1a201a; --line:#303b30; --text:#f3f5ed; --muted:#b1bbae; --lime:#c6f36b; --orange:#ffb865; --accent:var(--lime); }
+  * { box-sizing:border-box }
+  body { margin:0; background:radial-gradient(ellipse at 50% 0,#273421 0,transparent 55%),var(--bg); color:var(--text); font:15px/1.5 system-ui,sans-serif }
+  nav { display:flex; flex-wrap:wrap; gap:6px 18px; align-items:center; max-width:1240px; margin:0 auto; padding:16px 20px; font-size:14px }
+  nav .brand { color:var(--lime); font:700 13px ui-monospace,monospace; letter-spacing:.16em; text-transform:uppercase; margin-right:auto }
+  nav a { color:var(--muted); text-decoration:none } nav a:hover, nav a[aria-current] { color:var(--text) }
+  .lang-switch a { color:var(--muted) } .lang-switch a[aria-current] { color:var(--lime); font-weight:700 }
+  main { max-width:1240px; margin:0 auto; padding:0 20px 48px }
+  h1 { font-size:clamp(26px,4vw,38px); letter-spacing:-.03em; margin:8px 0 6px }
+  h2 { font-size:13px; letter-spacing:.1em; text-transform:uppercase; color:var(--orange); margin:36px 0 12px }
+  .sub { color:var(--muted); margin:0 0 18px; max-width:75ch }
+  a { color:var(--lime) }
+  code { background:#0b0e0a; border:1px solid var(--line); border-radius:6px; padding:1px 6px; font-size:13px }
+  .controls { display:flex; flex-wrap:wrap; gap:10px 18px; align-items:center; background:color-mix(in srgb,var(--panel) 92%,transparent); border:1px solid var(--line); padding:10px 16px; border-radius:14px; position:sticky; top:8px; z-index:2; backdrop-filter:blur(6px); font-size:14px }
+  .controls label { display:flex; gap:8px; align-items:center; color:var(--muted) }
+  .controls input[type=range] { accent-color:var(--lime) }
+  .grid { display:flex; flex-wrap:wrap; gap:12px }
+  .cell { background:var(--panel); border:1px solid var(--line); border-radius:14px; padding:8px; text-align:center }
+  .cell canvas { display:block; margin:0 auto 6px; cursor:zoom-in; border-radius:8px }
+  .cell .n { font-family:ui-monospace,monospace; font-size:12px; color:var(--muted); word-break:break-all }
+  .pet-name { font-size:18px; color:var(--text); margin:24px 0 8px; font-weight:700 }
+  .row-label { font-size:12px; color:var(--muted); margin:10px 0 6px; text-transform:uppercase; letter-spacing:.08em }
+  #zoom { position:fixed; inset:0; background:rgba(0,0,0,.88); display:none; align-items:center; justify-content:center; flex-direction:column; gap:10px; z-index:10 }
+  button, select { font:inherit; font-size:14px; padding:8px 12px; border-radius:10px; border:1px solid #454951; background:#23262e; color:var(--text) }
+  button { cursor:pointer; touch-action:none }
+  button:hover { border-color:var(--lime) }
+  :focus-visible { outline:2px solid var(--lime); outline-offset:3px }
+  #demo { background:var(--panel); border:1px solid var(--line); padding:22px; border-radius:18px; margin-top:18px; display:flex; flex-wrap:wrap; gap:28px; align-items:center }
+  #demo canvas { width:240px; height:240px; border-radius:12px }
+  .demo-controls { max-width:620px; flex:1 1 320px }
+  .demo-controls h2 { margin:0 0 12px }
+  .demo-controls p { color:var(--muted); margin:10px 0 }
+  .demo-controls label { color:var(--muted) }
+  .demo-buttons { display:flex; flex-wrap:wrap; gap:8px; margin:12px 0 }
+  #boot { background:var(--lime); border-color:var(--lime); color:#17200d; font-weight:800; padding:14px 30px; user-select:none }
+  #demo-message { min-height:2.8em; color:var(--lime) !important }
+  #demo-stats { color:var(--text) !important }
+  .note { font-size:13px }
 </style>
 </head>
 <body>
-<nav class="site-nav" aria-label="Páginas"><a href="guia.html">Comece aqui</a> · <b>Simulador</b> · <a href="install.html">Instalar na placa</a> · <a href="https://github.com/pantojinho/PixelGotchi">GitHub</a></nav>
-<h1>PixelGotchi — Simulador</h1>
-<p class="sub">Simulação da matriz 8×8 WS2812B. Os sprites vêm de <code>art/*.art</code> via <code>tools/gen_art.py</code> — os mesmos dados que vão pro firmware. As <b>cenas</b> são uma maquete de como o jogo compõe bicho + comida + efeitos. Clique numa matriz pra ampliar.</p>
+<nav aria-label="Páginas" data-en-aria-label="Pages">
+  <span class="brand">PixelGotchi</span>
+  <a href="guia.html" data-en="Start here">Comece aqui</a>
+  <a href="index.html" aria-current="page" data-en="Simulator">Simulador</a>
+  <a href="editor.html" data-en="Pet editor">Editor</a>
+  <a href="install.html" data-en="Install on the board">Instalar na placa</a>
+  <a href="https://github.com/pantojinho/PixelGotchi">GitHub</a>
+  <span class="lang-switch"></span>
+</nav>
+<main>
+<h1 data-en="Simulator">Simulador</h1>
+<p class="sub" data-en="The 8×8 matrix in your browser, with the same drawings as the firmware. Play with the buttons below; further down, every scene and animation of each pet. Click any matrix to zoom in.">A matriz 8×8 no seu navegador, com os mesmos desenhos do firmware. Brinque com os botões abaixo; mais para baixo estão todas as cenas e animações de cada bichinho. Clique numa matriz para ampliar.</p>
 <div class="controls">
-  <label>Modo <select id="mode"><option value="led">LED (simulado)</option><option value="flat">Cores de design</option></select></label>
-  <label>Brilho <input id="bright" type="range" min="1" max="30" value="5"><span id="brightV">5</span></label>
-  <span><a class="install-link" href="install.html">Instalar na placa via USB</a></span>
-  <span>Ver: <a href="?">tudo</a> · <a href="?view=scenes">só cenas</a> · <a href="?view=sprites">todos os frames</a></span>
+  <label><span data-en="Mode">Modo</span> <select id="mode"><option value="led" data-en="LED (simulated)">LED (simulado)</option><option value="flat" data-en="Design colors">Cores de design</option></select></label>
+  <label><span data-en="Brightness">Brilho</span> <input id="bright" type="range" min="1" max="30" value="5"><span id="brightV">5</span></label>
+  <span><span data-en="Show:">Ver:</span> <a href="?" data-en="everything">tudo</a> · <a href="?view=scenes" data-en="scenes only">só cenas</a> · <a href="?view=sprites" data-en="all frames">todos os frames</a></span>
 </div>
-<section id="demo" aria-label="Experimentar os controles">
-  <canvas id="demo-matrix" width="240" height="240" aria-label="Matriz do bichinho"></canvas>
+<section id="demo" aria-label="Experimentar os controles" data-en-aria-label="Try the controls">
+  <canvas id="demo-matrix" width="240" height="240" aria-label="Matriz do bichinho" data-en-aria-label="Pet matrix"></canvas>
   <div class="demo-controls">
-    <h2 style="margin:0 0 10px">Experimente BOOT + gestos</h2>
-    <label>Bichinho <select id="demo-pet"></select></label>
-    <p>Clique no BOOT para alimentar. Segure 0,6 s e solte para abrir o menu; clique ou incline para trocar o ícone; segure e solte para confirmar.</p>
-    <div class="demo-buttons"><button id="boot">BOOT</button><button id="tilt-left">← Inclinar</button><button id="tilt-right">Inclinar →</button></div>
-    <div class="demo-buttons"><button id="shake">Chacoalhar</button><button id="face-down">Virar para dormir</button><button id="face-up">Desvirar</button></div>
-    <label>Experimentar necessidade <select id="demo-need"><option value="normal">Tudo bem</option><option value="hunger">Fome</option><option value="happy">Tristeza</option><option value="energy">Cansaço</option><option value="poop">Sujeira</option><option value="sick">Doença</option></select></label>
+    <h2 data-en="Try BOOT + gestures">Experimente BOOT + gestos</h2>
+    <label><span data-en="Pet">Bichinho</span> <select id="demo-pet"></select></label>
+    <p data-en="Click BOOT to feed. Hold 0.6 s and release to open the menu; click or tilt to change the icon; hold and release to confirm.">Clique no BOOT para alimentar. Segure 0,6 s e solte para abrir o menu; clique ou incline para trocar o ícone; segure e solte para confirmar.</p>
+    <div class="demo-buttons"><button id="boot">BOOT</button><button id="tilt-left" data-en="← Tilt">← Inclinar</button><button id="tilt-right" data-en="Tilt →">Inclinar →</button></div>
+    <div class="demo-buttons"><button id="shake" data-en="Shake">Chacoalhar</button><button id="face-down" data-en="Flip to sleep">Virar para dormir</button><button id="face-up" data-en="Flip back">Desvirar</button></div>
+    <label><span data-en="Try a need">Experimentar necessidade</span> <select id="demo-need"><option value="normal" data-en="All good">Tudo bem</option><option value="hunger" data-en="Hunger">Fome</option><option value="happy" data-en="Sadness">Tristeza</option><option value="energy" data-en="Tiredness">Cansaço</option><option value="poop" data-en="Dirt">Sujeira</option><option value="sick" data-en="Sickness">Doença</option></select></label>
     <p id="demo-message" role="status" aria-live="polite"></p>
     <p id="demo-stats"></p>
-    <p class="sub">Maquete interativa dos cuidados, sem simular o relógio, DNA ou persistência do firmware. Na placa, o menu mostra apenas o ícone e os pontos. Espaço = BOOT; setas = inclinar. Reset: segure por 8 s (barra vermelha a partir de 3 s).</p>
+    <p class="note" data-en="Interactive mockup of the care loop: it does not simulate the firmware clock, DNA or saving. Waiting times are shortened. On the board, the menu shows only the icon and the dots. Space = BOOT; arrows = tilt. Reset: hold for 8 s (red bar from 3 s).">Maquete interativa dos cuidados: não simula o relógio, o DNA nem o salvamento do firmware, e as esperas são encurtadas. Na placa, o menu mostra apenas o ícone e os pontos. Espaço = BOOT; setas = inclinar. Reset: segure por 8 s (barra vermelha a partir de 3 s).</p>
   </div>
 </section>
 <div id="root"></div>
+</main>
 <div id="zoom"><canvas id="zc" width="480" height="480"></canvas><div class="n" id="zn"></div></div>
 <script src="i18n.js"></script>
 <script src="art.js"></script>
@@ -406,41 +427,45 @@ function grid(parent, label) {
   const g = document.createElement('div'); g.className = 'grid'; parent.append(g); return g;
 }
 
+const PET_EN = { capy:'Capybara', cat:'Cat', frog:'Frog', chick:'Chick', bunny:'Bunny', axo:'Axolotl' };
+const petLabel = p => L(p.name, PET_EN[p.id] || p.name);
+const SCENE_EN = { passeando:'walking', comendo:'eating', 'com fome':'hungry', cansado:'tired', dormindo:'sleeping', feliz:'happy',
+  carinho:'petting', brincando:'playing', triste:'sad', doente:'sick', selvagem:'wild' };
 function build() {
   document.getElementById('mode').value = mode;
   document.getElementById('bright').value = bright;
   document.getElementById('brightV').textContent = bright;
 
   if (VIEW === 'sprites') {
-    const g = grid(section('Todos os frames' + (ONLY ? ` (${ONLY})` : '')));
+    const g = grid(section(L('Todos os frames', 'All frames') + (ONLY ? ` (${ONLY})` : '')));
     Object.keys(A.sprites).filter(n => !ONLY || n.startsWith(ONLY)).forEach(n => addCell(g, n, spriteFn(n)));
     return;
   }
 
   const used = new Set();
-  const petSec = section('Pets');
+  const petSec = section(L('Bichinhos', 'Pets'));
   for (const pet of A.pets) {
     if (ONLY && pet.id !== ONLY) continue;
-    const t = document.createElement('div'); t.className = 'pet-name'; t.textContent = `${pet.name} (${pet.id})`;
+    const t = document.createElement('div'); t.className = 'pet-name'; t.textContent = `${petLabel(pet)} (${pet.id})`;
     petSec.append(t);
-    const sg = grid(petSec, 'cenas');
-    for (const [label, fn] of Object.entries(scenes(pet))) addCell(sg, label, fn);
+    const sg = grid(petSec, L('cenas', 'scenes'));
+    for (const [label, fn] of Object.entries(scenes(pet))) addCell(sg, SCENE_EN[label] ? L(label, SCENE_EN[label]) : label, fn);
     addCell(sg, 'RIP', deathScene(pet));
     if (VIEW === 'scenes') continue;
-    const ag = grid(petSec, 'animações');
+    const ag = grid(petSec, L('animações', 'animations'));
     for (const [name, a] of Object.entries(A.anims)) {
       if (!name.startsWith(pet.id + '_')) continue;
       used.add(name);
       addCell(ag, name.slice(pet.id.length + 1), animFn(a.frames, a.ms));
     }
-    if (pet.food) addCell(ag, 'comida', spriteFn(pet.food));
+    if (pet.food) addCell(ag, L('comida', 'food'), spriteFn(pet.food));
   }
   if (VIEW === 'scenes' || ONLY) return;
   const rest = Object.entries(A.anims).filter(([n]) => !used.has(n));
-  if (rest.length) { const g = grid(section('Outras animações')); rest.forEach(([n, a]) => addCell(g, n, animFn(a.frames, a.ms))); }
+  if (rest.length) { const g = grid(section(L('Outras animações', 'Other animations'))); rest.forEach(([n, a]) => addCell(g, n, animFn(a.frames, a.ms))); }
   const inAnim = new Set(Object.values(A.anims).flatMap(a => a.frames.map(f => f.split('@')[0])));
   const loose = Object.keys(A.sprites).filter(s => !inAnim.has(s) && !A.pets.some(p => p.food === s));
-  if (loose.length) { const g = grid(section('Sprites soltos (ícones, efeitos)')); loose.forEach(s => addCell(g, s, spriteFn(s))); }
+  if (loose.length) { const g = grid(section(L('Sprites soltos (ícones, efeitos)', 'Loose sprites (icons, effects)'))); loose.forEach(s => addCell(g, s, spriteFn(s))); }
 }
 
 let lastPaint = -Infinity;

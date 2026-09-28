@@ -1,7 +1,7 @@
 // Maquete de entrada humana. Arte e composição vêm da mesma galeria.
 (() => {
   const el = id => document.getElementById(id);
-  const labels = ['Alimentar', 'Brincar', 'Limpar', 'Remédio', 'Dormir / acordar', 'Carinho', 'Status', 'Voltar'];
+  const labels = [L('Alimentar', 'Feed'), L('Brincar', 'Play'), L('Limpar', 'Clean'), L('Remédio', 'Medicine'), L('Dormir / acordar', 'Sleep / wake'), L('Carinho', 'Pet'), 'Status', L('Voltar', 'Back')];
   const icons = ['icon_food', 'icon_play', 'icon_clean', 'icon_medicine', 'icon_sleep', 'icon_pet', 'icon_status', 'icon_back'];
   let pet = A.pets.find(p => p.id === Q.get('pet')) || A.pets[0], pose = scenes(pet), state, screen = 'life', item = 0, page = 0;
   let action = '', actionAt = 0, deadline = 0, heldAt = null, resetSent = false;
@@ -10,7 +10,7 @@
   const say = message => el('demo-message').textContent = message;
   // Mesmas cores de Game.cpp (C_HUNGER, C_HAPPY...): a cor do ícone que resolve.
   const C = { hunger:[255,58,74], bored:[154,92,255], poop:[127,216,255], sick:[62,214,76], energy:[255,138,26], happy:[255,111,168], care:[62,214,76] };
-  const STATUS = [['stat_hunger','hunger','Comida','COMIDA'], ['stat_happy','happy','Alegria','ALEGRIA'], ['stat_energy','energy','Energia','ENERGIA'], ['stat_care','care','Saúde','SAUDE']];
+  const STATUS = [['stat_hunger','hunger',L('Comida','Food'),'COMIDA'], ['stat_happy','happy',L('Alegria','Joy'),'ALEGRIA'], ['stat_energy','energy',L('Energia','Energy'),'ENERGIA'], ['stat_care','care',L('Saúde','Health'),'SAUDE']];
   const STEP_MS = 150; // TEXT_STEP_MS do Config.h
   const AGE_TEXT = '0 DIAS', AGE_MS = (textWidth(AGE_TEXT) + N + 2) * STEP_MS;
   const ICON_MS = 1000;
@@ -46,7 +46,7 @@
     return (value^(value>>>16))>>>0;
   }
   // ---- Autômato: mesma implementação de src/Dream.cpp (bit a bit).
-  const KIND = { gliders:0, pulse:1, soup:2 }, KIND_NAME = ['gliders atravessando', 'pulsação', 'grupos nascendo e se desfazendo'];
+  const KIND = { gliders:0, pulse:1, soup:2 }, KIND_NAME = [L('gliders atravessando', 'gliders crossing'), L('pulsação', 'pulsing'), L('grupos nascendo e se desfazendo', 'groups being born and fading')];
   const GLIDER=[[1,0],[2,1],[0,2],[1,2],[2,2]], BLINKER=[[1,0],[1,1],[1,2]];
   const TOAD=[[1,0],[2,0],[3,0],[0,1],[1,1],[2,1]], BEACON=[[0,0],[1,0],[0,1],[3,2],[2,3],[3,3]];
   class Life {
@@ -116,7 +116,7 @@
     D.chapterAt = D.lastStep = now;
     D.chapterMs = CHAPTER_MIN + D.seed % (CHAPTER_MAX - CHAPTER_MIN + 1);
     D.still = D.osc = 0; D.sig1 = D.sig2 = '';
-    if (state.asleep) say(`Sonho, capítulo ${D.chapter + 1}: ${KIND_NAME[D.kind]}.`);
+    if (state.asleep) say(L(`Sonho, capítulo ${D.chapter + 1}: ${KIND_NAME[D.kind]}.`, `Dream, chapter ${D.chapter + 1}: ${KIND_NAME[D.kind]}.`));
   }
   function seedDream(now) {
     D.calm = !state.sick && !state.poop && state.hunger >= 50 && state.happy >= 50 && state.energy >= 50;
@@ -219,7 +219,7 @@
     return out;
   }
   // ---- Pequenas intenções acordado (espelha pickBehavior/updateBehavior).
-  const BEH = ['pausa', 'passeio', 'farejando', 'olhando em volta', 'observando algo passar', 'pulinhos', 'se acomodando para cochilar', 'seguindo uma borboleta'];
+  const BEH = [L('pausa', 'pause'), L('passeio', 'stroll'), L('farejando', 'sniffing'), L('olhando em volta', 'looking around'), L('observando algo passar', 'watching something go by'), L('pulinhos', 'hopping'), L('se acomodando para cochilar', 'settling in for a nap'), L('seguindo uma borboleta', 'following a butterfly')];
   const B = { beh:0, at:0, until:0, x:3, target:3, faceRight:true, lastStep:0, blinkAt:0, bugX:0, bugY:1, bugDir:1, bugStep:0 };
   const NAP_SETTLE = 1500;
   const rnd = n => n ? Math.floor(Math.random() * n) : 0;
@@ -246,7 +246,7 @@
     if (i === 5) B.until = now + 1500;
     if (i === 6) B.until = now + NAP_SETTLE + rndRange(5000, 9000);
     if (i === 7) { B.bugX = rnd(N); B.bugY = rndRange(0, 2); B.until = now + 6000; }
-    if (B.beh) say(`Acontecimento: ${BEH[B.beh]}.`);
+    if (B.beh) say(L(`Acontecimento: ${BEH[B.beh]}.`, `Happening: ${BEH[B.beh]}.`));
   }
   function stepToward(target, now, ms) {
     if (now - B.lastStep < ms || B.x === target) return;
@@ -271,7 +271,7 @@
   function reactToInput(now) {
     if (B.beh <= 1) return;
     B.beh = 0; B.at = now; B.until = now + 2500; B.blinkAt = now;
-    say('Ele percebeu você e parou o que fazia.');
+    say(L('Ele percebeu você e parou o que fazia.', 'It noticed you and stopped what it was doing.'));
   }
   function sniffSpot(b) {
     const flip = pet.side && !B.faceRight, [mx, my] = mouthAt(pet, B.x, flip);
@@ -323,8 +323,8 @@
   const nameMs = () => (textWidth(dnaName(dna)) + N + 2) * STEP_MS;
   function nextStatusPage() {
     page++; pageAt = performance.now();
-    if (page > STATUS.length) { screen = 'life'; say('De volta ao bichinho.'); }
-    else say(page < STATUS.length ? `Status: ${STATUS[page][2]}` : 'Idade — maquete: 0 dias.');
+    if (page > STATUS.length) { screen = 'life'; say(L('De volta ao bichinho.', 'Back to the pet.')); }
+    else say(page < STATUS.length ? `Status: ${STATUS[page][2]}` : L('Idade — maquete: 0 dias.', 'Age — mockup: 0 days.'));
   }
   function reset() {
     state = { hunger:80, happy:80, energy:90, poop:0, sick:false, asleep:false };
@@ -333,7 +333,7 @@
     D.seeded = false; sleepDreamVisible=false;
     markActivity();
     el('demo-need').value = 'normal';
-    say('Pronto: clique para alimentar ou segure e solte para o menu.');
+    say(L('Pronto: clique para alimentar ou segure e solte para o menu.', 'Ready: click to feed, or hold and release for the menu.'));
   }
   function suggest() {
     if (state.asleep) return 4;
@@ -368,12 +368,12 @@
         } else startSleep();
         break;
       case 5: ok = !state.asleep; if (ok) { add('happy', 5); action = 'carinho'; } break;
-      case 6: screen = 'status'; page = -1; pageAt = performance.now(); deadline = Infinity; say(`Status: o nome dele é ${dnaName(dna)}`); return;
-      case 7: say('De volta ao bichinho.'); return;
+      case 6: screen = 'status'; page = -1; pageAt = performance.now(); deadline = Infinity; say(L(`Status: o nome dele é ${dnaName(dna)}`, `Status: its name is ${dnaName(dna)}`)); return;
+      case 7: say(L('De volta ao bichinho.', 'Back to the pet.')); return;
     }
     actionAt = performance.now();
     if (!ok) action = 'recusa';
-    say(ok ? `${labels[index]}: ${index === 4 ? (state.asleep ? 'boa noite!' : 'acordou!') : 'feito.'}` : 'Agora não: o bichinho não precisa desse cuidado.');
+    say(ok ? `${labels[index]}: ${index === 4 ? (state.asleep ? L('boa noite!', 'good night!') : L('acordou!', 'awake!')) : L('feito.', 'done.')}` : L('Agora não: o bichinho não precisa desse cuidado.', 'Not now: the pet does not need that.'));
   }
   function input(long) {
     markActivity();
@@ -381,11 +381,11 @@
       if (long) care(item);
       else { item = (item + 1) % icons.length; deadline = performance.now() + 8000; say(labels[item]); }
     } else if (screen === 'status') {
-      if (long) { screen = 'life'; say('De volta ao bichinho.'); }
+      if (long) { screen = 'life'; say(L('De volta ao bichinho.', 'Back to the pet.')); }
       else nextStatusPage();
     } else if (long) {
       screen = 'menu'; item = suggest(); deadline = performance.now() + 8000;
-      say(`Menu: ${labels[item]}. Clique para trocar; segure e solte para confirmar.`);
+      say(L(`Menu: ${labels[item]}. Clique para trocar; segure e solte para confirmar.`, `Menu: ${labels[item]}. Click to change; hold and release to confirm.`));
     } else if (state.asleep) care(4);
     else if (!action) care(0);
   }
@@ -398,7 +398,7 @@
   function requestReset() {
     if (heldAt === null || resetSent) return;
     resetSent = true; reset();
-    say('Reset da maquete. No firmware, volta à seleção e ao ovo.');
+    say(L('Reset da maquete. No firmware, volta à seleção e ao ovo.', 'Mockup reset. On the board it goes back to the selection and the egg.'));
   }
   function release(cancel = false) {
     if (heldAt === null) return;
@@ -408,7 +408,7 @@
     heldAt = null;
     if (!cancel && !resetSent) input(duration >= 600);
   }
-  A.pets.forEach(p => { const o = new Option(p.name, p.id); el('demo-pet').add(o); });
+  A.pets.forEach(p => { const o = new Option(typeof petLabel === 'function' ? petLabel(p) : p.name, p.id); el('demo-pet').add(o); });
   el('demo-pet').value = pet.id;
   el('demo-pet').onchange = e => { pet = A.pets.find(p => p.id === e.target.value); pose = scenes(pet); dna = (Math.random() * 2 ** 32) >>> 0; reset(); };
   el('demo-need').onchange = e => {
@@ -416,7 +416,7 @@
     if (['hunger', 'happy', 'energy'].includes(need)) state[need] = 15;
     if (need === 'poop') state.poop = 2;
     if (need === 'sick') state.sick = true;
-    say('Necessidade aplicada. Abra o menu para ver a sugestão.');
+    say(L('Necessidade aplicada. Abra o menu para ver a sugestão.', 'Need applied. Open the menu to see the suggestion.'));
   };
   el('boot').onpointerdown = e => { e.preventDefault(); el('boot').setPointerCapture(e.pointerId); press(); };
   el('boot').onpointerup = () => release();
@@ -425,10 +425,10 @@
   function tilt(dir) {
     markActivity();
     if (screen === 'menu') { item = (item + dir + icons.length) % icons.length; deadline = performance.now() + 8000; say(labels[item]); }
-    else if (state.asleep) { sleepPetUntil=performance.now()+SLEEP_PET_REVEAL; say('Ele se mexeu, mas continua dormindo.'); }
+    else if (state.asleep) { sleepPetUntil=performance.now()+SLEEP_PET_REVEAL; say(L('Ele se mexeu, mas continua dormindo.', 'It stirred but is still asleep.')); }
     else {
       B.x = dir < 0 ? minCx() : maxCx(); B.faceRight = dir > 0;
-      say('O bichinho acompanha a inclinação.');
+      say(L('O bichinho acompanha a inclinação.', 'The pet follows the tilt.'));
     }
   }
   el('tilt-left').onclick = () => tilt(-1);
@@ -437,18 +437,18 @@
     if (screen !== 'life' || action || heldAt !== null) return;
     const now = performance.now();
     markActivity(now);
-    if (state.asleep) { sleepPetUntil=now+SLEEP_PET_REVEAL; say('Ele se mexeu, mas continua dormindo.'); return; }
-    if (now - playedAt < 5000) { say('Dê uma pausa de 5 s entre brincadeiras.'); return; }
+    if (state.asleep) { sleepPetUntil=now+SLEEP_PET_REVEAL; say(L('Ele se mexeu, mas continua dormindo.', 'It stirred but is still asleep.')); return; }
+    if (now - playedAt < 5000) { say(L('Dê uma pausa de 5 s entre brincadeiras.', 'Wait 5 s between play sessions.')); return; }
     playedAt = now; care(1);
   };
   el('face-down').onclick = () => {
     if (screen !== 'life' || state.asleep) return;
     startSleep(); sleepByGesture = true; action = '';
-    say('Boa noite! Na placa, mantenha virado por 1,5 s.');
+    say(L('Boa noite! Na placa, mantenha virado por 1,5 s.', 'Good night! On the board, keep it face down for 1.5 s.'));
   };
   el('face-up').onclick = () => {
     markActivity();
-    if (sleepByGesture && state.asleep) { care(4); say('Desvirou: o bichinho acordou.'); }
+    if (sleepByGesture && state.asleep) { care(4); say(L('Desvirou: o bichinho acordou.', 'Flipped back: the pet woke up.')); }
     sleepByGesture = false;
   };
   document.addEventListener('keydown', e => {
@@ -464,11 +464,11 @@
     if (heldAt !== null && now - heldAt >= 8000 && !resetSent) {
       requestReset();
     }
-    if (screen !== 'life' && now >= deadline && heldAt === null) { screen = 'life'; say('Menu fechado por inatividade.'); }
+    if (screen !== 'life' && now >= deadline && heldAt === null) { screen = 'life'; say(L('Menu fechado por inatividade.', 'Menu closed after inactivity.')); }
     const actionMs = { comendo:3000, brincando:3000, carinho:1600, limpar:1600, remedio:2000, recusa:900 };
     if (action && now - actionAt >= actionMs[action]) action = '';
     if(screen==='life'&&!state.asleep&&!action&&state.energy<25&&now-lastActivityAt>30000) {
-      startSleep(now); say('Cansado e sozinho: cochilou. Ele também vai sonhar.');
+      startSleep(now); say(L('Cansado e sozinho: cochilou. Ele também vai sonhar.', 'Tired and alone: it dozed off. It will dream too.'));
     }
     let buf = b, fullDream = false;
     if (screen === 'menu') {
@@ -521,7 +521,7 @@
         const visit = Math.floor((idle - IDLE_DREAM_AFTER) / IDLE_DREAM_CYCLE);
         if (!D.seeded || !D.ambient || visit !== D.visit) {
           seedAmbient(now, visit);
-          say(visit % 2 ? 'Um blinker pulsa ao redor e um passarinho passa.' : 'Um glider atravessa o mundo ao redor.');
+          say(visit % 2 ? L('Um blinker pulsa ao redor e um passarinho passa.', 'A blinker pulses around and a little bird flies by.') : L('Um glider atravessa o mundo ao redor.', 'A glider crosses the world around it.'));
         }
         advanceDream(now);
         if (pet.side) B.faceRight = ambientFocusX(now) >= B.x;
@@ -544,7 +544,7 @@
         for (let x = 0; x < 8; x++) buf[56+x] = x < Math.floor((held-3000)*8/5000) ? [255,40,40] : [50,8,8];
       } else if (held >= 600) buf[7] = [62,214,76];
     }
-    el('demo-stats').textContent = `Saciedade ${state.hunger} · Alegria ${state.happy} · Energia ${state.energy}${state.asleep ? ' · Dormindo' : ''}`;
+    el('demo-stats').textContent = L(`Saciedade ${state.hunger} · Alegria ${state.happy} · Energia ${state.energy}${state.asleep ? ' · Dormindo' : ''}`, `Fullness ${state.hunger} · Joy ${state.happy} · Energy ${state.energy}${state.asleep ? ' · Asleep' : ''}`);
     return buf;
   }});
 })();

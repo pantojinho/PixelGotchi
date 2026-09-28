@@ -12,7 +12,7 @@ const element = id => {
 };
 const context = vm.createContext({
   window:{ addEventListener(){} }, document:{ getElementById:element, addEventListener(){} },
-  performance:{now:()=>now}, location:{search:''}, URLSearchParams,
+  performance:{now:()=>now}, location:{search:''}, URLSearchParams, L:(pt)=>pt, LANG:'pt',
   Option:function(text,value){this.text=text;this.value=value;}, setTimeout:()=>1, clearTimeout(){}
 });
 vm.runInContext(fs.readFileSync(path.join(root,'preview/art.js'),'utf8'), context);

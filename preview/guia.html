@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#10130f">
 <title>PixelGotchi — Comece aqui</title>
+<meta name="title-en" content="PixelGotchi — Start here">
 <style>
   :root { color-scheme:dark; --bg:#10130f; --panel:#1a201a; --line:#303b30; --text:#f3f5ed; --muted:#b1bbae; --lime:#c6f36b; --orange:#ffb865; }
   * { box-sizing:border-box }
@@ -12,6 +13,7 @@
   nav { display:flex; flex-wrap:wrap; gap:6px 18px; align-items:center; max-width:980px; margin:0 auto; padding:18px 20px; font-size:14px }
   nav .brand { color:var(--lime); font:700 13px ui-monospace,monospace; letter-spacing:.16em; text-transform:uppercase; margin-right:auto }
   nav a { color:var(--muted); text-decoration:none } nav a:hover, nav a[aria-current] { color:var(--text) }
+  .lang-switch a[aria-current] { color:var(--lime); font-weight:700 }
   main { max-width:980px; margin:0 auto; padding:0 20px 56px }
   h1 { font-size:clamp(32px,6vw,54px); line-height:1.05; letter-spacing:-.04em; margin:28px 0 12px; max-width:16ch }
   .lead { color:var(--muted); max-width:60ch; margin:0 0 24px; font-size:17px }
@@ -35,98 +37,101 @@
 </style>
 </head>
 <body>
-<nav aria-label="Páginas">
+<nav aria-label="Páginas" data-en-aria-label="Pages">
   <span class="brand">PixelGotchi</span>
-  <a href="guia.html" aria-current="page">Comece aqui</a>
-  <a href="index.html">Simulador</a>
-  <a href="editor.html">Editor</a>
-  <a href="install.html">Instalar na placa</a>
+  <a href="guia.html" aria-current="page" data-en="Start here">Comece aqui</a>
+  <a href="index.html" data-en="Simulator">Simulador</a>
+  <a href="editor.html" data-en="Pet editor">Editor</a>
+  <a href="install.html" data-en="Install on the board">Instalar na placa</a>
   <a href="https://github.com/pantojinho/PixelGotchi">GitHub</a>
+  <span class="lang-switch"></span>
 </nav>
 <main>
-  <h1>Um bichinho de 64 pixels para montar em casa.</h1>
-  <p class="lead">O PixelGotchi roda numa plaquinha de 25 mm com matriz de LEDs 8×8, botão e acelerômetro. Experimente aqui no navegador, grave na sua placa pelo cabo USB e, se quiser, imprima a case de chaveiro.</p>
+  <h1 data-en="A 64-pixel pet to build at home.">Um bichinho de 64 pixels para montar em casa.</h1>
+  <p class="lead" data-en="PixelGotchi runs on a 25 mm board with an 8×8 LED matrix, a button and an accelerometer. Try it here in the browser, flash it to your board over USB and, if you like, 3D-print the keychain case.">O PixelGotchi roda numa plaquinha de 25 mm com matriz de LEDs 8×8, botão e acelerômetro. Experimente aqui no navegador, grave na sua placa pelo cabo USB e, se quiser, imprima a case de chaveiro.</p>
   <div class="cta">
-    <a class="btn main" href="index.html">Abrir o simulador</a>
-    <a class="btn" href="install.html">Gravar na minha placa</a>
-    <a class="btn" href="https://github.com/pantojinho/PixelGotchi/blob/master/docs/GUIA-MONTAGEM.md">Guia de montagem</a>
+    <a class="btn main" href="index.html" data-en="Open the simulator">Abrir o simulador</a>
+    <a class="btn" href="install.html" data-en="Flash my board">Gravar na minha placa</a>
+    <a class="btn" href="https://github.com/pantojinho/PixelGotchi/blob/master/docs/GUIA-MONTAGEM.md" data-en-href="https://github.com/pantojinho/PixelGotchi/blob/master/docs/en/BUILD-GUIDE.md" data-en="Build guide">Guia de montagem</a>
   </div>
 
   <div class="card where" id="where"></div>
 
-  <h2>Do zero ao ovo chocando</h2>
+  <h2 data-en="From zero to a hatching egg">Do zero ao ovo chocando</h2>
   <div class="cards">
     <section class="card">
-      <div class="step">1 · EXPERIMENTE</div>
-      <h3>Simulador</h3>
-      <p>Mesmos desenhos do firmware. <b>Espaço</b> é o botão BOOT e as <b>setas</b> inclinam. Clique alimenta; segure e solte abre o menu.</p>
-      <p><a href="index.html">Abrir o simulador →</a></p>
+      <div class="step" data-en="1 · TRY IT">1 · EXPERIMENTE</div>
+      <h3 data-en="Simulator">Simulador</h3>
+      <p data-en="Same drawings as the firmware. <b>Space</b> is the BOOT button and the <b>arrows</b> tilt. Click feeds; hold and release opens the menu.">Mesmos desenhos do firmware. <b>Espaço</b> é o botão BOOT e as <b>setas</b> inclinam. Clique alimenta; segure e solte abre o menu.</p>
+      <p data-en="<a href=&quot;index.html&quot;>Open the simulator →</a>"><a href="index.html">Abrir o simulador →</a></p>
     </section>
     <section class="card">
-      <div class="step">2 · COMPRE</div>
-      <h3>A placa e um cabo</h3>
+      <div class="step" data-en="2 · BUY">2 · COMPRE</div>
+      <h3 data-en="The board and a cable">A placa e um cabo</h3>
       <ul>
         <li><b>Waveshare ESP32-S3-Matrix</b>: <a href="https://www.waveshare.com/esp32-s3-matrix.htm">Waveshare</a>, <a href="https://www.aliexpress.com/w/wholesale-waveshare-esp32%2Ds3%2Dmatrix.html">AliExpress</a>, <a href="https://lista.mercadolivre.com.br/esp32-s3-matrix">Mercado Livre</a></li>
-        <li>Cabo USB-C <b>de dados</b> (alguns só carregam)</li>
+        <li data-en="A USB-C <b>data</b> cable (some only charge)">Cabo USB-C <b>de dados</b> (alguns só carregam)</li>
       </ul>
-      <p>Confira o modelo: outras placas "ESP32 + matriz" têm pinagem diferente. <a href="https://github.com/pantojinho/PixelGotchi/blob/master/docs/HARDWARE.md">Fotos da placa</a>.</p>
+      <p data-en="Check the model: other &quot;ESP32 + matrix&quot; boards have different pinouts. <a href=&quot;https://github.com/pantojinho/PixelGotchi/blob/master/docs/en/HARDWARE.md&quot;>Board photos</a>.">Confira o modelo: outras placas "ESP32 + matriz" têm pinagem diferente. <a href="https://github.com/pantojinho/PixelGotchi/blob/master/docs/HARDWARE.md">Fotos da placa</a>.</p>
     </section>
     <section class="card">
-      <div class="step">3 · GRAVE</div>
-      <h3>Pelo navegador</h3>
-      <p>Chrome ou Edge no computador, placa no USB, um clique. Não precisa instalar nada.</p>
-      <p><a href="install.html">Abrir o instalador →</a></p>
+      <div class="step" data-en="3 · FLASH">3 · GRAVE</div>
+      <h3 data-en="From the browser">Pelo navegador</h3>
+      <p data-en="Chrome or Edge on a computer, board on USB, one click. Nothing to install.">Chrome ou Edge no computador, placa no USB, um clique. Não precisa instalar nada.</p>
+      <p data-en="<a href=&quot;install.html&quot;>Open the installer →</a>"><a href="install.html">Abrir o instalador →</a></p>
     </section>
     <section class="card">
-      <div class="step">4 · CHOQUE</div>
-      <h3>Primeiro uso</h3>
+      <div class="step" data-en="4 · HATCH">4 · CHOQUE</div>
+      <h3 data-en="First use">Primeiro uso</h3>
       <ol>
-        <li>Clique troca de bicho; segure 0,6 s e solte escolhe.</li>
-        <li>Mexa a placa com calma: o ovo choca com 5 min de movimento.</li>
-        <li>Ele nasce e diz o próprio nome.</li>
+        <li data-en="Click changes the pet; hold 0.6 s and release picks it.">Clique troca de bicho; segure 0,6 s e solte escolhe.</li>
+        <li data-en="Move the board gently: the egg hatches after 5 min of movement.">Mexa a placa com calma: o ovo choca com 5 min de movimento.</li>
+        <li data-en="It hatches and says its own name.">Ele nasce e diz o próprio nome.</li>
       </ol>
-      <p><a href="https://github.com/pantojinho/PixelGotchi/blob/master/docs/JOGO.md">Como jogar →</a></p>
+      <p><a href="https://github.com/pantojinho/PixelGotchi/blob/master/docs/JOGO.md" data-en-href="https://github.com/pantojinho/PixelGotchi/blob/master/docs/en/GAME.md" data-en="How to play →">Como jogar →</a></p>
     </section>
     <section class="card">
-      <div class="step">5 · OPCIONAL</div>
-      <h3>Case impressa em 3D</h3>
-      <p>28,7 × 28,7 mm com argolinha de chaveiro, versão com difusor "pixel" e versão com bateria. PLA, sem suporte.</p>
-      <p><a href="https://github.com/pantojinho/PixelGotchi/blob/master/docs/GUIA-MONTAGEM.md#4-case-impressa-em-3d-opcional">Arquivos e montagem →</a></p>
+      <div class="step" data-en="5 · OPTIONAL">5 · OPCIONAL</div>
+      <h3 data-en="3D-printed case">Case impressa em 3D</h3>
+      <p data-en="28.7 × 28.7 mm with a keychain loop, a &quot;pixel&quot; diffuser version and a battery version. PLA, no supports.">28,7 × 28,7 mm com argolinha de chaveiro, versão com difusor "pixel" e versão com bateria. PLA, sem suporte.</p>
+      <p><a href="https://github.com/pantojinho/PixelGotchi/blob/master/docs/GUIA-MONTAGEM.md#4-case-impressa-em-3d-opcional" data-en-href="https://github.com/pantojinho/PixelGotchi/blob/master/docs/en/BUILD-GUIDE.md#4-3d-printed-case-optional" data-en="Files and assembly →">Arquivos e montagem →</a></p>
     </section>
     <section class="card">
-      <div class="step">AJUDA</div>
-      <h3>Com uma IA</h3>
-      <p>Prompts prontos para instalar com um agente local, desenhar um bichinho novo ou tirar dúvidas de montagem.</p>
-      <p><a href="https://github.com/pantojinho/PixelGotchi/blob/master/docs/PROMPTS-IA.md">Ver os prompts →</a></p>
+      <div class="step" data-en="HELP">AJUDA</div>
+      <h3 data-en="With an AI">Com uma IA</h3>
+      <p data-en="Ready-made prompts to install with a local agent, draw a new pet or get build help.">Prompts prontos para instalar com um agente local, desenhar um bichinho novo ou tirar dúvidas de montagem.</p>
+      <p><a href="https://github.com/pantojinho/PixelGotchi/blob/master/docs/PROMPTS-IA.md" data-en-href="https://github.com/pantojinho/PixelGotchi/blob/master/docs/en/AI-PROMPTS.md" data-en="See the prompts →">Ver os prompts →</a></p>
     </section>
   </div>
 
-  <h2>Criar o seu bichinho</h2>
+  <h2 data-en="Create your own pet">Criar o seu bichinho</h2>
   <div class="cards">
     <section class="card">
-      <h3>No editor, sem instalar nada</h3>
-      <p>Comece de um dos seis bichinhos, desenhe pixel a pixel, monte as animações, teste no simulador e envie para a placa pelo cabo USB, sem compilar. O projeto fica salvo no navegador e pode ser baixado.</p>
-      <p><a href="editor.html">Abrir o editor →</a></p>
+      <h3 data-en="In the editor, nothing to install">No editor, sem instalar nada</h3>
+      <p data-en="Start from one of the six pets, draw pixel by pixel, build the animations, test in the simulator and send it to the board over USB, with no compiling. The project is saved in the browser and can be downloaded.">Comece de um dos seis bichinhos, desenhe pixel a pixel, monte as animações, teste no simulador e envie para a placa pelo cabo USB, sem compilar. O projeto fica salvo no navegador e pode ser baixado.</p>
+      <p data-en="<a href=&quot;editor.html&quot;>Open the editor →</a>"><a href="editor.html">Abrir o editor →</a></p>
     </section>
     <section class="card">
-      <h3>No código do projeto</h3>
-      <p>Quem quiser incluir o bichinho no repositório exporta o <code>.art</code> no editor (ou desenha em texto) e compila localmente ou pelo site do próprio fork.</p>
-      <p><a href="https://github.com/pantojinho/PixelGotchi/blob/master/docs/DESENVOLVIMENTO.md#editar-a-arte">Editar a arte →</a></p>
+      <h3 data-en="In the project code">No código do projeto</h3>
+      <p data-en="To include the pet in the repository, export the <code>.art</code> file from the editor (or draw it as text) and build locally or through your own fork’s site.">Quem quiser incluir o bichinho no repositório exporta o <code>.art</code> no editor (ou desenha em texto) e compila localmente ou pelo site do próprio fork.</p>
+      <p><a href="https://github.com/pantojinho/PixelGotchi/blob/master/docs/DESENVOLVIMENTO.md#editar-a-arte" data-en-href="https://github.com/pantojinho/PixelGotchi/blob/master/docs/en/DEVELOPMENT.md#editing-the-art" data-en="Editing the art →">Editar a arte →</a></p>
     </section>
   </div>
 </main>
-<footer>Código aberto (MIT) · <a href="https://github.com/pantojinho/PixelGotchi">github.com/pantojinho/PixelGotchi</a> · Verificado em software; ainda em ensaio na placa física.</footer>
+<footer data-en="Open source (MIT) · <a href=&quot;https://github.com/pantojinho/PixelGotchi&quot;>github.com/pantojinho/PixelGotchi</a> · Verified in software; physical board testing in progress.">Código aberto (MIT) · <a href="https://github.com/pantojinho/PixelGotchi">github.com/pantojinho/PixelGotchi</a> · Verificado em software; ainda em ensaio na placa física.</footer>
+<script src="i18n.js"></script>
 <script>
 // Mesma página no site publicado e na cópia local: mostra o contexto certo.
 const local = ['localhost', '127.0.0.1', ''].includes(location.hostname);
+const doc = (pt, en) => 'https://github.com/pantojinho/PixelGotchi/blob/master/docs/' + L(pt, 'en/' + en);
 document.getElementById('where').innerHTML = local ? `
-  <h3>Você está rodando a cópia local</h3>
-  <p>Edite <code>art/pets.art</code> e salve: o simulador recarrega sozinho. Para gravar na placa uma versão modificada, compile primeiro e depois use o instalador desta página:</p>
+  <h3>${L('Você está rodando a cópia local', 'You are running the local copy')}</h3>
+  <p>${L('Edite <code>art/pets.art</code> e salve: o simulador recarrega sozinho. Para gravar na placa uma versão modificada do firmware, compile primeiro e depois use o instalador desta página:', 'Edit <code>art/pets.art</code> and save: the simulator reloads by itself. To flash a modified firmware to the board, build it first and then use this page’s installer:')}</p>
   <pre>python tools/build_web_installer.py</pre>
-  <p>Isso precisa do PlatformIO. <a href="https://github.com/pantojinho/PixelGotchi/blob/master/docs/DESENVOLVIMENTO.md">Guia de desenvolvimento →</a></p>` : `
-  <h3>Quer rodar no seu computador?</h3>
-  <p>Para modificar os bichinhos, baixe o projeto (<code>git clone https://github.com/pantojinho/PixelGotchi.git</code> ou <b>Code → Download ZIP</b>), instale o <a href="https://www.python.org/downloads/">Python 3</a> e dê dois cliques em <code>iniciar.bat</code> (Windows) ou rode <code>./iniciar.sh</code> (macOS/Linux). Esta mesma página abre em <code>localhost</code>.</p>
-  <p><a href="https://github.com/pantojinho/PixelGotchi/blob/master/docs/DESENVOLVIMENTO.md">Guia de desenvolvimento →</a></p>`;
+  <p>${L('Isso precisa do PlatformIO.', 'This needs PlatformIO.')} <a href="${doc('DESENVOLVIMENTO.md', 'DEVELOPMENT.md')}">${L('Guia de desenvolvimento →', 'Development guide →')}</a></p>` : `
+  <h3>${L('Quer rodar no seu computador?', 'Want to run it on your computer?')}</h3>
+  <p>${L('Para modificar os bichinhos no código, baixe o projeto', 'To change the pets in the code, download the project')} (<code>git clone https://github.com/pantojinho/PixelGotchi.git</code> ${L('ou', 'or')} <b>Code → Download ZIP</b>), ${L('instale o', 'install')} <a href="https://www.python.org/downloads/">Python 3</a> ${L('e dê dois cliques em', 'and double-click')} <code>iniciar.bat</code> (Windows) ${L('ou rode', 'or run')} <code>./iniciar.sh</code> (macOS/Linux). ${L('Esta mesma página abre em', 'This same page opens at')} <code>localhost</code>.</p>
+  <p><a href="${doc('DESENVOLVIMENTO.md', 'DEVELOPMENT.md')}">${L('Guia de desenvolvimento →', 'Development guide →')}</a></p>`;
 </script>
 </body>
 </html>
