@@ -14,7 +14,7 @@ jobs:
       - name: Generate and check shared artwork
         run: |
           python tools/gen_art.py
-          git diff --exit-code -- src/art/ArtData.h src/art/ArtData.cpp preview/art.js
+          git diff --exit-code -- src/art/ArtData.h src/art/ArtData.cpp src/art/LedProfile.h preview/art.js
       - name: Test real C++ controls with simulated hardware
         run: python tools/test_controls.py
       - name: Build ESP32-S3 firmware

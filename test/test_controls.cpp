@@ -5,6 +5,9 @@
 #include "../src/Imu.cpp"
 #include "../src/Storage.h"
 #include <assert.h>
+#include <FastLED.h>
+
+FakeFastLED FastLED;
 
 uint32_t testMs = 10000;
 bool testButton = HIGH;
@@ -20,7 +23,6 @@ void save(const void *src, size_t n) {
     assert(n <= sizeof(stored)); memcpy(stored, src, n); storedSize = n;
 }
 }
-namespace Display { void begin() {} void show(const Canvas &) {} }
 
 void advance(uint32_t ms) { testMs += ms; Input::update(); }
 void down() { testButton = LOW; advance(1); advance(25); }
@@ -37,7 +39,52 @@ void sample(float x, float y, float z, uint32_t ms = 20) {
     testMs += ms; testAccel = {{x, y, z}}; testSampleReady = true; Imu::update();
 }
 
+CRGB ledOutput(Rgb color) {
+    Canvas canvas;
+    canvas.clear(); canvas.set(0, 0, color);
+    Display::show(canvas);
+    assert(canvas.get(0, 0).r == color.r && canvas.get(0, 0).g == color.g && canvas.get(0, 0).b == color.b);
+    CRGB result;
+    for (int i = 0; i < FastLED.count; i++) {
+        const CRGB p = FastLED.pixels[i];
+        if (p.r || p.g || p.b) {
+            // scale8 fixo do FastLED 3.6.0, sem correção de balanço de branco.
+            result = CRGB(p.r * (FastLED.brightness + 1) / 256,
+                          p.g * (FastLED.brightness + 1) / 256,
+                          p.b * (FastLED.brightness + 1) / 256);
+        }
+    }
+    return result;
+}
+
+int luminance(CRGB c) { return (54 * c.r + 183 * c.g + 19 * c.b); }
+void testLedContrast() {
+    assert(FastLED.brightness == 18 && FastLED.count == 64);
+    assert(FastLED.volts == 5 && FastLED.milliamps == 400 && FastLED.dither == 0);
+    assert(LedProfile::channel(0) == 0 && LedProfile::channel(255) == 255);
+    for (int i = 1; i < 256; i++) assert(LedProfile::channel(i) >= LedProfile::channel(i - 1));
+    CRGB black = ledOutput({0, 0, 0}), white = ledOutput({255, 255, 255});
+    assert(black.r == 0 && black.g == 0 && black.b == 0);
+    assert(white.r == 18 && white.g == 18 && white.b == 18);
+    const Rgb primaries[] = {{255, 0, 0}, {0, 255, 0}, {0, 0, 255}};
+    for (Rgb color : primaries) {
+        CRGB wire = ledOutput(color);
+        assert(wire.r == (color.r ? 18 : 0) && wire.g == (color.g ? 18 : 0) && wire.b == (color.b ? 18 : 0));
+    }
+    // Todos os 64 tons possíveis do DNA: focinho destaca, nariz não vira preto.
+    for (uint32_t variant = 0; variant < 64; variant++) {
+        Look look; look.tone = Dna{variant << 26}.tone();
+        Canvas capy; capy.clear(); capy.blitAnchored(SPR_capy_idle0, 3, 7, false, look);
+        const Rgb body = capy.get(0, 5), muzzle = capy.get(4, 3), nose = capy.get(6, 3);
+        CRGB b = ledOutput(body), m = ledOutput(muzzle), n = ledOutput(nose);
+        assert(luminance(m) >= 2 * luminance(b));
+        assert(luminance(b) > luminance(n) && n.r >= 3);
+        assert(ledOutput(dim(nose, NIGHT_DIM)).r >= 1);
+    }
+}
+
 int main() {
+    Display::begin(); testLedContrast();
     Input::begin(); Imu::begin();
     // Contato instável nunca vira clique.
     testButton = LOW; advance(1); advance(10);
@@ -130,5 +177,5 @@ int main() {
         cv.clear(); drawPet(*d.eat, testMs - actAt, petX, 7, testMs);
         assert(memcmp(eating.px, cv.px, sizeof(cv.px)) == 0);
     }
-    puts("PASS: BOOT, debounce, reset, IMU, sleep/wake, menu, play cooldown, egg and sprite composition");
+    puts("PASS: LED gamma/brightness/contrast, BOOT, debounce, reset, IMU, sleep/wake, menu, play cooldown, egg and sprite composition");
 }

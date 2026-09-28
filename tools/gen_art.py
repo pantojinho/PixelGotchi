@@ -22,6 +22,7 @@ Formato do .art (uma fonte da verdade pra firmware e preview):
 '.' é sempre transparente. Todas as linhas de um sprite têm a mesma largura.
 """
 import json
+import math
 import os
 import re
 import sys
@@ -31,6 +32,7 @@ ART_DIR = os.path.join(ROOT, "art")
 OUT_H = os.path.join(ROOT, "src", "art", "ArtData.h")
 OUT_CPP = os.path.join(ROOT, "src", "art", "ArtData.cpp")
 OUT_JS = os.path.join(ROOT, "preview", "art.js")
+OUT_LED = os.path.join(ROOT, "src", "art", "LedProfile.h")
 
 PET_ANIMS = ["idle", "blink", "walk", "eat", "sleep", "happy", "sad", "hungry"]
 PET_EGG_ANIMS = ["egg"]
@@ -279,9 +281,34 @@ def emit_cpp(palettes, sprites, anims, pets):
     return "\n".join(h), "\n".join(c)
 
 
-def emit_js(palettes, sprites, anims, pets):
+def load_led_profile():
+    with open(os.path.join(ART_DIR, "led-profile.json"), encoding="utf-8") as f:
+        profile = json.load(f)
+    brightness, gamma = profile.get("brightness"), profile.get("gamma")
+    if type(brightness) is not int or not 1 <= brightness <= 30:
+        raise ArtError("led-profile.json: brightness deve ser inteiro de 1 a 30")
+    if type(gamma) not in (int, float) or not math.isfinite(gamma) or not 1 <= gamma <= 2.2:
+        raise ArtError("led-profile.json: gamma deve estar entre 1 e 2.2")
+    return {"brightness": brightness, "gamma": gamma,
+            "gammaLut": [int(255 * (v / 255) ** gamma + 0.5) for v in range(256)]}
+
+
+def emit_led_profile(profile):
+    lines = ["// GERADO de art/led-profile.json por tools/gen_art.py -- não edite à mão.",
+             "#pragma once", "#include <stdint.h>", "", "namespace LedProfile {",
+             f"constexpr uint8_t BRIGHTNESS = {profile['brightness']};",
+             f"// Curva suave gamma {profile['gamma']}; mantém preto/primárias e separa meios-tons.",
+             "constexpr uint8_t GAMMA_LUT[256] = {"]
+    for i in range(0, 256, 16):
+        lines.append("    " + ", ".join(map(str, profile["gammaLut"][i:i+16])) + ",")
+    lines += ["};", "inline uint8_t channel(uint8_t value) { return GAMMA_LUT[value]; }",
+              "} // namespace LedProfile", ""]
+    return "\n".join(lines)
+
+
+def emit_js(palettes, sprites, anims, pets, led_profile):
     data = {"palettes": palettes, "sprites": sprites, "anims": anims, "pets": pets,
-            "font": font_glyphs(sprites)}
+            "font": font_glyphs(sprites), "ledProfile": led_profile}
     return "// GERADO por tools/gen_art.py -- não edite à mão.\nwindow.ART = " + json.dumps(data, ensure_ascii=False, indent=1) + ";\n"
 
 
@@ -301,11 +328,14 @@ def main():
     try:
         parsed = parse(paths)
         validate(*parsed)
+        led_profile = load_led_profile()
     except ArtError as e:
         print(f"[gen_art] ERRO: {e}", file=sys.stderr)
         sys.exit(1)
     h, cpp = emit_cpp(*parsed)
-    changed = [p for p, content in ((OUT_H, h), (OUT_CPP, cpp), (OUT_JS, emit_js(*parsed))) if write_if_changed(p, content)]
+    outputs = ((OUT_H, h), (OUT_CPP, cpp), (OUT_LED, emit_led_profile(led_profile)),
+               (OUT_JS, emit_js(*parsed, led_profile=led_profile)))
+    changed = [p for p, content in outputs if write_if_changed(p, content)]
     palettes, sprites, anims, pets = parsed
     print(f"[gen_art] {len(sprites)} sprites, {len(anims)} anims, {len(pets)} pets"
           + (f" -> atualizado: {', '.join(os.path.relpath(p, ROOT) for p in changed)}" if changed else " (sem mudanças)"))

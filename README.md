@@ -174,9 +174,20 @@ Veja também a [referência oficial da Waveshare](https://docs.waveshare.com/ESP
 | QMI8658, I²C | SDA GPIO11, SCL GPIO12 |
 | BOOT | GPIO0 |
 
-O firmware limita o brilho a **30/255**, a corrente da matriz a **400 mA**
-e usa FastLED **3.6.0**, com driver RMT e sem dithering temporal.
+O firmware limita o brilho a **18/255** (antes 30/255), a corrente da matriz
+a **400 mA** e usa FastLED **3.6.0**, com driver RMT e sem dithering temporal.
 A Waveshare informa que brilho excessivo aquece e pode danificar a placa.
+
+As cores passam por uma **curva gamma suave de 1,6** antes do brilho global.
+Ela reduz os meios-tons e ajuda a separar os tons claros e escuros. A capivara
+usa corpo cobre, focinho âmbar claro e nariz marrom escuro, com maior distância
+entre as cores. Preto continua apagado e as cores primárias continuam puras.
+
+O perfil fica em [`art/led-profile.json`](art/led-profile.json) e gera a mesma
+tabela para firmware e preview. Para reduzir mais, experimente `"brightness": 12`,
+gere a arte e regrave a placa; não aumente o brilho para compensar contraste.
+Esse ajuste não apaga o pet salvo. O resultado óptico ainda precisa de
+conferência na sua unidade; a curva não é uma calibração medida do hardware.
 
 O BOOT pressionado durante reset/energização entra no modo de gravação
 do ESP32. Para interagir, pressione-o **depois** que o firmware iniciar.
@@ -394,7 +405,8 @@ para o compilador). Alternativa: configure `ZIG_BINARY` com o caminho
 do Zig. Os testes executam o C++ real de Game, Input, Imu, PetSim,
 Canvas e arte; substituem apenas relógio, GPIO, sensor, NVS e saída LED.
 
-Cobrem debounce, clique/segurar/reset, orientação inicial, histerese,
+Cobrem brilho/gamma, saída RGB, contraste da capivara nos 64 tons de DNA,
+debounce, clique/segurar/reset, orientação inicial, histerese,
 sono por gesto e manual, navegação, intervalo entre brincadeiras,
 ovo parado e poses sem cortes ou sobreposição durante a refeição.
 O GitHub Actions também compila o firmware e verifica a arte gerada.
@@ -409,7 +421,7 @@ Edite **`art/*.art`** e execute `python tools/gen_art.py`. Não edite
 critérios para LEDs em [art/README.md](art/README.md).
 
 ```text
-art/           sprites, paletas, efeitos, fonte
+art/           sprites, paletas, efeitos, fonte e perfil de cor dos LEDs
 tools/         gerador da arte e testes locais
 preview/       galeria e maquete de controles
 src/Game.*     cenas, entrada e animações

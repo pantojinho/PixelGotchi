@@ -38,7 +38,11 @@ void show(const Canvas &c) {
     for (uint8_t y = 0; y < MATRIX_H; y++) {
         for (uint8_t x = 0; x < MATRIX_W; x++) {
             const Rgb &p = c.px[y][x];
-            leds[physicalIndex(x, y)] = CRGB(p.r, p.g, p.b);
+            // A arte é RGB de design. Corrige uma vez, no fim da composição,
+            // antes do teto de brilho aplicado pelo FastLED. Sem pow() por pixel.
+            leds[physicalIndex(x, y)] = CRGB(LedProfile::channel(p.r),
+                                           LedProfile::channel(p.g),
+                                           LedProfile::channel(p.b));
         }
     }
     FastLED.show();

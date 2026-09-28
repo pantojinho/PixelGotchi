@@ -10,7 +10,8 @@ build não comprova gravação USB, funcionamento do sensor ou aparência físic
 
 Referência do código: revisão
 [`585571f`](https://github.com/pantojinho/PixelGotchi/commit/585571f551f1e96894965938618dd8db5d534ad6).
-Esta atualização acrescenta documentação e imagens, sem alterar esse firmware.
+Os resultados abaixo referem-se a essa revisão. O ajuste posterior de brilho
+e cores tem uma rodada específica registrada na próxima seção.
 
 | Verificação | Resultado | Evidência / limite |
 |---|---|---|
@@ -28,13 +29,31 @@ A capacidade de aplicação acima não é o tamanho total da flash: a Matrix
 é configurada para **4 MB**. A maquete web não simula relógio do firmware,
 DNA, incubação, descuido nem persistência.
 
+## Rodada de brilho e cores — 28/09/2026
+
+Motivo: relato do autor de brilho excessivo e pouca separação de cores na
+placa. Ajuste: teto 18/255, gamma 1,6 compartilhado pelo firmware/preview e
+nova paleta da capivara. A silhueta e o estado salvo não mudam.
+
+| Verificação | Resultado / limite |
+|---|---|
+| Display C++ real com saída FastLED capturada | Passou: brilho 18, corrente 400 mA, dithering desligado, preto apagado e primárias sem mistura |
+| Contraste digital da capivara | Passou nos 64 tons possíveis do DNA: luminância RGB ponderada do focinho ≥ 2× corpo, corpo > nariz; nariz mantém ao menos um nível de vermelho no sono |
+| Controles e composição | Passaram com o Display real incluído no teste nativo |
+| Compilação ESP32-S3 | Passou: RAM 20.536 bytes e flash de aplicação 330.637 bytes |
+| Curva compartilhada | Gerador entrega a mesma LUT no header C++ e nos dados do preview |
+| Aparência, conforto e contraste físico | Pendente de conferir na placa após regravar; os testes digitais não medem luz emitida |
+
+A aproximação de luminância usada no teste é calculada dos valores enviados
+aos LEDs; não é uma medição fotométrica nem uma relação de contraste certificada.
+
 ## Reproduzir os testes de software
 
 Na raiz do repositório, com Python e PlatformIO disponíveis no mesmo ambiente:
 
 ```sh
 python tools/gen_art.py
-git diff --exit-code -- src/art/ArtData.h src/art/ArtData.cpp preview/art.js
+git diff --exit-code -- src/art/ArtData.h src/art/ArtData.cpp src/art/LedProfile.h preview/art.js
 python tools/test_controls.py
 python -m platformio run -e esp32-s3-matrix
 ```
@@ -47,7 +66,7 @@ nativo usado nesse teste. A CI prepara o ambiente Linux automaticamente.
 
 ### O que o teste C++ cobre
 
-O código real de `Game`, `Input`, `Imu`, `PetSim`, `Canvas` e arte é executado
+O código real de `Game`, `Input`, `Imu`, `PetSim`, `Canvas`, `Display` e arte é executado
 com relógio, GPIO, sensor, NVS e saída LED substituídos por mocks.
 
 | Caso | Comportamento esperado |

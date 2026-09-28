@@ -42,7 +42,7 @@ Mantenha a ordem de espécies existentes: o estado salvo usa esse índice.
 - Capivara: perfil, orelha curta arredondada, nariz na extremidade de um
   focinho largo, costas arredondadas e pernas curtas. Sem cauda longa.
 - Prefira massas de cor grandes. Tons próximos se misturam com o halo
-  dos LEDs. Confira no modo LED a 30/255 e também com a paleta de design.
+  dos LEDs. Confira no modo LED a 18/255 e também com a paleta de design.
 - Preserve orelhas e focinho nas expressões. Tristeza não deve transformar
   a espécie em outra silhueta.
 - As poses do gato e da capivara usam largura 7: só sobra um pixel para
@@ -56,3 +56,25 @@ Mantenha a ordem de espécies existentes: o estado salvo usa esse índice.
 
 O preview de LED é uma aproximação, sem medir difusão, gama ou calibração
 de cada unidade. A validação final acontece na matriz física.
+
+## Perfil de brilho e cor
+
+`led-profile.json` define o brilho global (**18/255**) e a curva gamma
+(**1,6**). O gerador produz `src/art/LedProfile.h` e `ART.ledProfile` no
+preview, incluindo a mesma tabela de 256 valores. Não edite as saídas à mão.
+
+A curva é aplicada uma vez, na saída do Display, depois da composição/DNA
+e antes do brilho do FastLED. O modo de design mostra o RGB original;
+o modo LED usa a tabela e a quantização de brilho do firmware. O monitor
+ainda faz uma aproximação da percepção, sem reproduzir fisicamente a placa.
+
+Escolha diferenças de luminosidade e de matiz entre corpo, rosto e detalhes.
+Na capivara, o corpo cobre fica mais escuro que o focinho âmbar, e o nariz
+tem um terceiro nível. Os testes verificam a separação depois de gamma,
+brilho e DNA, além de o nariz continuar aceso no sono. Isso verifica os
+valores digitais; a leitura visual final depende dos LEDs e da luz ambiente.
+
+Para um ambiente escuro, pode reduzir `brightness` para 12. Rode o gerador
+e recompile/regrave para aplicar. O perfil aceita 1–30 de brilho e 1–2,2
+de gamma; o padrão de 1,6 é um ajuste inicial para preservar detalhes nos
+64 LEDs, sujeito à avaliação na placa.

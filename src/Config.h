@@ -1,5 +1,6 @@
 #pragma once
 #include <Arduino.h>
+#include "art/LedProfile.h"
 
 // ============================================================ HARDWARE
 // Waveshare ESP32-S3-Matrix. Pinos internos confirmados no projeto
@@ -22,7 +23,7 @@ constexpr bool DISPLAY_MIRROR_X = false;
 // A Waveshare avisa que brilho alto esquenta e pode danificar a placa
 // (já aconteceu neste projeto com um driver ruim). Três camadas:
 // teto de brilho, orçamento de corrente do FastLED, e taxa de quadros.
-constexpr uint8_t MAX_BRIGHTNESS = 30;   // 0-255
+constexpr uint8_t MAX_BRIGHTNESS = LedProfile::BRIGHTNESS; // 18/255; art/led-profile.json
 constexpr uint16_t MAX_MILLIAMPS = 400;  // matriz inteira, a 5V
 constexpr uint16_t FRAME_MS = 20;        // ~50 fps
 constexpr uint8_t NIGHT_DIM = 110;       // brilho relativo (0-255) com a luz apagada
