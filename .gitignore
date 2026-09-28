@@ -10,3 +10,4 @@ Thumbs.db
 __pycache__/
 *.py[cod]
 tools/.imu_samples.json
+dist/
