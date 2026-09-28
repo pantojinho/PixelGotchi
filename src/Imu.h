@@ -1,15 +1,16 @@
 #pragma once
-#include <Arduino.h>
+#include <stdint.h>
 
-// Wrapper fino sobre o QMI8658 (via SensorLib) que expõe só o que o
-// PixelGochi precisa: dois gestos, "chacoalhar" e "virar de cabeça
-// pra baixo". Ver Config.h para os limiares.
+// QMI8658 (via SensorLib). Publica Ev::Shake / Ev::FaceDown / Ev::FaceUp
+// e expõe inclinação e "está mexendo" pra quem precisar ler continuamente.
 namespace Imu {
 
 bool begin();
-
-// Chamar a cada loop(). Dispara callbacks em Pet conforme os gestos
-// forem detectados (é o próprio módulo que decide os limiares).
 void update();
+
+bool ok();
+float tilt();              // ~ -1 (esquerda pra baixo) .. +1 (direita pra baixo)
+uint32_t lastMotionMs();   // millis() do último movimento perceptível
+void accel(float &x, float &y, float &z); // m/s^2, pra debug/calibração
 
 } // namespace Imu

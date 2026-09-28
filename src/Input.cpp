@@ -1,16 +1,14 @@
 #include "Input.h"
 #include "Config.h"
-#include "Pet.h"
-#include <Arduino.h>
-
-extern Pet pet;
+#include "Events.h"
 
 namespace {
-bool lastRawState = HIGH;
-bool debouncedState = HIGH; // HIGH = solto (INPUT_PULLUP, ativo em LOW)
-unsigned long lastEdgeAt = 0;
-unsigned long pressStartedAt = 0;
-bool longPressFired = false;
+bool lastRaw = HIGH;
+bool pressed = false;
+uint32_t lastEdgeAt = 0;
+uint32_t pressedAt = 0;
+bool longSent = false;
+bool resetSent = false;
 } // namespace
 
 namespace Input {
@@ -20,34 +18,39 @@ void begin() {
 }
 
 void update() {
+    uint32_t now = millis();
     bool raw = digitalRead(PIN_BOOT_BUTTON);
-    unsigned long now = millis();
-
-    if (raw != lastRawState) {
+    if (raw != lastRaw) {
+        lastRaw = raw;
         lastEdgeAt = now;
-        lastRawState = raw;
+    }
+    if (now - lastEdgeAt < BUTTON_DEBOUNCE_MS) return;
+
+    bool down = (raw == LOW);
+    if (down && !pressed) {
+        pressed = true;
+        pressedAt = now;
+        longSent = resetSent = false;
+    } else if (!down && pressed) {
+        pressed = false;
+        if (!longSent) Events::push(Ev::Short);
     }
 
-    if (now - lastEdgeAt >= BUTTON_DEBOUNCE_MS && raw != debouncedState) {
-        debouncedState = raw;
-        if (debouncedState == LOW) {
-            // borda de descida: começou a pressionar
-            pressStartedAt = now;
-            longPressFired = false;
-        } else {
-            // borda de subida: soltou
-            unsigned long heldMs = now - pressStartedAt;
-            if (!longPressFired && heldMs < BUTTON_LONG_PRESS_MS) {
-                pet.onButtonShortPress();
-            }
+    if (pressed) {
+        uint32_t held = now - pressedAt;
+        if (!longSent && held >= BUTTON_LONG_MS) {
+            longSent = true;
+            Events::push(Ev::Long);
+        }
+        if (!resetSent && held >= BUTTON_RESET_MS) {
+            resetSent = true;
+            Events::push(Ev::Reset);
         }
     }
+}
 
-    if (debouncedState == LOW && !longPressFired &&
-        now - pressStartedAt >= BUTTON_LONG_PRESS_MS) {
-        longPressFired = true;
-        pet.onButtonLongPress();
-    }
+uint32_t heldMs() {
+    return pressed ? millis() - pressedAt : 0;
 }
 
 } // namespace Input

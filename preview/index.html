@@ -1,0 +1,300 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PixelGochi — Preview da Arte</title>
+<style>
+  :root { --bg:#0e0f12; --panel:#17191e; --text:#e8e8ea; --muted:#8a8f99; --accent:#ffb347; }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--bg); color:var(--text); font:14px/1.4 system-ui, sans-serif; padding:16px; }
+  h1 { font-size:20px; margin:0 0 4px; }
+  h2 { font-size:15px; margin:28px 0 10px; color:var(--accent); text-transform:uppercase; letter-spacing:.06em; }
+  .sub { color:var(--muted); margin:0 0 14px; max-width:900px; }
+  .controls { display:flex; flex-wrap:wrap; gap:16px; align-items:center; background:var(--panel); padding:10px 14px; border-radius:10px; position:sticky; top:8px; z-index:2; }
+  .controls label { display:flex; gap:8px; align-items:center; }
+  .controls a { color:var(--accent); }
+  .grid { display:flex; flex-wrap:wrap; gap:12px; }
+  .cell { background:var(--panel); border-radius:10px; padding:8px; text-align:center; }
+  .cell canvas { display:block; margin:0 auto 6px; cursor:zoom-in; }
+  .cell .n { font-family:ui-monospace, monospace; font-size:12px; color:var(--muted); word-break:break-all; }
+  .pet-name { font-size:17px; color:var(--text); margin:22px 0 8px; font-weight:600; }
+  .row-label { font-size:12px; color:var(--muted); margin:10px 0 6px; text-transform:uppercase; letter-spacing:.05em; }
+  #zoom { position:fixed; inset:0; background:rgba(0,0,0,.88); display:none; align-items:center; justify-content:center; flex-direction:column; gap:10px; z-index:10; }
+</style>
+</head>
+<body>
+<h1>PixelGochi — Preview da Arte</h1>
+<p class="sub">Simulação da matriz 8×8 WS2812B. Os sprites vêm de <code>art/*.art</code> via <code>tools/gen_art.py</code> — os mesmos dados que vão pro firmware. As <b>cenas</b> são uma maquete de como o jogo compõe bicho + comida + efeitos. Clique numa matriz pra ampliar.</p>
+<div class="controls">
+  <label>Modo <select id="mode"><option value="led">LED (simulado)</option><option value="flat">Cores de design</option></select></label>
+  <label>Brilho <input id="bright" type="range" min="5" max="255" value="30"><span id="brightV">30</span></label>
+  <span>Ver: <a href="?">tudo</a> · <a href="?view=scenes">só cenas</a> · <a href="?view=sprites">todos os frames</a></span>
+</div>
+<div id="root"></div>
+<div id="zoom"><canvas id="zc" width="480" height="480"></canvas><div class="n" id="zn"></div></div>
+<script src="art.js"></script>
+<script>
+const A = window.ART;
+// Parâmetros de URL: ?cell=36&only=capy&view=scenes|sprites|anims&mode=flat&bright=30
+const Q = new URLSearchParams(location.search);
+const CELL = +(Q.get('cell') || 18), N = 8;
+const ONLY = Q.get('only');
+const VIEW = Q.get('view') || 'all';
+let mode = Q.get('mode') || 'led', bright = +(Q.get('bright') || 30);
+
+// ------------------------------------------------------------ desenho
+const hexToRgb = h => [parseInt(h.slice(1,3),16), parseInt(h.slice(3,5),16), parseInt(h.slice(5,7),16)];
+const newBuf = () => new Array(N * N).fill(null);
+
+function frameRef(ref) {
+  const [spr, pal] = ref.split('@');
+  const s = A.sprites[spr];
+  return { s, pal: A.palettes[pal || s.pal] };
+}
+
+// Mesmas fórmulas de Tint em src/Canvas.cpp.
+function tint(c, t) {
+  if (!t) return c;
+  const l = Math.floor((c[0] + c[1] + c[2]) / 3), s = v => Math.max(0, Math.min(255, Math.floor(v)));
+  if (t === 'sick') return [s(l * .6), s(l + 40), s(l * .4)];
+  if (t === 'ghost') return [s(l / 2), s(l * .7), s(l)];
+  return c;
+}
+
+function blit(buf, ref, x, y, flip = false, t = null, palName = null) {
+  const r = frameRef(ref), s = r.s, pal = palName ? A.palettes[palName] : r.pal;
+  s.rows.forEach((row, sy) => [...row].forEach((_, sx) => {
+    const ch = row[flip ? s.w - 1 - sx : sx];
+    if (ch === '.') return;
+    const X = x + sx, Y = y + sy;
+    if (X >= 0 && X < N && Y >= 0 && Y < N) buf[Y * N + X] = tint(hexToRgb(pal[ch]), t);
+  }));
+}
+// Ancoragem centro-inferior, igual Canvas::blitAnchored.
+function blitA(buf, ref, cx, bottom, flip, t, palName) {
+  const { s } = frameRef(ref);
+  blit(buf, ref, cx - Math.floor(s.w / 2), bottom - s.h + 1, flip, t, palName);
+}
+
+// Texto com a fonte 3x5 (espelha Game.cpp): 1 px entre letras, 2 px de espaço.
+function textWidth(str) {
+  let w = 0;
+  for (const ch of str) w += ch === ' ' ? 2 : (A.font[ch] ? A.sprites[A.font[ch]].w + 1 : 0);
+  return Math.max(0, w - 1);
+}
+function drawText(buf, str, x, y, rgb) {
+  for (const ch of str) {
+    if (ch === ' ') { x += 2; continue; }
+    const g = A.font[ch]; if (!g) continue;
+    const s = A.sprites[g];
+    s.rows.forEach((row, sy) => [...row].forEach((c, sx) => {
+      const X = x + sx, Y = y + sy;
+      if (c !== '.' && X >= 0 && X < N && Y >= 0 && Y < N) buf[Y * N + X] = rgb;
+    }));
+    x += s.w + 1;
+  }
+}
+function scrollText(buf, str, t, y, rgb, speedMs = 110) {
+  const w = textWidth(str), span = w + N + 2;
+  drawText(buf, str, N - Math.floor(t / speedMs) % span, y, rgb);
+}
+const dimBuf = (buf, k) => buf.map(c => c && c.map(v => Math.floor(v * k)));
+const animFrame = (name, t) => { const a = A.anims[name]; return a.frames[Math.floor(t / a.ms) % a.frames.length]; };
+const spriteW = ref => frameRef(ref).s.w;
+
+// Aproximação do que o olho vê: scale8 pelo brilho, quantizado; valores
+// baixos perdem níveis e matiz. Normalizado pelo teto de brilho.
+function ledColor(rgb) {
+  if (mode === 'flat') return rgb;
+  const out = rgb.map(v => Math.floor(v * bright / 256));
+  if (out.every(v => v === 0)) return null;
+  const top = Math.max(1, Math.floor(255 * bright / 256));
+  return out.map(v => Math.round(255 * Math.pow(v / top, 0.55)));
+}
+
+function drawBuf(ctx, buf, cell) {
+  const size = cell * N;
+  ctx.fillStyle = '#050506'; ctx.fillRect(0, 0, size, size);
+  const pad = cell * 0.14, r = cell * 0.18;
+  for (let i = 0; i < N * N; i++) {
+    const x = (i % N) * cell + pad, y = Math.floor(i / N) * cell + pad, w = cell - pad * 2;
+    const c = buf[i] ? ledColor(buf[i]) : null;
+    ctx.shadowBlur = 0;
+    if (c) {
+      ctx.fillStyle = `rgb(${c})`;
+      if (mode === 'led') { ctx.shadowColor = `rgb(${c})`; ctx.shadowBlur = cell * 0.6; }
+    } else ctx.fillStyle = mode === 'led' ? '#1b1b1f' : '#101013';
+    ctx.beginPath(); ctx.roundRect(x, y, w, w, r); ctx.fill();
+  }
+  ctx.shadowBlur = 0;
+}
+
+// ------------------------------------------------------------ cenas (maquete do Game.cpp)
+function scenes(pet) {
+  const id = pet.id, food = pet.food;
+  const facesRight = pet.side;
+  return {
+    'passeando': t => {
+      const b = newBuf(), w = spriteW(animFrame(id + '_idle', 0));
+      const minX = Math.floor(w / 2), maxX = N - 1 - Math.floor((w - 1) / 2);
+      const span = maxX - minX, period = 700, steps = span * 2;
+      const k = Math.floor(t / period) % (steps + 6);
+      let cx, walking = true, dirRight = true;
+      if (k < 3) { cx = minX; walking = false; }
+      else if (k < 3 + span) { cx = minX + (k - 3); }
+      else if (k < 6 + span) { cx = maxX; walking = false; }
+      else { cx = maxX - (k - 6 - span); dirRight = false; }
+      const blinking = !walking && (t % 2600) < 150;
+      const ref = walking ? animFrame(id + '_walk', t) : blinking ? animFrame(id + '_blink', t) : animFrame(id + '_idle', t);
+      blitA(b, ref, cx, 7, facesRight ? !dirRight : false);
+      return b;
+    },
+    'comendo': t => {
+      const b = newBuf();
+      const fw = spriteW(food), fx = N - fw;
+      const pw = spriteW(animFrame(id + '_eat', 0));
+      blitA(b, animFrame(id + '_eat', t), Math.floor(pw / 2) + Math.max(0, fx - pw), 7);
+      const bites = Math.floor(t / 700) % (fw + 2);
+      const { s } = frameRef(food);
+      blit(b, food, fx, N - s.h);
+      for (let i = 0; i < Math.min(bites, fw); i++) for (let y = 0; y < N; y++) if (y >= N - s.h) b[y * N + fx + i] = null;
+      return b;
+    },
+    'com fome': t => {
+      const b = newBuf();
+      const pw = spriteW(animFrame(id + '_hungry', 0));
+      blitA(b, animFrame(id + '_hungry', t), Math.floor(pw / 2), 7);
+      if (Math.floor(t / 400) % 5 !== 0) {
+        const { s } = frameRef(food);
+        blit(b, food, N - s.w, 0);
+        b[s.h * N + (N - s.w - 1)] = [150, 150, 170];
+      }
+      return b;
+    },
+    'dormindo': t => {
+      const b = newBuf();
+      blitA(b, animFrame(id + '_sleep', t), 3, 7);
+      const p = (t % 2400) / 2400;
+      blit(b, 'fx_z', 5, Math.round(3 - p * 4));
+      return dimBuf(b, 0.45);
+    },
+    'feliz': t => {
+      const b = newBuf();
+      const hop = Math.floor(t / 300) % 2;
+      blitA(b, animFrame(id + '_happy', t), 3, 7 - hop);
+      const p = (t % 1600) / 1600;
+      blit(b, 'fx_heart', 5, Math.round(2 - p * 4));
+      return b;
+    },
+    'triste': t => { const b = newBuf(); blitA(b, animFrame(id + '_sad', t), 3, 7); return b; },
+    'doente': t => {
+      const b = newBuf();
+      blitA(b, animFrame(id + '_sad', t), 3, 7, false, 'sick');
+      if (Math.floor(t / 500) % 2) blit(b, 'fx_sick', 5, 0);
+      return b;
+    },
+    'selvagem': t => {
+      const b = newBuf();
+      // arisco: fica espiando, vira de lado de repente
+      const k = Math.floor(t / 900) % 6;
+      const ref = k === 3 ? animFrame(id + '_blink', t) : animFrame(id + '_idle', t);
+      blitA(b, ref, k < 3 ? 2 : 5, 7, facesRight ? k >= 3 : false, null, pet.wild);
+      return b;
+    },
+  };
+}
+
+// Tela de morte: lápide, fantasminha subindo e descendo, e "RIP" rolando.
+function deathScene(pet) {
+  return t => {
+    const b = newBuf(), cycle = 9000, p = t % cycle;
+    if (p < 6000) {
+      blit(b, 'grave', 0, 3);
+      const bob = Math.sin(t / 600) > 0 ? 1 : 0;
+      blit(b, animFrame('ghost', t), 3, bob);
+    } else {
+      scrollText(b, 'RIP ' + pet.name.toUpperCase(), p - 6000, 1, [200, 210, 230], 90);
+    }
+    return b;
+  };
+}
+
+// ------------------------------------------------------------ montagem
+const players = [];
+function addCell(parent, label, fn) {
+  const cell = document.createElement('div'); cell.className = 'cell';
+  const cv = document.createElement('canvas'); cv.width = cv.height = CELL * N;
+  const n = document.createElement('div'); n.className = 'n'; n.textContent = label;
+  cell.append(cv, n); parent.append(cell);
+  const p = { ctx: cv.getContext('2d'), fn, label };
+  cv.onclick = () => { zoomP = p; document.getElementById('zn').textContent = label; document.getElementById('zoom').style.display = 'flex'; };
+  players.push(p);
+}
+const animFn = (frames, ms) => t => { const b = newBuf(); blitA(b, frames[Math.floor(t / ms) % frames.length], 3 + (N % 2), 7); return b; };
+const spriteFn = ref => t => { const b = newBuf(); const { s } = frameRef(ref); blit(b, ref, Math.floor((N - s.w) / 2), N - s.h); return b; };
+
+let zoomP = null;
+document.getElementById('zoom').onclick = () => { zoomP = null; document.getElementById('zoom').style.display = 'none'; };
+
+function section(title) {
+  const h = document.createElement('h2'); h.textContent = title;
+  const g = document.createElement('div');
+  document.getElementById('root').append(h, g);
+  return g;
+}
+function grid(parent, label) {
+  if (label) { const l = document.createElement('div'); l.className = 'row-label'; l.textContent = label; parent.append(l); }
+  const g = document.createElement('div'); g.className = 'grid'; parent.append(g); return g;
+}
+
+function build() {
+  document.getElementById('mode').value = mode;
+  document.getElementById('bright').value = bright;
+  document.getElementById('brightV').textContent = bright;
+
+  if (VIEW === 'sprites') {
+    const g = grid(section('Todos os frames' + (ONLY ? ` (${ONLY})` : '')));
+    Object.keys(A.sprites).filter(n => !ONLY || n.startsWith(ONLY)).forEach(n => addCell(g, n, spriteFn(n)));
+    return;
+  }
+
+  const used = new Set();
+  const petSec = section('Pets');
+  for (const pet of A.pets) {
+    if (ONLY && pet.id !== ONLY) continue;
+    const t = document.createElement('div'); t.className = 'pet-name'; t.textContent = `${pet.name} (${pet.id})`;
+    petSec.append(t);
+    const sg = grid(petSec, 'cenas');
+    for (const [label, fn] of Object.entries(scenes(pet))) addCell(sg, label, fn);
+    addCell(sg, 'RIP', deathScene(pet));
+    if (VIEW === 'scenes') continue;
+    const ag = grid(petSec, 'animações');
+    for (const [name, a] of Object.entries(A.anims)) {
+      if (!name.startsWith(pet.id + '_')) continue;
+      used.add(name);
+      addCell(ag, name.slice(pet.id.length + 1), animFn(a.frames, a.ms));
+    }
+    if (pet.food) addCell(ag, 'comida', spriteFn(pet.food));
+  }
+  if (VIEW === 'scenes' || ONLY) return;
+  const rest = Object.entries(A.anims).filter(([n]) => !used.has(n));
+  if (rest.length) { const g = grid(section('Outras animações')); rest.forEach(([n, a]) => addCell(g, n, animFn(a.frames, a.ms))); }
+  const inAnim = new Set(Object.values(A.anims).flatMap(a => a.frames.map(f => f.split('@')[0])));
+  const loose = Object.keys(A.sprites).filter(s => !inAnim.has(s) && !A.pets.some(p => p.food === s));
+  if (loose.length) { const g = grid(section('Sprites soltos (ícones, efeitos)')); loose.forEach(s => addCell(g, s, spriteFn(s))); }
+}
+
+function tick(t) {
+  for (const p of players) drawBuf(p.ctx, p.fn(t), CELL);
+  if (zoomP) drawBuf(document.getElementById('zc').getContext('2d'), zoomP.fn(t), 60);
+  requestAnimationFrame(tick);
+}
+
+document.getElementById('mode').onchange = e => mode = e.target.value;
+document.getElementById('bright').oninput = e => { bright = +e.target.value; document.getElementById('brightV').textContent = bright; };
+build();
+requestAnimationFrame(tick);
+</script>
+</body>
+</html>

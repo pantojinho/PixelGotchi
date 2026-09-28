@@ -1,0 +1,267 @@
+# PixelGochi — comidas, efeitos e ícones do menu
+
+palette food
+  R #FF3A4A
+  G #3ED64C
+  D #1C8A2A
+  O #FF8A1A
+  B #4FA8FF
+  W #F4F4FF
+  K #7A7A88
+  P #FF8FB8
+  Y #FFD62E
+end
+
+# melancia (capivara)
+sprite food_melon food
+RRRR
+GRRG
+.GG.
+end
+
+# peixe (gato) — cabeça pra esquerda, rabo em "V" à direita
+sprite food_fish food
+.B.B
+BWBB
+.B.B
+end
+
+# mosquinha (sapo)
+sprite food_fly food
+W.W
+.K.
+end
+
+# minhoca (pintinho)
+sprite food_worm food
+.PP.
+P..P
+end
+
+# cenoura (coelho)
+sprite food_carrot food
+.G.
+OOO
+.O.
+.O.
+end
+
+# camarãozinho (axolote)
+sprite food_shrimp food
+.OO
+O..
+OO.
+end
+
+# ------------------------------------------------------------ EFEITOS
+palette fx
+  R #FF3A5C
+  Z #7FC8FF
+  Y #FFE14A
+  W #FFFFFF
+  N #B98CFF
+  C #8A5A2E
+  c #B07A44
+  S #6CFF6C
+  B #4FA8FF
+end
+
+sprite fx_heart fx
+R.R
+RRR
+.R.
+end
+
+sprite fx_z fx
+ZZ.
+.Z.
+.ZZ
+end
+
+sprite fx_note fx
+.N
+.N
+NN
+end
+
+sprite fx_poop fx
+.c.
+CCc
+end
+
+sprite fx_sparkle fx
+.Y.
+YWY
+.Y.
+end
+
+sprite fx_twinkle fx
+W
+end
+
+sprite fx_alert fx
+Y
+Y
+.
+Y
+end
+
+sprite fx_sick fx
+.S.
+S.S
+.S.
+end
+
+sprite fx_drop fx
+B
+B
+end
+
+sprite fx_halo fx
+YYY
+end
+
+sprite fx_ball fx
+RY
+BS
+end
+
+sprite fx_pill fx
+RRW
+end
+
+# setinhas piscando dos lados do ovo: "me chacoalha!"
+sprite fx_arrow_l fx
+.W
+W.
+.W
+end
+
+sprite fx_arrow_r fx
+W.
+.W
+W.
+end
+
+anim fx_sparkle_anim 120 fx_sparkle fx_twinkle fx_sparkle fx_twinkle
+
+# ------------------------------------------------------------ RIP
+# Lápide com cruz, grama e uma florzinha; o fantasminha flutua por cima
+# (animado no código). Depois passa "RIP" rolando com a fonte 3x5.
+palette grave
+  G #8A90A0
+  L #2EA83C
+  F #FF7FA6
+end
+
+# Cruz de cemitério (silhueta bem clara) na grama, com uma florzinha.
+sprite grave grave
+.G......
+GGG.....
+.G......
+.G.F....
+LLLLLLLL
+end
+
+palette ghost
+  W #CFE3FF
+  B #7FAAF0
+end
+
+sprite ghost0 ghost
+.WWW.
+WWWWW
+W.W.W
+WWWWW
+B.B.B
+end
+
+sprite ghost1 ghost
+.WWW.
+WWWWW
+W.W.W
+WWWWW
+.B.B.
+end
+
+anim ghost 350 ghost0 ghost1
+
+# ------------------------------------------------------------ ÍCONES DO MENU (8x8)
+palette icons
+  R #FF3A4A
+  r #C8202E
+  G #3ED64C
+  C #8A4A1E
+  W #FFFFFF
+  B #3F8CFF
+  b #9FD4FF
+  Y #FFD62E
+  O #FF8A1A
+  P #FF7FA6
+end
+
+sprite icon_food icons
+....G...
+...CGG..
+.RRCRRR.
+RRRRRRWR
+RRRRRRRR
+RRRRRRRR
+.RRRRRr.
+..RR.R..
+end
+
+sprite icon_play icons
+..RRYY..
+.RRRYYY.
+RRRWWYYY
+RRWWWWYY
+BBWWWWGG
+BBBWWGGG
+.BBBGGG.
+..BBGG..
+end
+
+sprite icon_clean icons
+.....bb.
+....b..b
+....b..b
+.bb..bb.
+b..b....
+b.Wb..b.
+.bb..b.b
+......b.
+end
+
+sprite icon_medicine icons
+........
+........
+.RRRWWW.
+RWRRWWWW
+RRRRWWWW
+.rrrWWW.
+........
+........
+end
+
+sprite icon_sleep icons
+..YYY...
+.YY.....
+YY....W.
+YY...WWW
+YY....W.
+YY......
+.YY.....
+..YYY...
+end
+
+sprite icon_status icons
+......G.
+......G.
+...Y..G.
+...Y..G.
+R..Y..G.
+R..Y..G.
+R..Y..G.
+WWWWWWWW
+end

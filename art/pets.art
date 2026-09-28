@@ -1,0 +1,777 @@
+# PixelGochi — pets
+#
+# Regras de pixel art pra matriz de LED 8x8 (ver art/README.md):
+# - preto = LED apagado: nada de contorno escuro, a silhueta contra o
+#   fundo é o que define a forma;
+# - olhos são "buracos" (pixel apagado) ou um pixel claro;
+# - 2 a 4 cores por bicho, bem saturadas;
+# - bichos com ~5-6 px de largura: sobra espaço pra comida, balão e efeitos;
+# - frames de um mesmo bicho ancoram pelo centro-inferior.
+#
+# Vocabulário de expressões (igual pra todos, pra ficar legível):
+#   feliz   = olhos fechadinhos + boca/bochecha colorida
+#   triste  = lágrima azul (T) embaixo do olho + orelhas/brânquias caídas
+#   fome    = boca aberta (buraco) + babinha azul (T)
+#   dormindo= olhos fechados, corpo mais baixo (os Zzz vêm do código)
+
+# ------------------------------------------------------------ CAPIVARA
+# De lado, olhando pra direita. Cabeça mais clara que o corpo pra separar
+# as massas; orelhinha em cima; no "feliz" ganha a tangerina na cabeça.
+palette capy
+  B #B25A22
+  L #DE9050
+  D #6E300C
+  O #FF8A00
+  G #54B82E
+  T #4FA8FF
+end
+
+sprite capy_idle0 capy
+...D..
+.BBLLL
+BBBL.L
+BBBLLD
+.D..D.
+end
+
+sprite capy_ear capy
+....D.
+.BBLLL
+BBBL.L
+BBBLLD
+.D..D.
+end
+
+sprite capy_blink capy
+...D..
+.BBLLL
+BBBLDL
+BBBLLD
+.D..D.
+end
+
+sprite capy_walk1 capy
+...D..
+.BBLLL
+BBBL.L
+BBBLLD
+D..D..
+end
+
+sprite capy_eat1 capy
+......
+.BBD..
+BBBLLL
+BBBL.L
+.D..LD
+end
+
+sprite capy_sleep0 capy
+......
+...D..
+.BBLLL
+BBBLDL
+BBBBLD
+end
+
+sprite capy_sleep1 capy
+......
+....D.
+.BBLLL
+BBBLDL
+BBBBLD
+end
+
+sprite capy_happy capy
+....G.
+...DO.
+.BBLLL
+BBBLDL
+BBBLLD
+D....D
+end
+
+sprite capy_sad capy
+......
+.BBD..
+BBBLLL
+BBBL.L
+BBBLTD
+.D..D.
+end
+
+sprite capy_hungry0 capy
+...D..
+.BBLLL
+BBBL.L
+BBBL.D
+.D.DT.
+end
+
+anim capy_idle   450 capy_idle0 capy_idle0 capy_idle0 capy_ear capy_idle0 capy_idle0 capy_idle0 capy_idle0
+anim capy_blink  150 capy_blink
+anim capy_walk   220 capy_idle0 capy_walk1
+anim capy_eat    260 capy_idle0 capy_eat1
+anim capy_sleep  900 capy_sleep0 capy_sleep1
+anim capy_happy  300 capy_happy capy_idle0
+anim capy_sad    800 capy_sad
+anim capy_hungry 450 capy_hungry0 capy_idle0
+
+# ------------------------------------------------------------ GATO
+# De frente, cabeça de "emoji" com orelhas pontudas, olhos verdes e
+# focinho rosa; corpinho e patas embaixo.
+palette cat
+  B #AEB8CC
+  S #6F7A94
+  P #FF7FA6
+  E #8CFF4F
+  T #4FA8FF
+  R #FF4060
+end
+
+sprite cat_idle0 cat
+B...B
+BBBBB
+BEBEB
+BBPBB
+.BBB.
+.B.B.
+end
+
+sprite cat_ear cat
+B....
+BBBBB
+BEBEB
+BBPBB
+.BBB.
+.B.B.
+end
+
+sprite cat_blink cat
+B...B
+BBBBB
+BSBSB
+BBPBB
+.BBB.
+.B.B.
+end
+
+sprite cat_walk1 cat
+B...B
+BBBBB
+BEBEB
+BBPBB
+.BBB.
+B...B
+end
+
+sprite cat_eat1 cat
+B...B
+BBBBB
+BEBEB
+BBPBB
+.B.B.
+.B.B.
+end
+
+sprite cat_sleep0 cat
+.....
+B...B
+BBBBB
+BSBSB
+BBPBB
+.BBB.
+end
+
+sprite cat_sleep1 cat
+.....
+B...B
+BBBBB
+BSBSB
+BBPBB
+BBBBB
+end
+
+sprite cat_happy cat
+B...B
+BBBBB
+BSBSB
+BBPBB
+.BRB.
+B...B
+end
+
+sprite cat_sad cat
+.....
+BBBBB
+BEBEB
+BTPBB
+.BSB.
+.B.B.
+end
+
+sprite cat_hungry0 cat
+B...B
+BBBBB
+BEBEB
+BBPBB
+.B.B.
+.BTB.
+end
+
+anim cat_idle   450 cat_idle0 cat_idle0 cat_idle0 cat_idle0 cat_ear cat_idle0 cat_idle0 cat_idle0
+anim cat_blink  150 cat_blink
+anim cat_walk   220 cat_idle0 cat_walk1
+anim cat_eat    260 cat_idle0 cat_eat1
+anim cat_sleep  900 cat_sleep0 cat_sleep1
+anim cat_happy  300 cat_happy cat_idle0
+anim cat_sad    800 cat_sad
+anim cat_hungry 450 cat_hungry0 cat_idle0
+
+# ------------------------------------------------------------ SAPO
+# Olhos em "bolinha" em cima: branco em cima, pupila (buraco) embaixo.
+palette frog
+  G #3ED64C
+  D #1C8A2A
+  W #F4FFF0
+  Y #CFFF6A
+  R #FF4F6E
+  T #4FA8FF
+end
+
+sprite frog_idle0 frog
+.G..G.
+GWGGWG
+G.GG.G
+DGGGGD
+.DDDD.
+YY..YY
+end
+
+sprite frog_throat frog
+.G..G.
+GWGGWG
+G.GG.G
+DGGGGD
+.DYYD.
+YY..YY
+end
+
+sprite frog_blink frog
+.G..G.
+GGGGGG
+GDGGDG
+DGGGGD
+.DDDD.
+YY..YY
+end
+
+sprite frog_walk1 frog
+.G..G.
+GWGGWG
+G.GG.G
+DGGGGD
+Y.DD.Y
+......
+end
+
+sprite frog_eat1 frog
+.G..G.
+GWGGWG
+G.GG.G
+DRRRRD
+.DDDD.
+YY..YY
+end
+
+sprite frog_sleep0 frog
+......
+.G..G.
+GGGGGG
+GDGGDG
+.DDDD.
+YY..YY
+end
+
+sprite frog_sleep1 frog
+......
+.G..G.
+GGGGGG
+GDGGDG
+.DYYD.
+YY..YY
+end
+
+sprite frog_happy frog
+.G..G.
+GDGGDG
+GGGGGG
+RGGGGR
+.RRRR.
+Y....Y
+end
+
+sprite frog_sad frog
+......
+.G..G.
+GWGGWG
+GTGG.G
+GGGGGG
+.DDDD.
+end
+
+sprite frog_hungry0 frog
+.G..G.
+GWGGWG
+G.GG.G
+DG..GD
+.DRRD.
+YY..YY
+end
+
+anim frog_idle   400 frog_idle0 frog_idle0 frog_throat frog_idle0 frog_throat frog_idle0 frog_idle0 frog_idle0
+anim frog_blink  150 frog_blink
+anim frog_walk   240 frog_idle0 frog_walk1
+anim frog_eat    200 frog_idle0 frog_eat1
+anim frog_sleep  900 frog_sleep0 frog_sleep1
+anim frog_happy  280 frog_happy frog_idle0
+anim frog_sad    800 frog_sad
+anim frog_hungry 400 frog_hungry0 frog_idle0
+
+# ------------------------------------------------------------ PINTINHO
+# Bolinha redonda (5 de largura), uma peninha no topo, bico no meio.
+palette chick
+  Y #FFD62E
+  L #FFF09A
+  O #FF7A10
+  P #FF6F8F
+  T #4FA8FF
+end
+
+sprite chick_idle0 chick
+..Y..
+.YYY.
+Y.Y.Y
+YYOYY
+.YYY.
+.O.O.
+end
+
+sprite chick_blink chick
+..Y..
+.YYY.
+YLYLY
+YYOYY
+.YYY.
+.O.O.
+end
+
+sprite chick_walk1 chick
+...Y.
+.YYY.
+Y.Y.Y
+YYOYY
+.YYY.
+O...O
+end
+
+sprite chick_eat1 chick
+.....
+..Y..
+.YYY.
+Y.Y.Y
+YYOYY
+.O.O.
+end
+
+sprite chick_sleep0 chick
+.....
+.....
+.YYY.
+YLYLY
+YYOYY
+.YYY.
+end
+
+sprite chick_sleep1 chick
+.....
+..Y..
+.YYY.
+YLYLY
+YYOYY
+.YYY.
+end
+
+sprite chick_happy chick
+...Y...
+Y.YYY.Y
+YYLYLYY
+.PYOYP.
+..YOY..
+..O.O..
+end
+
+sprite chick_sad chick
+.....
+.YYY.
+Y.Y.Y
+YTOYY
+.YYY.
+.O.O.
+end
+
+sprite chick_hungry0 chick
+..Y..
+.YYY.
+Y.Y.Y
+YYOYY
+.YOY.
+.O.O.
+end
+
+anim chick_idle   380 chick_idle0 chick_idle0 chick_walk1 chick_idle0 chick_idle0 chick_idle0
+anim chick_blink  150 chick_blink
+anim chick_walk   200 chick_idle0 chick_walk1
+anim chick_eat    220 chick_idle0 chick_eat1
+anim chick_sleep  900 chick_sleep0 chick_sleep1
+anim chick_happy  220 chick_happy chick_idle0
+anim chick_sad    800 chick_sad
+anim chick_hungry 350 chick_hungry0 chick_idle0
+
+# ------------------------------------------------------------ COELHO
+palette bunny
+  W #F2EEFF
+  G #B9B0DA
+  P #FF8FB8
+  T #4FA8FF
+  R #FF4060
+end
+
+sprite bunny_idle0 bunny
+.W.W.
+.W.W.
+WWWWW
+W.W.W
+WWPWW
+.W.W.
+end
+
+sprite bunny_ear bunny
+.W...
+.W.WW
+WWWWW
+W.W.W
+WWPWW
+.W.W.
+end
+
+sprite bunny_blink bunny
+.W.W.
+.W.W.
+WWWWW
+WGWGW
+WWPWW
+.W.W.
+end
+
+sprite bunny_walk1 bunny
+.W.W.
+.W.W.
+WWWWW
+W.W.W
+WWPWW
+W...W
+end
+
+sprite bunny_eat1 bunny
+.W.W.
+.W.W.
+WWWWW
+W.W.W
+WPPPW
+.W.W.
+end
+
+sprite bunny_sleep0 bunny
+.....
+WW.WW
+WWWWW
+WGWGW
+WWPWW
+.WWW.
+end
+
+sprite bunny_sleep1 bunny
+.....
+.W.WW
+WWWWW
+WGWGW
+WWPWW
+.WWW.
+end
+
+sprite bunny_happy bunny
+W...W
+.W.W.
+WWWWW
+WGWGW
+WPRPW
+W...W
+end
+
+sprite bunny_sad bunny
+.....
+WW.WW
+WWWWW
+W.W.W
+WTPWW
+.W.W.
+end
+
+sprite bunny_hungry0 bunny
+.W.W.
+.W.W.
+WWWWW
+W.W.W
+WW.WW
+.WTW.
+end
+
+anim bunny_idle   450 bunny_idle0 bunny_idle0 bunny_idle0 bunny_ear bunny_idle0 bunny_idle0 bunny_idle0
+anim bunny_blink  150 bunny_blink
+anim bunny_walk   200 bunny_idle0 bunny_walk1
+anim bunny_eat    160 bunny_idle0 bunny_eat1
+anim bunny_sleep  900 bunny_sleep0 bunny_sleep1
+anim bunny_happy  240 bunny_happy bunny_idle0
+anim bunny_sad    800 bunny_sad
+anim bunny_hungry 400 bunny_hungry0 bunny_idle0
+
+# ------------------------------------------------------------ AXOLOTE
+# O favorito. Brânquias em "franja" magenta dos dois lados da cabeça.
+palette axo
+  P #FF96C8
+  M #FF2F86
+  D #C8407E
+  L #FFD2E8
+  T #4FA8FF
+  R #FF3A6A
+end
+
+sprite axo_idle0 axo
+M.....M
+.MPPPM.
+MP.P.PM
+.PPDPP.
+.LLLLL.
+end
+
+sprite axo_gill axo
+.......
+MMPPPMM
+MP.P.PM
+MPPDPPM
+.LLLLL.
+end
+
+sprite axo_blink axo
+M.....M
+.MPPPM.
+MPDPDPM
+.PPDPP.
+.LLLLL.
+end
+
+sprite axo_eat1 axo
+M.....M
+.MPPPM.
+MP.P.PM
+.PP.PP.
+.LLLLL.
+end
+
+sprite axo_sleep0 axo
+.......
+.......
+MMPPPMM
+MPDPDPM
+.LLLLL.
+end
+
+sprite axo_sleep1 axo
+.......
+.......
+.MPPPM.
+MPDPDPM
+.LLLLL.
+end
+
+sprite axo_happy axo
+M.....M
+.MPPPM.
+MPDPDPM
+.PPRPP.
+.LLLLL.
+end
+
+sprite axo_sad axo
+.......
+.MPPPM.
+.P.P.P.
+.TPDPP.
+.LLLLL.
+end
+
+sprite axo_hungry0 axo
+M.....M
+.MPPPM.
+MP.P.PM
+.PP.PP.
+.LLTLL.
+end
+
+anim axo_idle   500 axo_idle0 axo_idle0 axo_gill axo_idle0 axo_idle0 axo_gill axo_idle0
+anim axo_blink  150 axo_blink
+anim axo_walk   260 axo_idle0 axo_gill
+anim axo_eat    220 axo_idle0 axo_eat1
+anim axo_sleep  900 axo_sleep0 axo_sleep1
+anim axo_happy  260 axo_happy axo_idle0
+anim axo_sad    800 axo_sad
+anim axo_hungry 400 axo_hungry0 axo_idle0
+
+# ------------------------------------------------------------ OVOS
+# Um único desenho de ovo, recolorido por bicho via sprite@paleta.
+palette egg_base
+  E #FFF1D2
+  S #C9A27A
+  H #FFFFFF
+  C #7A5A3A
+end
+palette egg_capy
+  E #FFE9C8
+  S #B25A22
+  H #FFFFFF
+  C #6E300C
+end
+palette egg_cat
+  E #EEF1F8
+  S #7C87A0
+  H #FFFFFF
+  C #4A5268
+end
+palette egg_frog
+  E #EFFFE6
+  S #3ED64C
+  H #FFFFFF
+  C #1C8A2A
+end
+palette egg_chick
+  E #FFF8D8
+  S #FFB020
+  H #FFFFFF
+  C #C07A10
+end
+palette egg_bunny
+  E #FAF6FF
+  S #FF8FB8
+  H #FFFFFF
+  C #A07CB0
+end
+palette egg_axo
+  E #FFEAF4
+  S #FF2F86
+  H #FFFFFF
+  C #B03070
+end
+
+sprite egg0 egg_base
+..EE..
+.EEEE.
+.HEEE.
+EEESEE
+ESEEEE
+EEEESE
+.EEEE.
+end
+
+sprite egg1 egg_base
+..EE..
+.EEEE.
+.HEEE.
+EEECEE
+ESEEEE
+EEEESE
+.EEEE.
+end
+
+sprite egg2 egg_base
+..EE..
+.EECE.
+.HECE.
+EECCEE
+ESEEEE
+EEEESE
+.EEEE.
+end
+
+sprite egg3 egg_base
+..EE..
+.ECCE.
+CHECEC
+ECCECE
+ESEEEE
+EEEESE
+.EEEE.
+end
+
+anim capy_egg  700 egg0@egg_capy
+anim cat_egg   700 egg0@egg_cat
+anim frog_egg  700 egg0@egg_frog
+anim chick_egg 700 egg0@egg_chick
+anim bunny_egg 700 egg0@egg_bunny
+anim axo_egg   700 egg0@egg_axo
+
+# ------------------------------------------------------------ SELVAGENS
+# Forma "selvagem" (depois de muito descuido): mesmos desenhos, paleta
+# terrosa/suja. Gato e sapo ganham olho amarelo feroz; o axolote fica
+# escuro, que é a cor dele na natureza.
+palette capy_wild : capy
+  B #6E4424
+  L #8E6440
+  D #2E1808
+end
+palette cat_wild : cat
+  B #5C6272
+  S #30364A
+  P #9A4A60
+  E #FFD21E
+end
+palette frog_wild : frog
+  G #6E8E22
+  D #34500C
+  W #FFE24A
+  Y #8EA238
+end
+palette chick_wild : chick
+  Y #B8923A
+  L #D8C07A
+  O #9A4A10
+  P #8E4A58
+end
+palette bunny_wild : bunny
+  W #A88C6C
+  G #7A624A
+  P #A86070
+end
+palette axo_wild : axo
+  P #5E6E3E
+  M #7E2E52
+  D #2E3A1E
+  L #8E9E6A
+end
+
+pet capy  "Capivara" food=food_melon  wild=capy_wild side=1
+pet cat   "Gato"     food=food_fish   wild=cat_wild
+pet frog  "Sapo"     food=food_fly    wild=frog_wild
+pet chick "Pintinho" food=food_worm   wild=chick_wild
+pet bunny "Coelho"   food=food_carrot wild=bunny_wild
+pet axo   "Axolote"  food=food_shrimp wild=axo_wild

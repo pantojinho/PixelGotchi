@@ -1,0 +1,335 @@
+# PixelGochi — fonte 3x5 pra texto rolando na matriz ("RIP", idade, nome).
+# Largura variável (I, ponto e ! têm 1 px). O código pinta na cor que quiser;
+# W aqui é só o "ligado".
+
+palette font
+  W #FFFFFF
+end
+
+sprite font_A font
+.W.
+W.W
+WWW
+W.W
+W.W
+end
+
+sprite font_B font
+WW.
+W.W
+WW.
+W.W
+WW.
+end
+
+sprite font_C font
+.WW
+W..
+W..
+W..
+.WW
+end
+
+sprite font_D font
+WW.
+W.W
+W.W
+W.W
+WW.
+end
+
+sprite font_E font
+WWW
+W..
+WW.
+W..
+WWW
+end
+
+sprite font_F font
+WWW
+W..
+WW.
+W..
+W..
+end
+
+sprite font_G font
+.WW
+W..
+W.W
+W.W
+.WW
+end
+
+sprite font_H font
+W.W
+W.W
+WWW
+W.W
+W.W
+end
+
+sprite font_I font
+W
+W
+W
+W
+W
+end
+
+sprite font_J font
+..W
+..W
+..W
+W.W
+.W.
+end
+
+sprite font_K font
+W.W
+W.W
+WW.
+W.W
+W.W
+end
+
+sprite font_L font
+W..
+W..
+W..
+W..
+WWW
+end
+
+sprite font_M font
+W...W
+WW.WW
+W.W.W
+W...W
+W...W
+end
+
+sprite font_N font
+W..W
+WW.W
+W.WW
+W..W
+W..W
+end
+
+sprite font_O font
+.W.
+W.W
+W.W
+W.W
+.W.
+end
+
+sprite font_P font
+WW.
+W.W
+WW.
+W..
+W..
+end
+
+sprite font_Q font
+.W.
+W.W
+W.W
+WW.
+.WW
+end
+
+sprite font_R font
+WW.
+W.W
+WW.
+W.W
+W.W
+end
+
+sprite font_S font
+.WW
+W..
+.W.
+..W
+WW.
+end
+
+sprite font_T font
+WWW
+.W.
+.W.
+.W.
+.W.
+end
+
+sprite font_U font
+W.W
+W.W
+W.W
+W.W
+WWW
+end
+
+sprite font_V font
+W.W
+W.W
+W.W
+W.W
+.W.
+end
+
+sprite font_W font
+W...W
+W...W
+W.W.W
+WW.WW
+W...W
+end
+
+sprite font_X font
+W.W
+W.W
+.W.
+W.W
+W.W
+end
+
+sprite font_Y font
+W.W
+W.W
+.W.
+.W.
+.W.
+end
+
+sprite font_Z font
+WWW
+..W
+.W.
+W..
+WWW
+end
+
+sprite font_0 font
+WWW
+W.W
+W.W
+W.W
+WWW
+end
+
+sprite font_1 font
+.W.
+WW.
+.W.
+.W.
+WWW
+end
+
+sprite font_2 font
+WW.
+..W
+.W.
+W..
+WWW
+end
+
+sprite font_3 font
+WW.
+..W
+.W.
+..W
+WW.
+end
+
+sprite font_4 font
+W.W
+W.W
+WWW
+..W
+..W
+end
+
+sprite font_5 font
+WWW
+W..
+WW.
+..W
+WW.
+end
+
+sprite font_6 font
+.WW
+W..
+WWW
+W.W
+WWW
+end
+
+sprite font_7 font
+WWW
+..W
+.W.
+.W.
+.W.
+end
+
+sprite font_8 font
+WWW
+W.W
+WWW
+W.W
+WWW
+end
+
+sprite font_9 font
+WWW
+W.W
+WWW
+..W
+WW.
+end
+
+sprite font_dash font
+...
+...
+WWW
+...
+...
+end
+
+sprite font_dot font
+.
+.
+.
+.
+W
+end
+
+sprite font_excl font
+W
+W
+W
+.
+W
+end
+
+sprite font_colon font
+.
+W
+.
+W
+.
+end
+
+sprite font_heart font
+...
+W.W
+WWW
+.W.
+...
+end
