@@ -78,6 +78,8 @@ as regras e o glider seguem a referência do
 [Jogo da Vida em matriz de LEDs](https://www.makerguides.com/game-of-life-dot-matrix-max7219/).
 Os tempos do preview são encurtados para a demonstração; o firmware usa os
 tempos acima. Veja o [roteiro dos sonhos](docs/TESTES.md#sonhos-e-conway).
+As próximas melhorias de continuidade, alimentação e sonhos estão no
+[plano de animações e Conway](docs/ANIMACOES-E-CONWAY.md).
 
 Os desenhos são originais, feitos diretamente na grade de pixels.
 Referências de forma: [perfil de capivara (WWF)](https://www.wwf.or.jp/staffblog/news/5510.html)
