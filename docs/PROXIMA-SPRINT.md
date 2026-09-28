@@ -174,3 +174,20 @@ Executar os casos **FUT-01 a FUT-13** de [TESTES.md](TESTES.md#próxima-sprint-t
 O aceite depende de teste em placa física, inclusive interrupção de upload
 e energia. Se o prazo da sprint não comportar a etapa B, entregar a etapa A
 com seu limite de compilação local documentado e manter o envio direto no backlog.
+
+## Pendências: case 3D e primeira release
+
+Case em [hardware/case](../hardware/case/README.md), gerada por
+`tools/build_case.py` (OpenSCAD) com checagem automática de colisão contra um
+modelo simplificado da placa. As medidas vieram do desenho cotado e de fotos;
+o que falta depende da peça física:
+
+| Pendência | Por quê / como fechar |
+|---|---|
+| Imprimir e testar o encaixe na placa real | Posição dos botões (±0,5 mm), altura do botão e espessura da placa são estimativas. Ajustar `btn_dx`, `btn_y`, `sw_h`, `pcb_t` no `.scad` se preciso |
+| Confirmar que os pinos acionam BOOT e RESET sem ficar apertando | Ligar a placa dentro da case: não pode entrar em modo de gravação nem reiniciar sozinha |
+| Conferir o rasgo do USB com os cabos que você usa | Capas de borracha grandes podem precisar de `usb_open_w`/`usb_open_h` maiores |
+| Medir o passo dos LEDs antes de imprimir a versão difusor | Grade assume ~2,7 mm; medir centro do 1º ao 8º LED de uma linha e dividir por 7 (`led_pitch`) |
+| Ajustar `plate_fit` à sua impressora | Tampa justa/solta varia entre impressoras |
+| Variante em formato de ovo (estilo Tamagotchi) e com bateria | Ideia futura; a atual é compacta e só USB |
+| **Primeira release no GitHub** (após aprovação) | O repositório ainda **não tem remoto** e o `gh` não está instalado nesta máquina. Publicar pelo GitHub Desktop (ou configurar o remoto), depois criar a tag `v0.1.0` com o `firmware.bin` compilado e os STLs da case como anexos |

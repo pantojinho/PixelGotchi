@@ -183,6 +183,12 @@ Ela reduz os meios-tons e ajuda a separar os tons claros e escuros. A capivara
 usa corpo cobre, focinho âmbar claro e nariz marrom escuro, com maior distância
 entre as cores. Preto continua apagado e as cores primárias continuam puras.
 
+Depois da curva, o **brilho é ajustado por cor**: a soma R+G+B de cada pixel
+é limitada (`glare_cap`), então branco e tons claros ofuscam menos que cores
+puras; o azul é atenuado (`blue_gain`); e cores escuras nunca ficam abaixo de
+`min_peak` degraus, pra não sumirem. Com o pet dormindo, cada LED aceso fica no
+menor degrau visível.
+
 O perfil fica em [`art/led-profile.json`](art/led-profile.json) e gera a mesma
 tabela para firmware e preview. Para reduzir mais, experimente `"brightness": 12`,
 gere a arte e regrave a placa; não aumente o brilho para compensar contraste.
@@ -192,11 +198,30 @@ conferência na sua unidade; a curva não é uma calibração medida do hardware
 O BOOT pressionado durante reset/energização entra no modo de gravação
 do ESP32. Para interagir, pressione-o **depois** que o firmware iniciar.
 
-Orientação: `DISPLAY_ROTATION` e `DISPLAY_MIRROR_X` em `src/Config.h`.
-Se a inclinação estiver invertida, ajuste `TILT_SIGN`. Sensibilidade e
-tempo dos gestos também ficam nesse arquivo. O IMU tenta os endereços
-0x6B e 0x6A. A primeira amostra não é contada como movimento e o gesto
-de virar usa histerese para evitar oscilar entre dormir/acordar.
+Orientação da imagem: `DISPLAY_ROTATION` e `DISPLAY_MIRROR_X` em `src/Config.h`.
+
+**Acelerômetro:** o QMI8658 fica no verso da placa, então "tela pra cima" é o
+eixo z **negativo**. Os eixos e sinais ficam em `src/ImuCalib.h`, medidos na
+placa real. Se a inclinação ou o "virar pra dormir" se comportarem errado
+(outra placa, outro lote), recalibre em 4 posições e grave de novo:
+
+```bash
+python tools/calibrate_imu.py
+```
+
+Sensibilidade e tempo dos gestos ficam em `src/Config.h`. O IMU tenta os
+endereços 0x6B e 0x6A. A primeira amostra não é contada como movimento e o
+gesto de virar usa histerese para evitar oscilar entre dormir/acordar.
+
+## Case 3D
+
+Case de **28,7 × 28,7 × 8,6 mm** com acesso ao USB-C, aos botões BOOT e RESET
+de trás (por pinos que nunca ficam apertando sozinhos) e argolinha de
+chaveiro; versão com janela aberta ou com difusor e grade 8×8. Sem suporte.
+Veja [hardware/case](hardware/case/README.md) (STLs, configuração para a
+Ender-3 V3 KE e montagem).
+
+![Case explodida](hardware/case/images/exploded.png)
 
 ## Instalação manual via USB
 
@@ -449,6 +474,9 @@ Veja o [plano de conexão, formato de arte e entregas](docs/PROXIMA-SPRINT.md)
 e os [testes previstos](docs/TESTES.md#próxima-sprint-testes-planejados).
 Hoje a arte precisa ser gerada e compilada no firmware; não existe envio
 de um pet personalizado por USB nem instalação web com um clique.
+
+Pendências da case e da primeira release estão no fim do
+[plano da sprint](docs/PROXIMA-SPRINT.md#pendências-case-3d-e-primeira-release).
 
 Outras ideias de evolução, sem compromisso com essa sprint:
 
